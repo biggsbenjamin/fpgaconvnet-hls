@@ -1,0 +1,52 @@
+#include "common_tb.hpp"
+#include "pooling_layer_tb.hpp"
+
+int main()
+{
+    int err = 0;
+
+    std::string input_path  = std::string(DATA_DIR)+"/input.dat";
+    std::string output_path = std::string(DATA_DIR)+"/output.dat";
+
+    stream_t(data_t) in[POOLING_LAYER_COARSE];
+    stream_t(data_t) out[POOLING_LAYER_COARSE];
+    stream_t(data_t) out_correct[POOLING_LAYER_COARSE];
+
+    // test images
+    static data_t test_in[CHANNELS_3D(POOLING_LAYER_CHANNELS,POOLING_LAYER_COARSE)*POOLING_LAYER_ROWS*POOLING_LAYER_COLS][POOLING_LAYER_COARSE];
+    static data_t test_out[CHANNELS_3D(POOLING_LAYER_CHANNELS,POOLING_LAYER_COARSE)*POOLING_LAYER_ROWS_OUT*POOLING_LAYER_COLS_OUT][POOLING_LAYER_COARSE];
+
+    // load input
+    load_data<
+        CHANNELS_3D(POOLING_LAYER_CHANNELS,POOLING_LAYER_COARSE)*POOLING_LAYER_ROWS*POOLING_LAYER_COLS,
+        POOLING_LAYER_COARSE
+    >(input_path,test_in);
+
+    // load output
+    load_data<
+        CHANNELS_3D(POOLING_LAYER_CHANNELS,POOLING_LAYER_COARSE)*POOLING_LAYER_ROWS_OUT*POOLING_LAYER_COLS_OUT,
+        POOLING_LAYER_COARSE
+    >(output_path,test_out);
+
+    // convert to streams
+    to_stream<
+        CHANNELS_3D(POOLING_LAYER_CHANNELS,POOLING_LAYER_COARSE)*POOLING_LAYER_ROWS*POOLING_LAYER_COLS,
+        POOLING_LAYER_COARSE
+    >(test_in,in);
+
+    to_stream<
+        CHANNELS_3D(POOLING_LAYER_CHANNELS,POOLING_LAYER_COARSE)*POOLING_LAYER_ROWS_OUT*POOLING_LAYER_COLS_OUT,
+        POOLING_LAYER_COARSE
+    >(test_out,out_correct);
+
+    pooling_layer_top(in,out,0);
+
+    for(int i=0;i<POOLING_LAYER_COARSE;i++)
+    {
+        printf("TESTING OUTPUT %d: ",i);
+        err += checkStreamEqual<data_t>(out[i],out_correct[i],false);
+        printf("%s\n",(err==0) ? "passed" : "failed");
+    }
+
+    return err;
+}

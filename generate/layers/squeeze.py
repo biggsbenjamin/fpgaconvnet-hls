@@ -1,0 +1,127 @@
+# import modules
+import os
+import shutil 
+import generate.modules.squeeze
+
+squeeze_layer_template_header = """#ifndef {NAME}_HPP_
+#define {NAME}_HPP_
+
+#define name        {name}
+#define {NAME}_ID   {id}
+
+#define {name}_input_t          data_t
+#define {name}_output_t         data_t
+
+#define {NAME}_BATCH_SIZE   {batch_size}
+#define {NAME}_ROWS         {rows_in}
+#define {NAME}_COLS         {cols_in}
+#define {NAME}_CHANNELS     {channels_in}
+
+#define {NAME}_COARSE_IN    {coarse_in}
+#define {NAME}_COARSE_OUT   {coarse_out}
+
+#define {NAME}_ROWS_OUT     {rows_out} 
+#define {NAME}_COLS_OUT     {cols_out} 
+#define {NAME}_CHANNELS_OUT {channels_out} 
+
+#define MODULE_NAME {NAME}_SQUEEZE
+#define {NAME}_SQUEEZE_BATCH_SIZE   {batch_size}
+#define {NAME}_SQUEEZE_ROWS         {rows_in}
+#define {NAME}_SQUEEZE_COLS         {cols_in}
+#define {NAME}_SQUEEZE_CHANNELS     {channels_in}
+#define {NAME}_SQUEEZE_COARSE_IN    {coarse_in}
+#define {NAME}_SQUEEZE_COARSE_OUT   {coarse_out}
+#include "{name}_squeeze.hpp"
+#undef MODULE_NAME
+
+/**
+ * FUNCTION DEFINITION
+ */
+
+void {name}(
+    stream_t({name}_input_t)  in[{NAME}_COARSE_IN],
+    stream_t({name}_output_t) out[{NAME}_COARSE_OUT],
+    int mode
+);
+
+#undef name
+#endif
+"""
+
+squeeze_layer_template_src = """#include "{name}.hpp"
+
+void {name}(
+    stream_t({name}_input_t)  in[{NAME}_COARSE_IN],
+    stream_t({name}_output_t) out[{NAME}_COARSE_OUT],
+    int mode
+)
+{{
+
+#pragma HLS INLINE OFF
+
+#pragma HLS STREAM variable=in depth={buffer_depth}
+#pragma HLS STREAM variable=out
+
+#pragma HLS ARRAY_PARTITION variable=in  complete dim=0
+#pragma HLS ARRAY_PARTITION variable=out complete dim=0
+
+#pragma HLS DATAFLOW
+
+{squeeze}
+
+}}
+
+"""
+
+def gen_squeeze_layer(name,param,src_path,header_path):
+
+    # BATCH NORM MODULE INIT
+    squeeze_param = {
+        'input_t'       : "{name}_input_t".format(name=name),
+        'output_t'      : "{name}_output_t".format(name=name)
+    }
+    squeeze = generate.modules.squeeze.gen_squeeze_module(
+        name,
+        squeeze_param,
+        "in",
+        "out",
+        indent=4
+    )
+
+    # src
+    squeeze_layer_src = squeeze_layer_template_src.format(
+        name  =name,
+        NAME  =name.upper(),
+        buffer_depth=max(param['buffer_depth'],2),
+        squeeze  =squeeze
+    )
+
+    # header
+    squeeze_layer_header = squeeze_layer_template_header.format(
+        name                =name,
+        NAME                =name.upper(),
+        id                  =0, # param['id'],
+        batch_size          =param['batch_size'],
+        rows_in             =param['rows_in'],
+        cols_in             =param['cols_in'],
+        channels_in         =param['channels_in'],
+        coarse_in           =param['coarse_in'],
+        coarse_out          =param['coarse_out'],
+        rows_out            =param['rows_out'],
+        cols_out            =param['cols_out'],
+        channels_out        =param['channels_out']
+    )
+
+    # write source file
+    with open(src_path,'w') as src_file:
+        src_file.write(squeeze_layer_src)
+
+    # write header file
+    with open(header_path,'w') as header_file:
+        header_file.write(squeeze_layer_header)
+
+    # save modules 
+    header_path = os.path.dirname(os.path.abspath(header_path))
+    shutil.copy( os.path.join(os.environ['FPGACONVNET_ROOT'],'include/squeeze.hpp') , os.path.join(header_path,"{name}_squeeze.hpp".format(name=name)) )
+
+    return

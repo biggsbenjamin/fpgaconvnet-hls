@@ -1,0 +1,11 @@
+{
+    "type": "BATCHNORM",
+    "rows": 7,
+    "cols": 7,
+    "channels": 1,
+    "rows_out": 7,
+    "cols_out": 7,
+    "channels_out": 1,
+    "batch_size": 1,
+    "description": "module name: batch_norm, layer name: bn5b_branch2a, net name: resnet.prototxt"
+}

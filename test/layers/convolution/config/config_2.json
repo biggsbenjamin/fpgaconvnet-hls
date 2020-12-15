@@ -1,0 +1,23 @@
+{
+    "type": "CONVOLUTION",
+    "buffer_depth": 0,
+    "rows_in": 14,
+    "cols_in": 14,
+    "channels_in": 256,
+    "filters": 1024,
+    "kernel_size": 1,
+    "stride": 1,
+    "groups": 1,
+    "pad": 0,
+    "coarse_in": 8,
+    "coarse_out": 4,
+    "fine": 1,
+    "size_in": 50176,
+    "size_out": 784,
+    "wr_factor": 256,
+    "rows_out": 14,
+    "cols_out": 14,
+    "channels_out": 4,
+    "batch_size": 1,
+    "description": "layer name: res4f_branch2c, net name: resnet.prototxt"
+}

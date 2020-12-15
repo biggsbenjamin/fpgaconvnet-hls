@@ -1,0 +1,14 @@
+{
+    "type": "INNER_PRODUCT",
+    "buffer_depth" : 0,
+    "rows_in": 1,
+    "cols_in": 1,
+    "channels_in": 10,
+    "filters": 10,
+    "coarse_in": 1,
+    "coarse_out": 1,
+    "fine": 1,
+    "batch_size": 1,
+    "wr_factor" : 1,
+    "description": "layer name: ip1, net name: lenet.prototxt"
+}

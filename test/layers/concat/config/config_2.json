@@ -1,0 +1,26 @@
+{
+    "type": "CONCAT",
+    "inputs": 4,
+    "rows": 3,
+    "cols": 3,
+    "channels": [
+        192,
+        208,
+        48,
+        64
+    ],
+    "coarse": 6,
+    "coarse_in": 6,
+    "coarse_out": 6,
+    "size_in": 1728,
+    "size_out": 4608,
+    "rows_out": 3,
+    "cols_out": 3,
+    "channels_out": 512,
+    "channels_0": 192,
+    "channels_1": 208,
+    "channels_2": 48,
+    "channels_3": 64,
+    "batch_size": 1,
+    "description": "layer name: inception_4a/output, net name: googlenet.prototxt"
+}
