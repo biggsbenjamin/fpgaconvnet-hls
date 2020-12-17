@@ -2,10 +2,11 @@ import sys
 import os
 import numpy as np
 import csv
+import copy 
 
 sys.path.append('..')
-sys.path.append('../..')
-sys.path.append('../../..')
+sys.path.append(os.environ.get("FPGACONVNET_OPTIMISER"))
+sys.path.append(os.environ.get("FPGACONVNET_HLS"))
 
 from models.layers.InnerProductLayer import InnerProductLayer
 import generate.layers.inner_product
@@ -46,7 +47,7 @@ class InnerProductLayerTB(Layer):
         ])
         bias     = np.zeros(self.param['filters'])
         # data out
-        data_out = layer.functional_model(data_in,weights,bias)
+        data_out = layer.functional_model(copy.copy(data_in),weights,bias)[0]
         data_out = np.moveaxis(data_out,0,-1)
         
         # reshape weights

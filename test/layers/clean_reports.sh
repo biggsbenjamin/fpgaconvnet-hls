@@ -4,7 +4,7 @@ function clean_prj {
     if [ $1 ]; then
         rm ${1}/rpt/*
         rm -rf ${1}/data/*
-        rm -rf ${1}/${1}_test_prj/*
+        rm -rf ${1}/${1}_hls_prj/*
     fi
 }
 

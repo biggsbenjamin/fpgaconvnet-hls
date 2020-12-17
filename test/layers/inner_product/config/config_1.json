@@ -1,8 +1,9 @@
 {
     "type": "CONVOLUTION",
-    "rows": 1,
-    "cols": 1,
-    "channels": 500,
+    "buffer_depth": 2,
+    "rows_in": 1,
+    "cols_in": 1,
+    "channels_in": 500,
     "filters": 10,
     "coarse_in": 50,
     "coarse_out": 2,

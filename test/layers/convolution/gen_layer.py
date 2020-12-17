@@ -2,10 +2,11 @@ import sys
 import os
 import numpy as np
 import csv
+import copy 
 
 sys.path.append('..')
-sys.path.append('../..')
-sys.path.append('../../..')
+sys.path.append(os.environ.get("FPGACONVNET_OPTIMISER"))
+sys.path.append(os.environ.get("FPGACONVNET_HLS"))
 
 from models.layers.ConvolutionLayer import ConvolutionLayer
 import generate.layers.convolution
@@ -58,8 +59,10 @@ class ConvolutionLayerTB(Layer):
         ])
         bias     = np.zeros(self.param['filters'])
         # data out
-        data_out = layer.functional_model(data_in,weights,bias)
+        print(data_in.shape)
+        data_out = layer.functional_model(copy.copy(data_in),weights,bias)[0]
         data_out = np.moveaxis(data_out,0,-1)
+        print(data_out.shape)
 
         # save weights
         weights = CaffeData()._transform_weights(

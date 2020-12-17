@@ -1,10 +1,12 @@
 import sys
 import os
 import numpy as np
+import csv
+import copy 
 
 sys.path.append('..')
-sys.path.append('../..')
-sys.path.append('../../..')
+sys.path.append(os.environ.get("FPGACONVNET_OPTIMISER"))
+sys.path.append(os.environ.get("FPGACONVNET_HLS"))
 
 from models.layers.PoolingLayer import PoolingLayer
 import generate.layers.pooling
@@ -20,9 +22,9 @@ class PoolingLayerTB(Layer):
         # Init Module
         layer = PoolingLayer(
             [
-                self.param['channels'],
-                self.param['rows'],
-                self.param['cols']
+                self.param['channels_in'],
+                self.param['rows_in'],
+                self.param['cols_in']
             ],
             self.param['pool_type'],
             self.param['kernel_size'],
@@ -40,12 +42,12 @@ class PoolingLayerTB(Layer):
 
         # data in
         data_in = self.gen_data([
-            self.param['rows'],
-            self.param['cols'],
-            self.param['channels']
+            self.param['rows_in'],
+            self.param['cols_in'],
+            self.param['channels_in']
         ])
         # data out
-        data_out = layer.functional_model(data_in)
+        data_out = layer.functional_model(copy.copy(data_in))[0]
         data_out = np.moveaxis(data_out,0,-1)
     
         # add output dimensions

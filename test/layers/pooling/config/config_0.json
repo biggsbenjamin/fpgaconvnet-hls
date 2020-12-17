@@ -1,9 +1,9 @@
 {
     "type": "POOLING",
     "buffer_depth" : 0,
-    "rows": 56,
-    "cols": 56,
-    "channels": 32,
+    "rows_in": 56,
+    "cols_in": 56,
+    "channels_in": 32,
     "kernel_size": 2,
     "stride": 2,
     "pad": 0,
