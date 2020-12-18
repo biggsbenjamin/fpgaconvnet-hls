@@ -1,7 +1,8 @@
-import sys
 import os
-sys.path.append('../../..')
+import sys
+
 sys.path.append('..')
+sys.path.append(os.environ.get("FPGACONVNET_OPTIMISER"))
 
 from models.modules.SlidingWindow import SlidingWindow
 from Data import Data

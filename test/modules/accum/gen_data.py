@@ -2,7 +2,7 @@ import os
 import sys
 
 sys.path.append('..')
-sys.path.append(os.environ.get("FPGACONVNET_ROOT"))
+sys.path.append(os.environ.get("FPGACONVNET_OPTIMISER"))
 
 from models.modules.Accum import Accum
 from Data import Data

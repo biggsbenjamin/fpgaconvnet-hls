@@ -1,7 +1,8 @@
 import os
 import sys
-sys.path.append('../../..')
+
 sys.path.append('..')
+sys.path.append(os.environ.get("FPGACONVNET_OPTIMISER"))
 
 from models.modules.Pool import Pool
 from Data import Data

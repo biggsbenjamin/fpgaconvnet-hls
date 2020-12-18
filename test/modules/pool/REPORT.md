@@ -5,36 +5,36 @@
 
 | TEST | CSIM | SYNTH | SIM | IMPL |
 |:----:|:----:|:-----:|:---:|:----:|
-| 3 | True | True | False | True | 
-| 7 | True | True | False | True | 
-| 1 | True | True | False | True | 
-| 0 | True | True | False | True | 
-| 9 | True | True | False | True | 
-| 6 | True | True | False | True | 
-| 5 | True | True | False | True | 
-| 10 | True | True | False | True | 
-| 11 | True | True | False | True | 
-| 2 | True | True | False | True | 
-| 4 | True | True | False | True | 
-| 8 | True | True | False | True | 
+| 3 | True | True | True | True | 
+| 7 | True | True | True | True | 
+| 1 | True | True | True | True | 
+| 0 | True | False | False | False | 
+| 9 | True | True | True | True | 
+| 6 | True | True | True | True | 
+| 5 | True | True | True | True | 
+| 10 | True | True | True | True | 
+| 11 | True | True | True | True | 
+| 2 | True | True | True | True | 
+| 4 | True | True | True | True | 
+| 8 | True | True | True | True | 
 
 
 ## Latency Results
 
 | TEST | MODEL | SYNTH | SIM |
 |:----:|:-----:|:-----:|:---:|
-| 3 | 50176 | 50179 | N/A | 
-| 7 | 16 | 17 | N/A | 
-| 1 | 50176 | 50177 | N/A | 
-| 0 | 2352 | 2355 | N/A | 
-| 9 | 50176 | 50177 | N/A | 
-| 6 | 1440 | 1441 | N/A | 
-| 5 | 1568 | 1569 | N/A | 
-| 10 | 25088 | 25089 | N/A | 
-| 11 | 25088 | 25091 | N/A | 
-| 2 | 36 | 39 | N/A | 
-| 4 | 1568 | 1571 | N/A | 
-| 8 | 4 | 27 | N/A | 
+| 3 | 50176 | 50179 | 50181 | 
+| 7 | 16 | 17 | 19 | 
+| 1 | 50176 | 50177 | 50179 | 
+| 0 | 2352 | N/A | N/A | 
+| 9 | 50176 | 50177 | 50179 | 
+| 6 | 1440 | 1441 | 1443 | 
+| 5 | 1568 | 1569 | 1571 | 
+| 10 | 25088 | 25089 | 25091 | 
+| 11 | 25088 | 25091 | 25093 | 
+| 2 | 36 | 39 | 41 | 
+| 4 | 1568 | 1571 | 1573 | 
+| 8 | 4 | 27 | 29 | 
 
 
 ## Resource Results
@@ -44,7 +44,7 @@
 | 3 | 200 | 362 | 0 | 0 || 0 | 0 | 0 | 0 | 
 | 7 | 81 | 78 | 0 | 0 || 0 | 0 | 0 | 0 | 
 | 1 | 100 | 102 | 0 | 0 || 0 | 0 | 0 | 0 | 
-| 0 | 193 | 354 | 0 | 0 || 0 | 0 | 0 | 0 | 
+| 0 | N/A | N/A | N/A | N/A || 0 | 0 | 0 | 0 | 
 | 9 | 100 | 102 | 0 | 0 || 0 | 0 | 0 | 0 | 
 | 6 | 94 | 92 | 0 | 0 || 0 | 0 | 0 | 0 | 
 | 5 | 95 | 92 | 0 | 0 || 0 | 0 | 0 | 0 | 
@@ -62,7 +62,7 @@
 | 3 | 7.666 | 
 | 7 | 7.339 | 
 | 1 | 7.609 | 
-| 0 | 7.595 | 
+| 0 | N/A | 
 | 9 | 7.609 | 
 | 6 | 7.635 | 
 | 5 | 7.802 | 
