@@ -18,8 +18,6 @@ void NAME_SUB(name,_mem_write)(
     const unsigned ports_out                = NAME_SUB(MODULE_NAME,_PORTS_OUT);
     const unsigned streams_out              = NAME_SUB(MODULE_NAME,_STREAMS_OUT);
     const unsigned weights_reloading_factor = NAME_SUB(MODULE_NAME,_WEIGHTS_RELOADING_FACTOR);
-    //const unsigned weights_reloading_index  = NAME_SUB(MODULE_NAME,_WEIGHTS_RELOADING_INDEX );
-    //const unsigned channels_per_coarse      = DIVIDE(channels_out,coarse_out*weights_reloading_factor);
     const unsigned channels_per_stream      = DIVIDE(channels_out,streams_out);
     const unsigned dma_channels             = DIVIDE(DMA_WIDTH,DATA_WIDTH);
 

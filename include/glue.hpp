@@ -44,24 +44,12 @@ void NAME_SUB(name,_glue)(
 #if NAME_SUB(MODULE_NAME,_COARSE_IN) > 1
                 coarse_in_loop: for(unsigned int in_index=0; in_index<coarse_in; in_index++) {
                     
-                                    
                     acc_t prev = ( in_index == 0 ) ? acc_t(0) : acc[out_index] ;
-                    
                     acc[out_index] = prev + in[in_index][out_index].read() ;
                 
                     if( in_index == (coarse_in-1) ) {
                         out[out_index].write( acc[out_index] ) ;
                     }
-
-                    /*
-                    if( in_index == 0 ) {
-                        acc[out_index] = in[in_index][out_index].read();
-                    } else if ( in_index == (coarse_in-1) ) {
-		        out[out_index].write( data_t( acc[out_index] + in[in_index][out_index].read() ) );
-                    } else {
-                        acc[out_index] += in[in_index][out_index].read();
-                    }
-                    */
                 }
 #else
 		out[out_index].write( data_t( in[0][out_index].read() ) );

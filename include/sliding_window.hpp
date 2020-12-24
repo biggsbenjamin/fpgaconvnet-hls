@@ -21,7 +21,6 @@ void NAME_SUB(name,_sliding_window_line_shift)(
     const unsigned int col_stride   = NAME_SUB(MODULE_NAME,_STRIDE);
     const unsigned int kernel_size  = NAME_SUB(MODULE_NAME,_KERNEL_SIZE);
 
-    //DO_PRAGMA( HLS STREAM variable=in depth=pad_bottom*channels*cols+pad_left*channels+1 )
     #pragma HLS STREAM variable=in
     #pragma HLS STREAM variable=frame_buffer
     #pragma HLS ARRAY_PARTITION variable=frame_buffer complete dim=0
@@ -221,10 +220,4 @@ void NAME_SUB(name,_sliding_window)(
     NAME_SUB(name,_sliding_window_line_shift)<0>(in,frame_buffer );
     NAME_SUB(name,_sliding_window_out)<0>(frame_buffer,out );
  
-    /*
-    HLSLIB_DATAFLOW_INIT();
-    HLSLIB_DATAFLOW_FUNCTION( NAME_SUB(name,_sliding_window_line_shift),in,frame_buffer );
-    HLSLIB_DATAFLOW_FUNCTION( NAME_SUB(name,_sliding_window_out),frame_buffer,out );
-    HLSLIB_DATAFLOW_FINALIZE();
-    */
 }

@@ -33,7 +33,6 @@ void NAME_SUB(name,_conv_intr)(
     const unsigned int interval     = DIVIDE(kernel_size*kernel_size,fine);
  
 #pragma HLS STREAM variable=in 
-//#pragma HLS STREAM variable=weights off
 #pragma HLS STREAM variable=window_stream 
 #pragma HLS STREAM variable=weight_stream 
 
@@ -73,7 +72,7 @@ void NAME_SUB(name,_conv_intr)(
                     intr_k1_loop: for(unsigned char k1=0;k1<kernel_size;k1++) {
                         #pragma HLS PIPELINE II=1 rewind
                         if(filter_index == 0) {
-                            //DO_PRAGMA(HLS occurrence cycle=batch_size*rows*cols*channels)
+                            DO_PRAGMA(HLS occurrence cycle=batch_size*rows*cols*channels)
                             window_cache[k1][k2] = in[k1][k2].read();
                         }
                         window_stream.write(window_cache[k1][k2]);
@@ -85,7 +84,7 @@ void NAME_SUB(name,_conv_intr)(
                     #pragma HLS PIPELINE II=1 rewind
                     intr_k1_loop: for(unsigned char k1=0;k1<kernel_size;k1++) {
                         if(filter_index == 0) {
-                            //DO_PRAGMA(HLS occurrence cycle=batch_size*rows*cols*channels)
+                            DO_PRAGMA(HLS occurrence cycle=batch_size*rows*cols*channels)
                             window_cache[k1][k2] = in[k1][k2].read();
                         }   
                         window_stream[k1].write(window_cache[k1][k2]);
@@ -97,7 +96,7 @@ void NAME_SUB(name,_conv_intr)(
                 intr_k2_loop: for(unsigned char k2=0;k2<kernel_size;k2++) {
                     intr_k1_loop: for(unsigned char k1=0;k1<kernel_size;k1++) {
                         if(filter_index == 0) {
-                            //DO_PRAGMA(HLS occurrence cycle=batch_size*rows*cols*channels)
+                            DO_PRAGMA(HLS occurrence cycle=batch_size*rows*cols*channels)
                             window_cache[k1][k2] = in[k1][k2].read();
                         }
                         window_stream[k1][k2].write(window_cache[k1][k2]);
@@ -169,9 +168,6 @@ void NAME_SUB(name,_conv_mul)(
         mul_k2_loop: for(unsigned char k2=0;k2<kernel_size;k2++) {
             mul_k1_loop: for(unsigned char k1=0;k1<kernel_size;k1++) {
                 #pragma HLS PIPELINE II=1 rewind
-                //data_t  mul_pixel  = window_stream.read();
- 		//weight_t mul_weight = weight_stream.read();
- 		//acc_t mul_val = mul_pixel * mul_weight;
 
                 acc_t prev = ( (k1==0) && (k2==0) ) ? acc_t(0) : acc_cache ;
                 acc_cache = prev + window_stream.read() * weight_stream.read();
@@ -179,19 +175,6 @@ void NAME_SUB(name,_conv_mul)(
                 if( (k1==(kernel_size-1)) && (k2==(kernel_size-1)) ){
                     acc_stream.write( acc_cache ) ;
                 }
-
-                /*
-                if((k1==0) && (k2==0)) {
-		    acc_cache = mul_val;
-                }
-                else if ( (k1==(kernel_size-1)) && (k2==(kernel_size-1)) ) {
-                    DO_PRAGMA(HLS occurrence cycle=batch_size*rows*cols*channels*filters)
-		    acc_stream.write(acc_cache + mul_val);
-                }
-                else {
-		    acc_cache += mul_val;
-                }
-                */
             }
         }
 #elif NAME_SUB(MODULE_NAME,_FINE) == NAME_SUB(MODULE_NAME,_KERNEL_SIZE)
@@ -199,9 +182,6 @@ void NAME_SUB(name,_conv_mul)(
         mul_k2_loop: for(unsigned char k2=0;k2<kernel_size;k2++) {
             #pragma HLS PIPELINE II=1 rewind
             mul_k1_loop: for(unsigned char k1=0;k1<kernel_size;k1++) {
-                //data_t  mul_pixel  = window_stream[k1].read();
- 		//weight_t mul_weight = weight_stream[k1].read();
- 		//acc_t mul_val = mul_pixel * mul_weight;
 
                 acc_t prev = ( k2 == 0 ) ? acc_t(0) : acc_cache[k1] ;
                 acc_cache[k1] = prev + window_stream[k1].read() * weight_stream[k1].read();
@@ -209,22 +189,6 @@ void NAME_SUB(name,_conv_mul)(
                 if(k2==(kernel_size-1)){
                     acc_stream[k1].write( acc_cache[k1] ) ;
                 }
-
-                /*
-                if(k2 == 0) {
-		    //acc_cache[k1] = 0 + mul_pixel * mul_weight;
-		    acc_cache[k1] = 0 + mul_val;
-                }
-                else if(k2==(kernel_size-1)){
-                    DO_PRAGMA(HLS occurrence cycle=batch_size*rows*cols*channels*filters*kernel_size)
-		    //acc_stream[k1].write(acc_cache[k1] + mul_pixel * mul_weight);
-		    acc_stream[k1].write(acc_cache[k1] + mul_val);
-		}
-		else{
-		    //acc_cache[k1] += mul_pixel * mul_weight;
-		    acc_cache[k1] += mul_val;
-		}
-                */
             }
         }
 #elif NAME_SUB(MODULE_NAME,_FINE) == NAME_SUB(MODULE_NAME,_KERNEL_SIZE)*NAME_SUB(MODULE_NAME,_KERNEL_SIZE)
@@ -286,16 +250,12 @@ void NAME_SUB(name,_conv_acc)(
         acc_t acc = 0 ;
         acc_k1_loop: for(unsigned char k1=0;k1<kernel_size;k1++) {
             acc += acc_stream[k1].read();
-            //acc_t acc_tmp = acc_stream[k1].read();
-            //acc += acc_tmp;
         }
 #elif NAME_SUB(MODULE_NAME,_FINE) == NAME_SUB(MODULE_NAME,_KERNEL_SIZE)*NAME_SUB(MODULE_NAME,_KERNEL_SIZE)
         acc_t acc = 0 ;
         acc_k2_loop: for(unsigned char k2=0;k2<kernel_size;k2++) {
             acc_k1_loop: for(unsigned char k1=0;k1<kernel_size;k1++) {
                 acc += acc_stream[k1][k2].read();
-                //acc_t acc_tmp = acc_stream[k1][k2].read();
-                //acc += acc_tmp;
             }
         }
 #endif
@@ -358,14 +318,6 @@ void NAME_SUB(name,_conv)(
     NAME_SUB(name,_conv_mul)<0>(window_stream,weight_stream,acc_stream);
     NAME_SUB(name,_conv_acc)<0>(acc_stream,out);
     
-    /*
-    HLSLIB_DATAFLOW_INIT();
-    HLSLIB_DATAFLOW_FUNCTION( NAME_SUB(name,_conv_intr),in,weights,window_stream,weight_stream );
-    HLSLIB_DATAFLOW_FUNCTION( NAME_SUB(name,_conv_mul),window_stream,weight_stream,acc_stream );
-    HLSLIB_DATAFLOW_FUNCTION( NAME_SUB(name,_conv_acc),acc_stream,out );
-    HLSLIB_DATAFLOW_FINALIZE();
-    */
-
 }
 
 /**
@@ -387,7 +339,6 @@ void NAME_SUB(name,_conv_pw)(
     const unsigned channels     = NAME_SUB(MODULE_NAME,_CHANNELS);
     const unsigned filters      = NAME_SUB(MODULE_NAME,_FILTERS);
  
-//DO_PRAGMA( HLS STREAM variable=in depth=filters )
 #pragma HLS STREAM variable=in
 #pragma HLS STREAM variable=out
     
@@ -410,7 +361,7 @@ void NAME_SUB(name,_conv_pw)(
                 #pragma HLS PIPELINE II=1 rewind
                 #pragma HLS dependence variable=windowCache intra RAW true
                 if(filter_index == 0) {
-                    //DO_PRAGMA(HLS occurrence cycle=batch_size*rows*cols*channels)
+                    DO_PRAGMA(HLS occurrence cycle=batch_size*rows*cols*channels)
                     window_cache = in.read();
                 }
                 acc_t acc = window_cache * weights[weight_index];

@@ -1,8 +1,6 @@
 #ifndef COMMON_HPP_
 #define COMMON_HPP_
 
-//#include "/tools/Xilinx/Vivado/2019.1/include/gmp.h"
-//#include "/tools/Xilinx/Vivado/2019.1/include/mpfr.h"
 #include "system.hpp"
 #include <ap_fixed.h>
 #include "hls_stream.h"
