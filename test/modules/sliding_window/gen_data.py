@@ -29,9 +29,7 @@ class SlidingWindowTB(Data):
         )
         # load model coefficients
         sliding_window.load_coef(
-            os.path.join(os.getenv("FPGACONVNET_ROOT"),"data/model_coefficients/sliding_window_static_coef.npy"),
-            os.path.join(os.getenv("FPGACONVNET_ROOT"),"data/model_coefficients/sliding_window_dynamic_coef.npy"),
-            os.path.join(os.getenv("FPGACONVNET_ROOT"),"data/model_coefficients/sliding_window_rsc_coef.npy"),
+            os.path.join(os.getenv("FPGACONVNET_OPTIMISER"),"coefficients/sliding_window_rsc_coef.npy"),
         )
         # output dimensions
         self.param['rows_out'] = sliding_window.rows_out()

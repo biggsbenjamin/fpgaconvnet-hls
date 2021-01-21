@@ -25,9 +25,7 @@ class ForkTB(Data):
         )
         # load model coefficients
         fork.load_coef(
-            os.path.join(os.getenv("FPGACONVNET_ROOT"),"data/model_coefficients/fork_static_coef.npy"),
-            os.path.join(os.getenv("FPGACONVNET_ROOT"),"data/model_coefficients/fork_dynamic_coef.npy"),
-            os.path.join(os.getenv("FPGACONVNET_ROOT"),"data/model_coefficients/fork_rsc_coef.npy"),
+            os.path.join(os.getenv("FPGACONVNET_OPTIMISER"),"coefficients/fork_rsc_coef.npy"),
         )
         # data in
         data_in = self.gen_data([

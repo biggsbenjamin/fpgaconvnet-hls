@@ -39,10 +39,10 @@ if __name__ == "__main__":
             "clk_period" : "N/A", #module_test_log.get_clk_period()
         }
         # update latency
-        try:
-            results["latency"]["synth"] = module_test_log.get_synth_latency()
-        except AssertionError:
-            pass
+        #try:
+        #    results["latency"]["synth"] = module_test_log.get_synth_latency()
+        #except AssertionError:
+        #    pass
         try:
             results["latency"]["sim"]   = module_test_log.get_sim_latency()
         except AssertionError:

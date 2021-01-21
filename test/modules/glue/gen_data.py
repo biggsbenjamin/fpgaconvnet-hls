@@ -27,9 +27,7 @@ class GlueTB(Data):
         )
         # load model coefficients
         glue.load_coef(
-            os.path.join(os.getenv("FPGACONVNET_ROOT"),"data/model_coefficients/glue_static_coef.npy"),
-            os.path.join(os.getenv("FPGACONVNET_ROOT"),"data/model_coefficients/glue_dynamic_coef.npy"),
-            os.path.join(os.getenv("FPGACONVNET_ROOT"),"data/model_coefficients/glue_rsc_coef.npy"),
+            os.path.join(os.getenv("FPGACONVNET_OPTIMISER"),"coefficients/glue_rsc_coef.npy"),
         )
         # data in
         data_in = self.gen_data([

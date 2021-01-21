@@ -40,4 +40,6 @@ host/fpgaconvnet_bsp/ps7_cortexa9_0
 
 onnx/
 
+**REPORT.md
+
 include/system.hpp

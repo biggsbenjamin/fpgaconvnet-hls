@@ -28,9 +28,7 @@ class AccumTB(Data):
         )
         # load model coefficients
         accum.load_coef(
-            os.path.join(os.getenv("FPGACONVNET_ROOT"),"data/model_coefficients/accum_static_coef.npy"),
-            os.path.join(os.getenv("FPGACONVNET_ROOT"),"data/model_coefficients/accum_dynamic_coef.npy"),
-            os.path.join(os.getenv("FPGACONVNET_ROOT"),"data/model_coefficients/accum_rsc_coef.npy"),
+                os.path.join(os.getenv("FPGACONVNET_OPTIMISER"),"coefficients/accum_rsc_coef.npy"),
         )
         # data in
         data_in = self.gen_data([
