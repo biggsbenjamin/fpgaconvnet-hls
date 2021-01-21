@@ -11,7 +11,7 @@ The following programmes are needed:
 2. Anaconda
 3. yaml-cpp (version 0.5.3)
 
-Also, you will need to add the environmental variable `FPGACONVNET_ROOT` that points to the install directory of this repository. 
+Also, you will need to add the environmental variable `FPGACONVNET_HLS` that points to the install directory of this repository. 
 
 
 ### Vivado Setup

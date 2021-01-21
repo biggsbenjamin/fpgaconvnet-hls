@@ -10,17 +10,16 @@ import onnx
 from PIL import Image
 from google.protobuf import json_format
 
-sys.path.append(os.environ.get("FPGACONVNET_ROOT"))
+sys.path.append(os.environ.get("FPGACONVNET_OPTIMISER"))
+sys.path.append(os.environ.get("FPGACONVNET_HLS"))
 
 import proto.fpgaconvnet_pb2
 import tools.onnx_helper as onnx_helper
-import tools.third_party.prototxt
+#import tools.third_party.prototxt
 from tools.onnx_data import ONNXData
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Weights Formatting Script")
-    parser.add_argument('-n','--name',required=True,
-        help='Name of network')
     parser.add_argument('-p','--partition_path',metavar='PATH',required=True,
         help='Path to partition info (.pb.bin)')
     parser.add_argument('-m','--onnx_path',metavar='PATH',required=True,
@@ -46,14 +45,4 @@ if __name__ == "__main__":
             to_yaml=True,
             to_csv=True,
             to_bin=True )
-
-        ## save batch_norm coefficients ##
-        """
-        self.caffe_data.save_batch_norm(
-            self.partition_info[self.partition_index]['layer_info'],
-            'partition_{partition_index}/data'.format(partition_index=self.partition_index))
-        self.caffe_data.save_batch_norm_csv(
-            'partition_{partition_index}/data'.format(partition_index=self.partition_index),
-            self.partition_info[self.partition_index]['layer_info'])
-        """
 

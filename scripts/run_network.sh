@@ -94,10 +94,10 @@ for i in $( seq 1 ${NUM_PARTITIONS} ); do
     #fi
 
     # create hardware
-    #python $FPGACONVNET_ROOT/scripts/generate_hardware.py -n $NETWORK -m $MODEL_PATH -p $PARTITION_INFO_PATH -i $PARTITION_INDEX
+    python $FPGACONVNET_HLS/scripts/generate_hardware.py -n $NETWORK -m $MODEL_PATH -p $PARTITION_INFO_PATH -i $PARTITION_INDEX
 
-    # generate network script
-    python $FPGACONVNET_ROOT/scripts/gen_network.py $GEN_NETWORK_ARGS
+    # format weights
+    python $FPGACONVNET_HLS/scripts/format_weights.py -m $MODEL_PATH -p $PARTITION_INFO_PATH
 
     # run the network
     cd partition_${PARTITION_INDEX}

@@ -25,7 +25,7 @@ if __name__ == "__main__":
     parser.add_argument('-n','--name',required=True,
         help='Name of network')
     parser.add_argument('-p','--partition_path',metavar='PATH',required=True,
-        help='Path to partition info (.pb.bin)')
+        help='Path to partition info (.json)')
     parser.add_argument('-m','--onnx_path',metavar='PATH',required=True,
         help='Path to onnx model (.onnx)')
     parser.add_argument('-i','--partition_index',metavar='N',required=False, type=int,

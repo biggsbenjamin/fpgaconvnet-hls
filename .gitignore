@@ -43,3 +43,6 @@ onnx/
 **REPORT.md
 
 include/system.hpp
+
+examples/**/outputs/
+examples/**/partition_*/
