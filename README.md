@@ -1,4 +1,5 @@
-# FpgaConvNet 2
+# fpgaConvNet HLS
+
 This is CNN-to-FPGA mapping framework designed to find the optimal implementation of a CNN architecture on an FPGA for power, latency and throughput driven designs.
 
 ## Setup
@@ -11,8 +12,9 @@ The following programmes are needed:
 2. Anaconda
 3. yaml-cpp (version 0.5.3)
 
-Also, you will need to add the environmental variable `FPGACONVNET_HLS` that points to the install directory of this repository. 
+Also, you will need to add the environmental variable `FPGACONVNET_OPTIMISER` that points to the install directory of [fpgaconvnet-hls](https://github.com/AlexMontgomerie/fpgaconvnet-optimiser). 
 
+> You will need to use the same python environment as fpgaconvnet-hls also
 
 ### Vivado Setup
 
@@ -34,33 +36,16 @@ You will need to setup JTAG drivers to program a device. To do so, execute the f
 
 For more information, visit [here](https://www.xilinx.com/support/answers/59128.html).
 
-### Anaconda Setup
+Finally, there is a known [bug](http://svn.clifford.at/handicraft/2017/vivadobugs/vivadobug04.txt) to do with C++ libraries. A workaround for this is adding the `mpfr.h` and `gmp.h` headers manually. For this project, you need to create a header file `include/system.hpp` which includes the following:
 
-Miniconda is the recommended python environment manager to install. Download and setup instructions can be found [here](https://docs.conda.io/en/latest/miniconda.html).
+```C
+#ifndef SYSTEM_HPP_
+#define SYSTEM_HPP_
 
-After install conda, you will need to setup an fpgaconvnet environment. Run the following commands to do so:
+#include "(path to Vivado 2019.1)/include/gmp.h"
+#include "(path to Vivado 2019.1)/include/mpfr.h"
 
-```
-conda create -n fpgaconvnet python=3.6
-conda activate fpgaconvnet
-```
-
-Next you will need to install ONNX and it's dependencies. Currently this project is working with the latest version (1.8) only, so will need to create from source.
-
-```
-conda install -c conda-forge protobuf numpy
-git clone https://github.com/onnx/onnx.git
-cd onnx
-git submodule update --init --recursive
-python setup.py install
-cd ..
-```
-
-And next you will have to install the rest of the packages needed.
-
-```
-conda install -c anaconda caffe
-python -m pip install -r requirements.txt
+#endif
 ```
 
 ### yaml-cpp Setup
