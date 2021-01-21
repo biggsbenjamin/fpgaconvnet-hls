@@ -1,0 +1,160 @@
+{
+  "name": "lenet",
+  "date_created": "2021-01-21 11:12:36.431796",
+  "total_iterations": 0,
+  "platform": {
+    "name": "platform",
+    "freq": 125,
+    "reconf_time": 0.08255,
+    "wr_time": 0.0,
+    "ports": 2,
+    "port_width": 64,
+    "mem_capacity": 1024000000,
+    "constraints": {
+      "FF": 437200,
+      "LUT": 218600,
+      "DSP": 900,
+      "BRAM": 1090
+    }
+  },
+  "network": {
+    "memory_usage": 813056,
+    "performance": {
+      "latency": 0.05250204,
+      "throughput": 9752.002017445417
+    },
+    "num_partitions": 1,
+    "max_resource_usage": {
+      "BRAM": 711,
+      "DSP": 300
+    }
+  },
+  "partitions": {
+    "0": {
+      "partition_index": 0,
+      "batch_size": 512,
+      "num_layers": 12,
+      "latency": 0.05250204,
+      "weights_reloading_factor": 1,
+      "weights_reloading_layer": "ip2",
+      "resource_usage": {
+        "BRAM": 711,
+        "DSP": 300
+      },
+      "bandwidth": {
+        "in": 0,
+        "out": 0
+      },
+      "layers": {
+        "conv1": {
+          "type": "LAYER_TYPE.Convolution",
+          "interval": 2880.0000000000005,
+          "latency": 2880.0000000000005,
+          "resource_usage": {
+            "BRAM": 124,
+            "DSP": 100
+          }
+        },
+        "pool1": {
+          "type": "LAYER_TYPE.Pooling",
+          "interval": 5760.0,
+          "latency": 5760.0,
+          "resource_usage": {
+            "BRAM": 6,
+            "DSP": 0
+          }
+        },
+        "conv2": {
+          "type": "LAYER_TYPE.Convolution",
+          "interval": 12800.0,
+          "latency": 12800.0,
+          "resource_usage": {
+            "BRAM": 270,
+            "DSP": 125
+          }
+        },
+        "pool2": {
+          "type": "LAYER_TYPE.Pooling",
+          "interval": 1600.0,
+          "latency": 1600.0,
+          "resource_usage": {
+            "BRAM": 6,
+            "DSP": 0
+          }
+        },
+        "ip1_6relu1": {
+          "type": "LAYER_TYPE.InnerProduct",
+          "interval": 8000.0,
+          "latency": 8000.0,
+          "resource_usage": {
+            "BRAM": 275,
+            "DSP": 50
+          }
+        },
+        "ip1": {
+          "type": "LAYER_TYPE.ReLU",
+          "interval": 100.0,
+          "latency": 100.0,
+          "resource_usage": {
+            "BRAM": 0,
+            "DSP": 0
+          }
+        },
+        "ip2": {
+          "type": "LAYER_TYPE.InnerProduct",
+          "interval": 200.0,
+          "latency": 200.0,
+          "resource_usage": {
+            "BRAM": 30,
+            "DSP": 25
+          }
+        },
+        "conv1_squeeze_pool1": {
+          "type": "LAYER_TYPE.Squeeze",
+          "interval": 5760.0,
+          "latency": 5760.0,
+          "resource_usage": {
+            "BRAM": 0,
+            "DSP": 0
+          }
+        },
+        "pool1_squeeze_conv2": {
+          "type": "LAYER_TYPE.Squeeze",
+          "interval": 1440.0,
+          "latency": 1440.0,
+          "resource_usage": {
+            "BRAM": 0,
+            "DSP": 0
+          }
+        },
+        "conv2_squeeze_pool2": {
+          "type": "LAYER_TYPE.Squeeze",
+          "interval": 1600.0,
+          "latency": 1600.0,
+          "resource_usage": {
+            "BRAM": 0,
+            "DSP": 0
+          }
+        },
+        "pool2_squeeze_ip1_6relu1": {
+          "type": "LAYER_TYPE.Squeeze",
+          "interval": 400.0,
+          "latency": 400.0,
+          "resource_usage": {
+            "BRAM": 0,
+            "DSP": 0
+          }
+        },
+        "squeeze_ip2": {
+          "type": "LAYER_TYPE.Squeeze",
+          "interval": 10.0,
+          "latency": 10.0,
+          "resource_usage": {
+            "BRAM": 0,
+            "DSP": 0
+          }
+        }
+      }
+    }
+  }
+}

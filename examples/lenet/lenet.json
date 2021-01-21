@@ -1,0 +1,398 @@
+{
+  "partition": [
+    {
+      "id": 0,
+      "ports": 1,
+      "batch_size": 512,
+      "input_node": "data",
+      "output_node": "ip2",
+      "weights_reloading_factor": 1,
+      "weights_reloading_layer": "ip2",
+      "layers": [
+        {
+          "name": "conv1",
+          "streams_in": [
+            {
+              "name": "in",
+              "coarse": 1
+            }
+          ],
+          "streams_out": [
+            {
+              "name": "conv1_conv1_squeeze_pool1",
+              "coarse": 4
+            }
+          ],
+          "type": "CONVOLUTION",
+          "weights_path": "convolution_W",
+          "bias_path": "convolution_B",
+          "parameters": {
+            "rows_in": 28,
+            "cols_in": 28,
+            "channels_in": 1,
+            "rows_out": 24,
+            "cols_out": 24,
+            "channels_out": 20,
+            "coarse_in": 1,
+            "coarse_out": 4,
+            "filters": 20,
+            "pad": 0,
+            "pad_top": 0,
+            "pad_right": 0,
+            "pad_bottom": 0,
+            "pad_left": 0,
+            "stride": 1,
+            "groups": 1,
+            "kernel_size": 5,
+            "fine": 25,
+            "buffer_depth": 0,
+            "batch_size": 512
+          }
+        },
+        {
+          "name": "conv1_squeeze_pool1",
+          "streams_in": [
+            {
+              "name": "conv1_conv1_squeeze_pool1",
+              "coarse": 4
+            }
+          ],
+          "streams_out": [
+            {
+              "name": "conv1_squeeze_pool1_pool1",
+              "coarse": 2
+            }
+          ],
+          "type": "SQUEEZE",
+          "parameters": {
+            "rows_in": 24,
+            "cols_in": 24,
+            "channels_in": 20,
+            "rows_out": 24,
+            "cols_out": 24,
+            "channels_out": 20,
+            "coarse_in": 4,
+            "coarse_out": 2,
+            "buffer_depth": 0,
+            "batch_size": 512
+          }
+        },
+        {
+          "name": "pool1",
+          "streams_in": [
+            {
+              "name": "conv1_squeeze_pool1_pool1",
+              "coarse": 2
+            }
+          ],
+          "streams_out": [
+            {
+              "name": "pool1_pool1_squeeze_conv2",
+              "coarse": 2
+            }
+          ],
+          "type": "POOLING",
+          "parameters": {
+            "rows_in": 24,
+            "cols_in": 24,
+            "channels_in": 20,
+            "rows_out": 12,
+            "cols_out": 12,
+            "channels_out": 20,
+            "coarse_in": 2,
+            "coarse_out": 2,
+            "pad": 0,
+            "pad_top": 0,
+            "pad_right": 0,
+            "pad_bottom": 0,
+            "pad_left": 0,
+            "stride": 2,
+            "kernel_size": 2,
+            "buffer_depth": 0,
+            "batch_size": 512,
+            "coarse": 2
+          }
+        },
+        {
+          "name": "pool1_squeeze_conv2",
+          "streams_in": [
+            {
+              "name": "pool1_pool1_squeeze_conv2",
+              "coarse": 2
+            }
+          ],
+          "streams_out": [
+            {
+              "name": "pool1_squeeze_conv2_conv2",
+              "coarse": 5
+            }
+          ],
+          "type": "SQUEEZE",
+          "parameters": {
+            "rows_in": 12,
+            "cols_in": 12,
+            "channels_in": 20,
+            "rows_out": 12,
+            "cols_out": 12,
+            "channels_out": 20,
+            "coarse_in": 2,
+            "coarse_out": 5,
+            "buffer_depth": 0,
+            "batch_size": 512
+          }
+        },
+        {
+          "name": "conv2",
+          "streams_in": [
+            {
+              "name": "pool1_squeeze_conv2_conv2",
+              "coarse": 5
+            }
+          ],
+          "streams_out": [
+            {
+              "name": "conv2_conv2_squeeze_pool2",
+              "coarse": 25
+            }
+          ],
+          "type": "CONVOLUTION",
+          "weights_path": "convolution1_W",
+          "bias_path": "convolution1_B",
+          "parameters": {
+            "rows_in": 12,
+            "cols_in": 12,
+            "channels_in": 20,
+            "rows_out": 8,
+            "cols_out": 8,
+            "channels_out": 50,
+            "coarse_in": 5,
+            "coarse_out": 25,
+            "filters": 50,
+            "pad": 0,
+            "pad_top": 0,
+            "pad_right": 0,
+            "pad_bottom": 0,
+            "pad_left": 0,
+            "stride": 1,
+            "groups": 1,
+            "kernel_size": 5,
+            "fine": 1,
+            "buffer_depth": 0,
+            "batch_size": 512
+          }
+        },
+        {
+          "name": "conv2_squeeze_pool2",
+          "streams_in": [
+            {
+              "name": "conv2_conv2_squeeze_pool2",
+              "coarse": 25
+            }
+          ],
+          "streams_out": [
+            {
+              "name": "conv2_squeeze_pool2_pool2",
+              "coarse": 2
+            }
+          ],
+          "type": "SQUEEZE",
+          "parameters": {
+            "rows_in": 8,
+            "cols_in": 8,
+            "channels_in": 50,
+            "rows_out": 8,
+            "cols_out": 8,
+            "channels_out": 50,
+            "coarse_in": 25,
+            "coarse_out": 2,
+            "buffer_depth": 0,
+            "batch_size": 512
+          }
+        },
+        {
+          "name": "pool2",
+          "streams_in": [
+            {
+              "name": "conv2_squeeze_pool2_pool2",
+              "coarse": 2
+            }
+          ],
+          "streams_out": [
+            {
+              "name": "pool2_pool2_squeeze_ip1_6relu1",
+              "coarse": 2
+            }
+          ],
+          "type": "POOLING",
+          "parameters": {
+            "rows_in": 8,
+            "cols_in": 8,
+            "channels_in": 50,
+            "rows_out": 4,
+            "cols_out": 4,
+            "channels_out": 50,
+            "coarse_in": 2,
+            "coarse_out": 2,
+            "pad": 0,
+            "pad_top": 0,
+            "pad_right": 0,
+            "pad_bottom": 0,
+            "pad_left": 0,
+            "stride": 2,
+            "kernel_size": 2,
+            "buffer_depth": 0,
+            "batch_size": 512,
+            "coarse": 2
+          }
+        },
+        {
+          "name": "pool2_squeeze_ip1_6relu1",
+          "streams_in": [
+            {
+              "name": "pool2_pool2_squeeze_ip1_6relu1",
+              "coarse": 2
+            }
+          ],
+          "streams_out": [
+            {
+              "name": "pool2_squeeze_ip1_6relu1_ip1_6relu1",
+              "coarse": 10
+            }
+          ],
+          "type": "SQUEEZE",
+          "parameters": {
+            "rows_in": 4,
+            "cols_in": 4,
+            "channels_in": 50,
+            "rows_out": 4,
+            "cols_out": 4,
+            "channels_out": 50,
+            "coarse_in": 2,
+            "coarse_out": 10,
+            "buffer_depth": 0,
+            "batch_size": 512
+          }
+        },
+        {
+          "name": "ip1_6relu1",
+          "streams_in": [
+            {
+              "name": "pool2_squeeze_ip1_6relu1_ip1_6relu1",
+              "coarse": 10
+            }
+          ],
+          "streams_out": [
+            {
+              "name": "ip1_6relu1_ip1",
+              "coarse": 5
+            }
+          ],
+          "type": "INNER_PRODUCT",
+          "weights_path": "innerProduct_B",
+          "bias_path": "innerProduct_C",
+          "parameters": {
+            "rows_in": 4,
+            "cols_in": 4,
+            "channels_in": 50,
+            "rows_out": 1,
+            "cols_out": 1,
+            "channels_out": 500,
+            "coarse_in": 10,
+            "coarse_out": 5,
+            "filters": 500,
+            "buffer_depth": 0,
+            "batch_size": 512
+          }
+        },
+        {
+          "name": "ip1",
+          "streams_in": [
+            {
+              "name": "ip1_6relu1_ip1",
+              "coarse": 5
+            }
+          ],
+          "streams_out": [
+            {
+              "name": "ip1_ip2",
+              "coarse": 5
+            }
+          ],
+          "type": "RELU",
+          "parameters": {
+            "rows_in": 1,
+            "cols_in": 1,
+            "channels_in": 500,
+            "rows_out": 1,
+            "cols_out": 1,
+            "channels_out": 500,
+            "coarse_in": 5,
+            "coarse_out": 5,
+            "buffer_depth": 0,
+            "batch_size": 512,
+            "coarse": 5
+          }
+        },
+        {
+          "name": "ip2",
+          "streams_in": [
+            {
+              "name": "ip1_ip2",
+              "coarse": 5
+            }
+          ],
+          "streams_out": [
+            {
+              "name": "ip2_squeeze_ip2",
+              "coarse": 5
+            }
+          ],
+          "type": "INNER_PRODUCT",
+          "weights_path": "innerProduct1_B",
+          "bias_path": "innerProduct1_C",
+          "parameters": {
+            "rows_in": 1,
+            "cols_in": 1,
+            "channels_in": 500,
+            "rows_out": 1,
+            "cols_out": 1,
+            "channels_out": 10,
+            "coarse_in": 5,
+            "coarse_out": 5,
+            "filters": 10,
+            "buffer_depth": 0,
+            "batch_size": 512
+          }
+        },
+        {
+          "name": "squeeze_ip2",
+          "streams_in": [
+            {
+              "name": "ip2_squeeze_ip2",
+              "coarse": 5
+            }
+          ],
+          "streams_out": [
+            {
+              "name": "out",
+              "coarse": 1
+            }
+          ],
+          "type": "SQUEEZE",
+          "parameters": {
+            "rows_in": 1,
+            "cols_in": 1,
+            "channels_in": 10,
+            "rows_out": 1,
+            "cols_out": 1,
+            "channels_out": 10,
+            "coarse_in": 5,
+            "coarse_out": 1,
+            "buffer_depth": 0,
+            "batch_size": 512
+          }
+        }
+      ]
+    }
+  ]
+}
