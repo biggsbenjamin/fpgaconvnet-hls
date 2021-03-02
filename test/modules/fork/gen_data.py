@@ -4,7 +4,7 @@ import sys
 sys.path.append('..')
 sys.path.append(os.environ.get("FPGACONVNET_OPTIMISER"))
 
-from models.modules.Fork import Fork
+from fpgaconvnet_optimiser.models.modules.Fork import Fork
 from Data import Data
 
 class ForkTB(Data):
@@ -25,7 +25,7 @@ class ForkTB(Data):
         )
         # load model coefficients
         fork.load_coef(
-            os.path.join(os.getenv("FPGACONVNET_OPTIMISER"),"coefficients/fork_rsc_coef.npy"),
+            os.path.join(os.getenv("FPGACONVNET_OPTIMISER"),"fpgaconvnet_optimiser/coefficients/fork_rsc_coef.npy"),
         )
         # data in
         data_in = self.gen_data([
