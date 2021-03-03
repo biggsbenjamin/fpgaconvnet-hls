@@ -1,8 +1,4 @@
 #include "accum_tb.hpp"
-
-#define MODULE_NAME ACCUM
-#define name        test
-
 #include "accum.hpp"
 
 void accum_top(
@@ -17,9 +13,13 @@ void accum_top(
     #pragma HLS DATAFLOW
     
     // DUT
-    test_accum<0>(in,out);
+    accum<
+        ACCUM_BATCH_SIZE,  
+        ACCUM_ROWS,  
+        ACCUM_COLS,  
+        ACCUM_CHANNELS,  
+        ACCUM_FILTERS,  
+        ACCUM_GROUPS 
+    >(in,out);
 
 }
-
-#undef MODULE_NAME
-#undef name

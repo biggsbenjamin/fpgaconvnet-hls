@@ -2,9 +2,8 @@ import os
 import sys
 
 sys.path.append('..')
-sys.path.append(os.environ.get("FPGACONVNET_OPTIMISER"))
 
-from models.modules.SlidingWindow import SlidingWindow
+from fpgaconvnet_optimiser.models.modules.SlidingWindow import SlidingWindow
 from Data import Data
 
 class SlidingWindowTB(Data):
@@ -29,7 +28,7 @@ class SlidingWindowTB(Data):
         )
         # load model coefficients
         sliding_window.load_coef(
-            os.path.join(os.getenv("FPGACONVNET_OPTIMISER"),"coefficients/sliding_window_rsc_coef.npy"),
+            os.path.join(os.getenv("FPGACONVNET_OPTIMISER"),"fpgaconvnet_optimiser/coefficients/sliding_window_rsc_coef.npy"),
         )
         # output dimensions
         self.param['rows_out'] = sliding_window.rows_out()

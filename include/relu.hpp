@@ -7,7 +7,7 @@ template<
     unsigned int BATCH_SIZE,
     unsigned int ROWS,
     unsigned int COLS,
-    unsigned int CHANNELS,
+    unsigned int CHANNELS
 >
 void relu(
     stream_t(data_t)  &in,

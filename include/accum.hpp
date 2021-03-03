@@ -6,7 +6,7 @@ template<
     unsigned int COLS,
     unsigned int CHANNELS,
     unsigned int FILTERS,
-    unsigned int GROUPS,
+    unsigned int GROUPS
 >
 void accum(
     stream_t(acc_t) &in,
@@ -37,7 +37,6 @@ void accum(
     stream_pixel_loop: for(unsigned long pixel_index=0;pixel_index<batch_size*rows*cols;pixel_index++) {
         stream_group_loop: for(unsigned int group_index=0;group_index<groups;group_index++) {
             stream_channel_loop: for(unsigned int channel_index=0;channel_index<channels_per_group;channel_index++) {
-                #pragma HLS loop_flatten
                 while( out.full() ) {}; 
                 stream_filter_loop: for(unsigned int filter_index=0;filter_index<filters_per_group;filter_index++) {
                     #pragma HLS PIPELINE II=1 rewind 

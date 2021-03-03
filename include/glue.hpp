@@ -22,10 +22,10 @@ void glue(
     const unsigned int batch_size   = BATCH_SIZE;
     const unsigned int rows         = ROWS;
     const unsigned int cols         = COLS;
-    const unsigned int channels     = FILTERS;
+    const unsigned int filters      = FILTERS;
     const unsigned int coarse_in    = COARSE_IN;
     const unsigned int coarse_out   = COARSE_OUT;
-    const unsigned int filters_per_coarse   = DIVIDE(fiters,coarse_out);
+    const unsigned int filters_per_coarse   = DIVIDE(filters,coarse_out);
 
 #pragma HLS STREAM variable=in
 #pragma HLS STREAM variable=out

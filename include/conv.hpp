@@ -175,10 +175,18 @@ void conv_acc(
     }
 }
 
-template<int _>
-void NAME_SUB(name,_conv)(
-    stream_t(data_t) in[NAME_SUB(MODULE_NAME,_KERNEL_SIZE)][NAME_SUB(MODULE_NAME,_KERNEL_SIZE)],
-    const weight_t weights[NAME_SUB(MODULE_NAME,_CHANNELS)*NAME_SUB(MODULE_NAME,_FILTERS)][NAME_SUB(MODULE_NAME,_KERNEL_SIZE)][NAME_SUB(MODULE_NAME,_KERNEL_SIZE)],
+template<
+    unsigned int BATCH_SIZE,
+    unsigned int ROWS,
+    unsigned int COLS,
+    unsigned int CHANNELS,
+    unsigned int FILTERS,
+    unsigned int FINE,
+    unsigned int KERNEL_SIZE
+>
+void conv(
+    stream_t(data_t) in[KERNEL_SIZE][KERNEL_SIZE],
+    const weight_t weights[CHANNELS*FILTERS][KERNEL_SIZE][KERNEL_SIZE],
     stream_t(acc_t) &out
 )
 {
@@ -188,19 +196,14 @@ void NAME_SUB(name,_conv)(
 
 //#pragma HLS stable variable=weights
 
-    const unsigned int batch_size   = NAME_SUB(MODULE_NAME,_BATCH_SIZE);
-    const unsigned int rows         = NAME_SUB(MODULE_NAME,_ROWS);
-    const unsigned int cols         = NAME_SUB(MODULE_NAME,_COLS);
-    const unsigned int channels     = NAME_SUB(MODULE_NAME,_CHANNELS);
-    const unsigned int filters      = NAME_SUB(MODULE_NAME,_FILTERS);
-    const unsigned int kernel_size  = NAME_SUB(MODULE_NAME,_KERNEL_SIZE);
-    const unsigned int fine         = NAME_SUB(MODULE_NAME,_FINE);
  
 #pragma HLS STREAM variable=in
 #pragma HLS STREAM variable=out
 
 #pragma HLS ARRAY_PARTITION variable=in complete dim=0
 
+    const unsigned int fine = FINE;
+    
     stream_t(data_t)  window_stream[fine];
     stream_t(weight_t) weight_stream[fine];
     stream_t(acc_t) acc_stream[fine];
@@ -210,83 +213,72 @@ void NAME_SUB(name,_conv)(
     #pragma HLS STREAM variable=acc_stream    
 
     conv_intr<
-        batch_size,
-        rows,
-        cols,
-        channels,
-        filters,
-        fine,
-        kernel_size
+        BATCH_SIZE,
+        ROWS,
+        COLS,
+        CHANNELS,
+        FILTERS,
+        FINE,
+        KERNEL_SIZE
     >(in,weights,window_stream,weight_stream);
 
     conv_mul<
-        batch_size,
-        rows,
-        cols,
-        channels,
-        filters,
-        fine,
-        kernel_size
+        BATCH_SIZE,
+        ROWS,
+        COLS,
+        CHANNELS,
+        FILTERS,
+        FINE,
+        KERNEL_SIZE
     >(window_stream,weight_stream,acc_stream);
 
     conv_acc<
-        batch_size,
-        rows,
-        cols,
-        channels,
-        filters,
-        fine,
-        kernel_size
+        BATCH_SIZE,
+        ROWS,
+        COLS,
+        CHANNELS,
+        FILTERS,
+        FINE,
+        KERNEL_SIZE
     >(acc_stream,out);
-
-/*
-
-
-    NAME_SUB(name,_conv_intr)<0>(in,weights,window_stream,weight_stream);
-    NAME_SUB(name,_conv_mul)<0>(window_stream,weight_stream,acc_stream);
-    NAME_SUB(name,_conv_acc)<0>(acc_stream,out);
-*/
 
 }
 
 /**
  *  POINTWISE CONVOLUTION FUNCTION
  */
-template<int _>
-void NAME_SUB(name,_conv_pw)(
+template<
+    unsigned int BATCH_SIZE,
+    unsigned int ROWS,
+    unsigned int COLS,
+    unsigned int CHANNELS,
+    unsigned int FILTERS
+>
+void conv(
     stream_t(data_t) &in,
-    const weight_t weights[NAME_SUB(MODULE_NAME,_CHANNELS)*NAME_SUB(MODULE_NAME,_FILTERS)],
+    const weight_t weights[CHANNELS*FILTERS],
     stream_t(acc_t) &out
 )
 {
 
 #pragma HLS INLINE OFF
 
-    const unsigned batch_size   = NAME_SUB(MODULE_NAME,_BATCH_SIZE);
-    const unsigned rows         = NAME_SUB(MODULE_NAME,_ROWS);
-    const unsigned cols         = NAME_SUB(MODULE_NAME,_COLS);
-    const unsigned channels     = NAME_SUB(MODULE_NAME,_CHANNELS);
-    const unsigned filters      = NAME_SUB(MODULE_NAME,_FILTERS);
+    const unsigned batch_size   = BATCH_SIZE;
+    const unsigned rows         = ROWS;
+    const unsigned cols         = COLS;
+    const unsigned channels     = CHANNELS;
+    const unsigned filters      = FILTERS;
  
 #pragma HLS STREAM variable=in
 #pragma HLS STREAM variable=out
     
     data_t window_cache;
     
-#if (NAME_SUB(MODULE_NAME,_BATCH_SIZE) > 1) || (NAME_SUB(MODULE_NAME,_ROWS) > 1) || (NAME_SUB(MODULE_NAME,_COLS) > 1)  
     pixel_loop: for(unsigned int pixel_index=0;pixel_index<batch_size*rows*cols;pixel_index++) {
-#endif
         unsigned int weight_index = 0;
-#if NAME_SUB(MODULE_NAME,_CHANNELS) != 1
         channel_loop: for(unsigned int channel_index=0;channel_index<channels;channel_index++) {
-#else
-        unsigned int channel_index=0;
-#endif
-#if NAME_SUB(MODULE_NAME,_FILTERS) != 1
             filter_loop: for(unsigned int filter_index=0;filter_index<filters;filter_index++) {
-#else
-            unsigned int filter_index=0;
-#endif
+                #pragma HLS loop_flatten
                 #pragma HLS PIPELINE II=1 rewind
                 #pragma HLS dependence variable=windowCache intra RAW true
                 if(filter_index == 0) {
@@ -296,14 +288,8 @@ void NAME_SUB(name,_conv_pw)(
                 acc_t acc = window_cache * weights[weight_index];
                 weight_index++;
                 out.write(acc);
-#if NAME_SUB(MODULE_NAME,_FILTERS) != 1
             }
-#endif
-#if NAME_SUB(MODULE_NAME,_CHANNELS) != 1
         }
-#endif
-#if (NAME_SUB(MODULE_NAME,_BATCH_SIZE) > 1) || (NAME_SUB(MODULE_NAME,_ROWS) > 1) || (NAME_SUB(MODULE_NAME,_COLS) > 1) 
     }
-#endif
 }
 

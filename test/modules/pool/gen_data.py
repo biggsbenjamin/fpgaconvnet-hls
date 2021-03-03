@@ -2,9 +2,8 @@ import os
 import sys
 
 sys.path.append('..')
-sys.path.append(os.environ.get("FPGACONVNET_OPTIMISER"))
 
-from models.modules.Pool import Pool
+from fpgaconvnet_optimiser.models.modules.Pool import Pool
 from Data import Data
 
 class PoolTB(Data):
@@ -29,7 +28,7 @@ class PoolTB(Data):
         )
         # load model coefficients
         pool.load_coef(
-            os.path.join(os.getenv("FPGACONVNET_OPTIMISER"),"coefficients/pool_rsc_coef.npy"),
+            os.path.join(os.getenv("FPGACONVNET_OPTIMISER"),"fpgaconvnet_optimiser/coefficients/pool_rsc_coef.npy"),
         )
         # data in
         data_in = self.gen_data([

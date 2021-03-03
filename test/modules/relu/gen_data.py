@@ -2,9 +2,8 @@ import os
 import sys
 
 sys.path.append('..')
-sys.path.append(os.environ.get("FPGACONVNET_OPTIMISER"))
 
-from models.modules.ReLU import ReLU
+from fpgaconvnet_optimiser.models.modules.ReLU import ReLU
 from Data import Data
 
 class ReLUTB(Data):
@@ -23,7 +22,7 @@ class ReLUTB(Data):
         )
         # load model coefficients
         relu.load_coef(
-            os.path.join(os.getenv("FPGACONVNET_OPTIMISER"),"coefficients/relu_rsc_coef.npy"),
+            os.path.join(os.getenv("FPGACONVNET_OPTIMISER"),"fpgaconvnet_optimiser/coefficients/relu_rsc_coef.npy"),
         )
         # data in
         data_in = self.gen_data([
