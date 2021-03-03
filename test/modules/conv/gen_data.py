@@ -2,9 +2,8 @@ import os
 import sys
 
 sys.path.append('..')
-sys.path.append(os.environ.get("FPGACONVNET_OPTIMISER"))
 
-from models.modules.Conv import Conv
+from fpgaconvnet_optimiser.models.modules.Conv import Conv
 from Data import Data
 
 class ConvTB(Data):
@@ -28,7 +27,7 @@ class ConvTB(Data):
         )
         # load model coefficients
         conv.load_coef(
-            os.path.join(os.getenv("FPGACONVNET_OPTIMISER"),"coefficients/conv_rsc_coef.npy"),
+            os.path.join(os.getenv("FPGACONVNET_OPTIMISER"),"fpgaconvnet_optimiser/coefficients/conv_rsc_coef.npy"),
         )
         # data in
         data_in = self.gen_data([
