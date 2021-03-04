@@ -24,7 +24,7 @@ void convolution_layer_top(
 
 #pragma HLS ARRAY_PARTITION variable=weights complete dim=1
 #pragma HLS ARRAY_PARTITION variable=weights complete dim=2
-#pragma HLS RESOURCE variable=weights core=RAM_1P_BRAM
+#pragma HLS RESOURCE variable=weights core=RAM_2P_BRAM
 
     convolution_layer(weights,in,out,mode);
 

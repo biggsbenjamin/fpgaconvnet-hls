@@ -3,20 +3,26 @@
 /**
   * POOL 
   */
-template<int _>
-void NAME_SUB(name,_pool)(
-    stream_t(data_t)  in[NAME_SUB(MODULE_NAME,_KERNEL_SIZE)][NAME_SUB(MODULE_NAME,_KERNEL_SIZE)],
+template<
+    unsigned int BATCH_SIZE,
+    unsigned int ROWS,
+    unsigned int COLS,
+    unsigned int CHANNELS,
+    unsigned int KERNEL_SIZE
+>
+void pool(
+    stream_t(data_t)  in[KERNEL_SIZE][KERNEL_SIZE],
     stream_t(data_t) &out
 )
 {
 
 #pragma HLS INLINE OFF 
 
-    const unsigned int batch_size   = NAME_SUB(MODULE_NAME,_BATCH_SIZE);
-    const unsigned int rows         = NAME_SUB(MODULE_NAME,_ROWS);
-    const unsigned int cols         = NAME_SUB(MODULE_NAME,_COLS);
-    const unsigned int channels     = NAME_SUB(MODULE_NAME,_CHANNELS);
-    const unsigned int kernel_size  = NAME_SUB(MODULE_NAME,_KERNEL_SIZE);
+    const unsigned int batch_size   = BATCH_SIZE;
+    const unsigned int rows         = ROWS;
+    const unsigned int cols         = COLS;
+    const unsigned int channels     = CHANNELS;
+    const unsigned int kernel_size  = KERNEL_SIZE;
  
 #pragma HLS STREAM variable=in
 #pragma HLS STREAM variable=out

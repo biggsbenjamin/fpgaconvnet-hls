@@ -1,7 +1,5 @@
 #include "fork_tb.hpp"
 
-#define MODULE_NAME FORK
-#define name        test
 #include "fork.hpp"
 
 void fork_top(
@@ -16,9 +14,23 @@ void fork_top(
 {
 
     #pragma HLS DATAFLOW
-    test_fork<0>(in,out);
+#if FORK_KERNEL_SIZE == 1
+    fork<
+        FORK_BATCH_SIZE,
+        FORK_ROWS,
+        FORK_COLS,
+        FORK_CHANNELS,
+        FORK_COARSE
+    >(in,out);
+#else
+    fork<
+        FORK_BATCH_SIZE,
+        FORK_ROWS,
+        FORK_COLS,
+        FORK_CHANNELS,
+        FORK_COARSE,
+        FORK_KERNEL_SIZE
+    >(in,out);
+#endif
 
 }
-
-#undef MODULE_NAME
-#undef name

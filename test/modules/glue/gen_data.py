@@ -2,9 +2,8 @@ import os
 import sys
 
 sys.path.append('..')
-sys.path.append(os.environ.get("FPGACONVNET_OPTIMISER"))
 
-from models.modules.Glue import Glue
+from fpgaconvnet_optimiser.models.modules.Glue import Glue
 from Data import Data
 
 class GlueTB(Data):
@@ -24,10 +23,6 @@ class GlueTB(Data):
             self.param['filters'],
             self.param['coarse_in'],
             self.param['coarse_out']
-        )
-        # load model coefficients
-        glue.load_coef(
-            os.path.join(os.getenv("FPGACONVNET_OPTIMISER"),"coefficients/glue_rsc_coef.npy"),
         )
         # data in
         data_in = self.gen_data([

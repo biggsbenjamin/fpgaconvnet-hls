@@ -5,10 +5,9 @@ import csv
 import copy 
 
 sys.path.append('..')
-sys.path.append(os.environ.get("FPGACONVNET_OPTIMISER"))
 sys.path.append(os.environ.get("FPGACONVNET_HLS"))
 
-from models.layers.PoolingLayer import PoolingLayer
+from fpgaconvnet_optimiser.models.layers.PoolingLayer import PoolingLayer
 import generate.layers.pooling
 from Layer import Layer
 

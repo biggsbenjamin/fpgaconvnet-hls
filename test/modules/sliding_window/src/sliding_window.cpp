@@ -1,8 +1,4 @@
 #include "sliding_window_tb.hpp"
-
-#define MODULE_NAME SLIDING_WINDOW
-#define name        test
-
 #include "sliding_window.hpp"
 
 void sliding_window_top(
@@ -10,17 +6,21 @@ void sliding_window_top(
     stream_t(data_t) out[SLIDING_WINDOW_KERNEL_SIZE][SLIDING_WINDOW_KERNEL_SIZE]
 )
 {
-
-    #pragma HLS INTERFACE axis port=in
-    #pragma HLS INTERFACE axis port=out
-
     #pragma HLS ARRAY_PARTITION variable=out complete dim=0
-
     #pragma HLS DATAFLOW
 
-    test_sliding_window<0>(in,out);
+    sliding_window<
+        SLIDING_WINDOW_BATCH_SIZE,
+        SLIDING_WINDOW_ROWS,
+        SLIDING_WINDOW_COLS,
+        SLIDING_WINDOW_CHANNELS,
+        SLIDING_WINDOW_PAD_TOP,
+        SLIDING_WINDOW_PAD_RIGHT,
+        SLIDING_WINDOW_PAD_BOTTOM,
+        SLIDING_WINDOW_PAD_LEFT,
+        SLIDING_WINDOW_STRIDE,
+        SLIDING_WINDOW_STRIDE,
+        SLIDING_WINDOW_KERNEL_SIZE
+    >(in,out);
 
 }
-
-#undef MODULE_NAME
-#undef name

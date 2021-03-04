@@ -1,8 +1,4 @@
 #include "relu_tb.hpp"
-
-#define MODULE_NAME RELU
-#define name        test
-
 #include "relu.hpp"
 
 void relu_top(
@@ -11,15 +7,14 @@ void relu_top(
 )
 {
 
-#pragma HLS INTERFACE axis port=in
-#pragma HLS INTERFACE axis port=out
-
 #pragma HLS DATAFLOW
 
     // DUT
-    test_relu<0>(in,out);
+    relu<
+        RELU_BATCH_SIZE,
+        RELU_ROWS,
+        RELU_COLS,
+        RELU_CHANNELS
+    >(in,out);
 
 }
-
-#undef MODULE_NAME
-#undef name

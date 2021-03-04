@@ -1,14 +1,17 @@
 pool_template="""
-{indent}{name}_pool<0>({input},{output});
-
+{indent}pool<
+{indent}    {NAME}_BATCH_SIZE,
+{indent}    {NAME}_ROWS,
+{indent}    {NAME}_COLS,
+{indent}    {NAME}_CHANNELS,
+{indent}    {NAME}_KERNEL_SIZE
+{indent}>({input_stream},{output_stream});
 """
 
-def gen_pool_module(name,param,input,output,indent=0):
+def gen_pool_module(name,input_stream,output_stream,indent=0):
     return pool_template.format(
-        name        =name,
-        input_t     =param['input_t'],
-        output_t    =param['output_t'],
-        input       =input,
-        output      =output,
-        indent      =" "*indent
+        NAME            =name.upper(),
+        input_stream    =input_stream,
+        output_stream   =output_stream,
+        indent          =" "*indent
     )

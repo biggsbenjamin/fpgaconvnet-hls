@@ -2,9 +2,8 @@ import os
 import sys
 
 sys.path.append('..')
-sys.path.append(os.environ.get("FPGACONVNET_OPTIMISER"))
 
-from models.modules.Accum import Accum
+from fpgaconvnet_optimiser.models.modules.Accum import Accum
 from Data import Data
 
 class AccumTB(Data):
@@ -25,10 +24,6 @@ class AccumTB(Data):
             ],
             self.param['filters'],
             self.param['groups']
-        )
-        # load model coefficients
-        accum.load_coef(
-                os.path.join(os.getenv("FPGACONVNET_OPTIMISER"),"coefficients/accum_rsc_coef.npy"),
         )
         # data in
         data_in = self.gen_data([

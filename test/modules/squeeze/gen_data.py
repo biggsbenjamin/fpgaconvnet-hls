@@ -2,9 +2,8 @@ import os
 import sys
 
 sys.path.append('..')
-sys.path.append(os.environ.get("FPGACONVNET_OPTIMISER"))
 
-from models.modules.Squeeze import Squeeze
+from fpgaconvnet_optimiser.models.modules.Squeeze import Squeeze
 from Data import Data
 
 class SqueezeTB(Data):
@@ -22,10 +21,6 @@ class SqueezeTB(Data):
             ],
             self.param['coarse_out'],
             self.param['coarse_in']
-        )
-        # load model coefficients
-        squeeze.load_coef(
-            os.path.join(os.getenv("FPGACONVNET_OPTIMISER"),"coefficients/squeeze_rsc_coef.npy"),
         )
         # data in
         data_in = self.gen_data([

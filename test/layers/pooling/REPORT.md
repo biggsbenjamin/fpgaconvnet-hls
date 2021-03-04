@@ -1,5 +1,5 @@
 
-# POOLING Report
+# pooling report
 
 ## Baseline Tests
 
@@ -7,12 +7,10 @@
 |:----:|:----:|:-----:|:---:|:----:|
 
 
-
 ## Latency Results
 
 | TEST | MODEL | SYNTH | SIM |
 |:----:|:-----:|:-----:|:---:|
-
 
 
 ## Resource Results
@@ -25,9 +23,4 @@
 
 | TEST | CLK |
 |:----:|:---:|
-
-
-## Warnings
-
-
 
