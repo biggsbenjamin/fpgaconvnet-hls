@@ -39,18 +39,18 @@ void glue(
     pixel_loop: for(unsigned long pixel_index=0;pixel_index<batch_size*rows*cols;pixel_index++) {
         filter_loop: for(unsigned int filter_index=0;filter_index<filters_per_coarse;filter_index++) {
             #pragma HLS loop_flatten
-            #pragma HLS PIPELINE II=1 rewind
+            #pragma HLS pipeline II=1 rewind
+            #pragma HLS unroll region
             coarse_out_loop: for(unsigned int out_index=0; out_index<coarse_out; out_index++) {
                 coarse_in_loop: for(unsigned int in_index=0; in_index<coarse_in; in_index++) {
-                    
+                    // update accumulation cache
                     acc_t prev = ( in_index == 0 ) ? acc_t(0) : acc[out_index] ;
                     acc[out_index] = prev + in[in_index][out_index].read() ;
-                
+                    // write to output stream 
                     if( in_index == (coarse_in-1) ) {
-                        out[out_index].write( acc[out_index] ) ;
+                        out[out_index].write( data_t(acc[out_index]) ) ;
                     }
                 }
-		out[out_index].write( data_t( in[0][out_index].read() ) );
             }
 	}
     }

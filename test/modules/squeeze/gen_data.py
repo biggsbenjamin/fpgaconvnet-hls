@@ -22,10 +22,6 @@ class SqueezeTB(Data):
             self.param['coarse_out'],
             self.param['coarse_in']
         )
-        # load model coefficients
-        squeeze.load_coef(
-            os.path.join(os.getenv("FPGACONVNET_OPTIMISER"),"fpgaconvnet_optimiser/coefficients/squeeze_rsc_coef.npy"),
-        )
         # data in
         data_in = self.gen_data([
             self.param['rows'],

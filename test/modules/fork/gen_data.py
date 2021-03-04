@@ -23,10 +23,6 @@ class ForkTB(Data):
             self.param['kernel_size'],
             self.param['coarse']
         )
-        # load model coefficients
-        fork.load_coef(
-            os.path.join(os.getenv("FPGACONVNET_OPTIMISER"),"fpgaconvnet_optimiser/coefficients/fork_rsc_coef.npy"),
-        )
         # data in
         data_in = self.gen_data([
             self.param['rows'],

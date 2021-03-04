@@ -39,7 +39,7 @@ done
 shift $((OPTIND -1))
 
 # move into network folder
-cd $NETWORK
+#cd $NETWORK
 
 # create outputs folder
 mkdir -p outputs

@@ -26,10 +26,6 @@ class SlidingWindowTB(Data):
             self.param['pad_bottom'],
             self.param['pad_left']
         )
-        # load model coefficients
-        sliding_window.load_coef(
-            os.path.join(os.getenv("FPGACONVNET_OPTIMISER"),"fpgaconvnet_optimiser/coefficients/sliding_window_rsc_coef.npy"),
-        )
         # output dimensions
         self.param['rows_out'] = sliding_window.rows_out()
         self.param['cols_out'] = sliding_window.cols_out()

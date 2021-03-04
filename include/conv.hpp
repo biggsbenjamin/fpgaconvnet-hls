@@ -120,7 +120,8 @@ void conv_mul(
     mul_pixel_loop: for(unsigned int pixel_index=0;pixel_index<batch_size*rows*cols*channels*filters;pixel_index++) {
         acc_t acc_cache[fine];
         acc_loop: for(unsigned char acc_index=0;acc_index<interval;acc_index++) {
-            #pragma HLS PIPELINE II=1 rewind
+            #pragma HLS pipeline II=1 rewind
+            #pragma HLS unroll region
             mul_loop: for(unsigned char fine_index=0;fine_index<fine;fine_index++) {
                 // update accumulation cache
                 acc_t prev = ( acc_index == 0 ) ? acc_t(0) : acc_cache[fine_index] ;
@@ -166,7 +167,8 @@ void conv_acc(
     
     // ACCUMULATION LOOP
     acc_pixel_loop: for(unsigned int pixel_index=0;pixel_index<batch_size*rows*cols*channels*filters;pixel_index++) {
-        #pragma HLS PIPELINE II=1 rewind
+        #pragma HLS pipeline II=1 rewind
+        #pragma HLS unroll region 
         acc_t acc = 0 ;
         acc_fine_loop: for(unsigned char fine_index=0;fine_index<fine;fine_index++) {
             acc += acc_stream[fine_index].read();

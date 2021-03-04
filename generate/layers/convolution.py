@@ -89,7 +89,6 @@ convolution_layer_template_header = """#ifndef {NAME}_HPP_
 #define {NAME}_GLUE_FILTERS     {channels_out} 
 #define {NAME}_GLUE_COARSE_IN   {coarse_in}
 #define {NAME}_GLUE_COARSE_OUT  {coarse_out}
-#define {NAME}_GLUE_ACC         {glue_acc}
 
 /**
  * FUNCTION DEFINITION
@@ -315,8 +314,6 @@ def gen_convolution_layer(name,param,src_path,header_path):
         glue            =glue
     )
 
-    glue_acc = "+".join([ "in[{i}][out_index].read()".format(i=i) for i in range(param['coarse_in']) ])
-    
     # header
     convolution_layer_header = convolution_layer_template_header.format(
         name                            =name,
@@ -334,7 +331,6 @@ def gen_convolution_layer(name,param,src_path,header_path):
         groups                          =param['groups'],
         coarse_in                       =param['coarse_in'],
         coarse_out                      =param['coarse_out'],
-        glue_acc                        =glue_acc,
         fine                            =param['fine'],
         interval                        =int((param['kernel_size']*param['kernel_size'])/param['fine']),
         kernel_size                     =param['kernel_size'],

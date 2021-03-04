@@ -25,10 +25,6 @@ class ConvTB(Data):
             self.param['kernel_size'],
             self.param['group']
         )
-        # load model coefficients
-        conv.load_coef(
-            os.path.join(os.getenv("FPGACONVNET_OPTIMISER"),"fpgaconvnet_optimiser/coefficients/conv_rsc_coef.npy"),
-        )
         # data in
         data_in = self.gen_data([
             self.param['rows'],

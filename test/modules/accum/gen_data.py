@@ -25,10 +25,6 @@ class AccumTB(Data):
             self.param['filters'],
             self.param['groups']
         )
-        # load model coefficients
-        accum.load_coef(
-                os.path.join(os.getenv("FPGACONVNET_OPTIMISER"),"fpgaconvnet_optimiser/coefficients/accum_rsc_coef.npy"),
-        )
         # data in
         data_in = self.gen_data([
             self.param['rows'],
