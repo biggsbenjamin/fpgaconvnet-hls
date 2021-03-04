@@ -1,14 +1,18 @@
 accum_template = """
-{indent}{name}_accum<0>({input},{output});
+{indent}accum<
+{indent}    {NAME}_BATCH_SIZE,
+{indent}    {NAME}_ROWS,
+{indent}    {NAME}_COLS,
+{indent}    {NAME}_CHANNELS,
+{indent}    {NAME}_FILTERS,
+{indent}    {NAME}_GROUPS
+{indent}>({input_stream},{output_stream});
 """
 
-def gen_accum_module(name,param,input,output,indent=0,grouped=False):
+def gen_accum_module(name,input_stream,output_stream,indent=0):
     return accum_template.format(
-        name        =name,
-        input_t     =param['input_t'],
-        output_t    =param['output_t'],
-        input       =input,
-        output      =output,
-        indent      =" "*indent
-        #is_grouped  ="" if grouped else "//"
+        NAME            =name.upper(),
+        input_stream    =input_stream,
+        output_stream   =output_stream,
+        indent          =" "*indent
     )

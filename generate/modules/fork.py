@@ -1,15 +1,22 @@
 fork_template="""
-{indent}{name}_fork<0>({input},{output});
+{indent}fork<
+{indent}    {NAME}_BATCH_SIZE,
+{indent}    {NAME}_ROWS,
+{indent}    {NAME}_COLS,
+{indent}    {NAME}_CHANNELS,
+{indent}    {NAME}_COARSE
+#if {NAME}_KERNEL_SIZE > 1
+{indent}    ,{NAME}_KERNEL_SIZE
+#endif
+{indent}>({input_stream},{output_stream});
 
 """
 
-def gen_fork_module(name,param,input,output,indent=0,single_stream=False):
+def gen_fork_module(name,input_stream,output_stream,indent=0):
     return fork_template.format(
-        name            =name,
-        input_t         =param['input_t'],
-        output_t        =param['output_t'],
-        input           =input,
-        output          =output,
+        NAME            =name.upper(),
+        input_stream    =input_stream,
+        output_stream   =output_stream,
         indent          =" "*indent
         #single_stream   ="" if not single_stream else "//"
     )

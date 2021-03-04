@@ -8,6 +8,9 @@ import generate.modules.pool
 pooling_layer_template_header = """#ifndef {NAME}_HPP_
 #define {NAME}_HPP_
 
+#include "sliding_window.hpp"
+#include "pool.hpp"
+
 #define name        {name}
 #define {NAME}_ID   {id}
 
@@ -33,7 +36,6 @@ pooling_layer_template_header = """#ifndef {NAME}_HPP_
 #define {NAME}_CHANNELS_OUT {channels_out} 
 
 // SLIDING WINDOW
-#define MODULE_NAME {NAME}_SLIDING_WINDOW
 #define {NAME}_SLIDING_WINDOW_BATCH_SIZE   {batch_size}
 #define {NAME}_SLIDING_WINDOW_ROWS         {rows}
 #define {NAME}_SLIDING_WINDOW_COLS         {cols}
@@ -44,19 +46,14 @@ pooling_layer_template_header = """#ifndef {NAME}_HPP_
 #define {NAME}_SLIDING_WINDOW_PAD_RIGHT    {pad_right}
 #define {NAME}_SLIDING_WINDOW_PAD_TOP      {pad_top}
 #define {NAME}_SLIDING_WINDOW_PAD_BOTTOM   {pad_bottom}
-#include "{name}_sliding_window.hpp"
-#undef MODULE_NAME
 
 // POOL
-#define MODULE_NAME {NAME}_POOL
 #define {NAME}_POOL_BATCH_SIZE   {batch_size}
 #define {NAME}_POOL_ROWS         {rows_out}
 #define {NAME}_POOL_COLS         {cols_out}
 #define {NAME}_POOL_CHANNELS     {channels_per_module}
 #define {NAME}_POOL_KERNEL_SIZE  {kernel_size}
 #define {NAME}_POOL_FINE         {fine}
-#include "{name}_pool.hpp"
-#undef MODULE_NAME
 
 /**
  * FUNCTION DEFINITION
@@ -90,14 +87,13 @@ void {name}(
 #pragma HLS ARRAY_PARTITION variable=in  complete dim=0
 #pragma HLS ARRAY_PARTITION variable=out complete dim=0
 
-    stream_t({name}_sliding_window_t) sw_out[{NAME}_COARSE][{NAME}_KERNEL_SIZE][{NAME}_KERNEL_SIZE]; //sliding window output
+    stream_t(data_t) sw_out[{NAME}_COARSE][{NAME}_KERNEL_SIZE][{NAME}_KERNEL_SIZE]; //sliding window output
 
 #pragma HLS STREAM variable=sw_out
 #pragma HLS ARRAY_PARTITION variable=sw_out complete dim=0
 
     for(unsigned int coarseIndex=0;coarseIndex<{NAME}_COARSE;coarseIndex++)
     {{
-        //SLIDING WINDOW
 #pragma HLS UNROLL
 {sliding_window}
 {pool}
@@ -112,26 +108,16 @@ def gen_pooling_layer(name,param,src_path,header_path):
     single_channel = True if param['channels_in'] == 1 else False
 
     # SLIDING WINDOW MODULE INIT
-    sliding_window_param = {
-        'input_t'       : "{name}_input_t".format(name=name),
-        'output_t'      : "{name}_sliding_window_t".format(name=name)
-    }
     sliding_window = generate.modules.sliding_window.gen_sliding_window_module(
-        name,
-        sliding_window_param,
+        name+"_sliding_window",
         "in[coarseIndex]",
         "sw_out[coarseIndex]",
         indent=8
     )
 
     # POOL MODULE INIT
-    pool_param = {
-        'input_t'       : "{name}_sliding_window_t".format(name=name),
-        'output_t'      : "{name}_output_t".format(name=name)
-    }
     pool = generate.modules.pool.gen_pool_module(
-        name,
-        pool_param,
+        name+"_pool",
         "sw_out[coarseIndex]",
         "out[coarseIndex]",
         indent=8
@@ -177,10 +163,5 @@ def gen_pooling_layer(name,param,src_path,header_path):
     # write header file
     with open(header_path,'w') as header_file:
         header_file.write(pooling_layer_header)
-
-    # save modules 
-    header_path = os.path.dirname(os.path.abspath(header_path))
-    shutil.copy( os.path.join(os.environ['FPGACONVNET_ROOT'],'include/sliding_window.hpp')  , os.path.join(header_path,"{name}_sliding_window.hpp".format(name=name))   )
-    shutil.copy( os.path.join(os.environ['FPGACONVNET_ROOT'],'include/pool.hpp')            , os.path.join(header_path,"{name}_pool.hpp".format(name=name))             )
 
     return

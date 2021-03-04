@@ -11,6 +11,12 @@ import generate.modules.glue
 convolution_layer_template_header = """#ifndef {NAME}_HPP_
 #define {NAME}_HPP_
 
+#include "sliding_window.hpp"
+#include "fork.hpp"
+#include "conv.hpp"
+#include "accum.hpp"
+#include "glue.hpp"
+
 #define name        {name}
 #define {NAME}_ID   {id}
 
@@ -37,7 +43,6 @@ convolution_layer_template_header = """#ifndef {NAME}_HPP_
 #define {NAME}_CHANNELS_OUT {channels_out} 
 
 // SLIDING WINDOW
-#define MODULE_NAME {NAME}_SLIDING_WINDOW
 #define {NAME}_SLIDING_WINDOW_BATCH_SIZE    {batch_size}
 #define {NAME}_SLIDING_WINDOW_ROWS          {rows}
 #define {NAME}_SLIDING_WINDOW_COLS          {cols}
@@ -48,22 +53,16 @@ convolution_layer_template_header = """#ifndef {NAME}_HPP_
 #define {NAME}_SLIDING_WINDOW_PAD_RIGHT     {pad_right}
 #define {NAME}_SLIDING_WINDOW_PAD_TOP       {pad_top}
 #define {NAME}_SLIDING_WINDOW_PAD_BOTTOM    {pad_bottom}
-#include "{name}_sliding_window.hpp"
-#undef MODULE_NAME
 
 // FORK
-#define MODULE_NAME {NAME}_FORK
 #define {NAME}_FORK_BATCH_SIZE  {batch_size}
 #define {NAME}_FORK_ROWS        {rows_out}
 #define {NAME}_FORK_COLS        {cols_out}
 #define {NAME}_FORK_CHANNELS    {channels_per_module}
 #define {NAME}_FORK_COARSE      {coarse_out}
 #define {NAME}_FORK_KERNEL_SIZE {kernel_size}
-#include "{name}_fork.hpp"
-#undef MODULE_NAME
 
 // CONV
-#define MODULE_NAME {NAME}_CONV
 #define {NAME}_CONV_BATCH_SIZE  {batch_size}
 #define {NAME}_CONV_ROWS        {rows_out}
 #define {NAME}_CONV_COLS        {cols_out}
@@ -72,11 +71,8 @@ convolution_layer_template_header = """#ifndef {NAME}_HPP_
 #define {NAME}_CONV_KERNEL_SIZE {kernel_size}
 #define {NAME}_CONV_FINE        {fine}
 #define {NAME}_CONV_INTERVAL    {interval}
-#include "{name}_conv.hpp"
-#undef MODULE_NAME
 
 // ACCUM
-#define MODULE_NAME {NAME}_ACCUM
 #define {NAME}_ACCUM_BATCH_SIZE         {batch_size}
 #define {NAME}_ACCUM_ROWS               {rows_out}
 #define {NAME}_ACCUM_COLS               {cols_out}
@@ -85,11 +81,8 @@ convolution_layer_template_header = """#ifndef {NAME}_HPP_
 #define {NAME}_ACCUM_FILTERS            {filters_per_module}
 #define {NAME}_ACCUM_CHANNELS_PER_GROUP {channels_per_module_per_group}
 #define {NAME}_ACCUM_FILTERS_PER_GROUP  {filters_per_module_per_group}
-#include "{name}_accum.hpp"
-#undef MODULE_NAME
 
 // GLUE
-#define MODULE_NAME {NAME}_GLUE
 #define {NAME}_GLUE_BATCH_SIZE  {batch_size}
 #define {NAME}_GLUE_ROWS        {rows_out}
 #define {NAME}_GLUE_COLS        {cols_out}
@@ -97,8 +90,6 @@ convolution_layer_template_header = """#ifndef {NAME}_HPP_
 #define {NAME}_GLUE_COARSE_IN   {coarse_in}
 #define {NAME}_GLUE_COARSE_OUT  {coarse_out}
 #define {NAME}_GLUE_ACC         {glue_acc}
-#include "{name}_glue.hpp"
-#undef MODULE_NAME
 
 /**
  * FUNCTION DEFINITION
@@ -241,13 +232,8 @@ def gen_convolution_layer(name,param,src_path,header_path):
     #pragma HLS STREAM variable=sw_out 
     #pragma HLS ARRAY_PARTITION variable=sw_out complete dim=0
         """.format(NAME=name.upper(),name=name)
-        sliding_window_param = {
-            'input_t'       : "{name}_input_t".format(name=name),
-            'output_t'      : "{name}_sliding_window_t".format(name=name)
-        }
         sliding_window = generate.modules.sliding_window.gen_sliding_window_module(
-            name,
-            sliding_window_param,
+            name+"_sliding_window",
             inputs['sliding_window'],
             outputs['sliding_window'],
             indent=8
@@ -263,17 +249,11 @@ def gen_convolution_layer(name,param,src_path,header_path):
     #pragma HLS ARRAY_PARTITION variable=fork_out complete dim=0
         """.format(NAME=name.upper(),name=name,
                 single_stream=";//" if single_stream else "")
-        fork_param = {
-            'input_t'       : "{name}_sliding_window_t".format(name=name),
-            'output_t'      : "{name}_fork_t".format(name=name)
-        }
         fork = generate.modules.fork.gen_fork_module(
-            name,
-            fork_param,
+            name+"_fork",
             inputs['fork'],
             outputs['fork'],
-            indent=8,
-            single_stream=single_stream
+            indent=8
         )
     else:
         fork = ''
@@ -285,19 +265,12 @@ def gen_convolution_layer(name,param,src_path,header_path):
     #pragma HLS STREAM variable=conv_out
     #pragma HLS ARRAY_PARTITION variable=conv_out complete dim=0
         """.format(NAME=name.upper(),name=name)
-        conv_param = {
-            'input_t'       : "{name}_fork_t".format(name=name),
-            'weight_t'      : "{name}_weight_t".format(name=name),
-            'output_t'      : "{name}_conv_t".format(name=name)
-        }
         conv = generate.modules.conv.gen_conv_module(
-            name,
-            conv_param,
+            name+"_conv",
             inputs['conv'],
             "weights[i][j]",
             outputs['conv'],
-            indent=12,
-            single_stream=single_stream
+            indent=12
         )
     else:
         conv = ''
@@ -309,30 +282,19 @@ def gen_convolution_layer(name,param,src_path,header_path):
     #pragma HLS STREAM variable=accum_out
     #pragma HLS ARRAY_PARTITION variable=accum_out complete dim=0
         """.format(NAME=name.upper(),name=name)
-        accum_param = {
-            'input_t'       : "{name}_conv_t".format(name=name),
-            'output_t'      : "{name}_accum_t".format(name=name)
-        }
         accum = generate.modules.accum.gen_accum_module(
-            name,
-            accum_param,
+            name+"_accum",
             inputs['accum'],
             outputs['accum'],
-            indent=12,
-            grouped=grouped
+            indent=12
         )
     else:
         accum = ''
 
     # GLUE MODULE INIT
     if 'glue' in inputs:
-        glue_param = {
-            'input_t'       : "{name}_accum_t".format(name=name),
-            'output_t'      : "{name}_output_t".format(name=name)
-        }
         glue = generate.modules.glue.gen_glue_module(
-            name,
-            glue_param,
+            name+"_glue",
             inputs['glue'],
             outputs['glue'],
             indent=4
@@ -394,13 +356,5 @@ def gen_convolution_layer(name,param,src_path,header_path):
     # write header file
     with open(header_path,'w') as header_file:
         header_file.write(convolution_layer_header)
-
-    # save modules 
-    header_path = os.path.dirname(os.path.abspath(header_path))
-    shutil.copy( os.path.join(os.environ['FPGACONVNET_ROOT'],'include/sliding_window.hpp') , os.path.join(header_path,"{name}_sliding_window.hpp".format(name=name)) )
-    shutil.copy( os.path.join(os.environ['FPGACONVNET_ROOT'],'include/fork.hpp')           , os.path.join(header_path,"{name}_fork.hpp".format(name=name))           )
-    shutil.copy( os.path.join(os.environ['FPGACONVNET_ROOT'],'include/conv.hpp')           , os.path.join(header_path,"{name}_conv.hpp".format(name=name))           )
-    shutil.copy( os.path.join(os.environ['FPGACONVNET_ROOT'],'include/accum.hpp')          , os.path.join(header_path,"{name}_accum.hpp".format(name=name))          )
-    shutil.copy( os.path.join(os.environ['FPGACONVNET_ROOT'],'include/glue.hpp')           , os.path.join(header_path,"{name}_glue.hpp".format(name=name))           )
 
     return

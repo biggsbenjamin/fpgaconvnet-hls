@@ -5,13 +5,12 @@ import csv
 import copy 
 
 sys.path.append('..')
-sys.path.append(os.environ.get("FPGACONVNET_OPTIMISER"))
 sys.path.append(os.environ.get("FPGACONVNET_HLS"))
 
-from models.layers.ConvolutionLayer import ConvolutionLayer
+from fpgaconvnet_optimiser.models.layers.ConvolutionLayer import ConvolutionLayer
 import generate.layers.convolution
 from Layer import Layer
-from tools.caffe_data import CaffeData
+from tools.onnx_data import ONNXData
 from tools.array_init import array_init
 
 class ConvolutionLayerTB(Layer):
@@ -65,7 +64,7 @@ class ConvolutionLayerTB(Layer):
         print(data_out.shape)
 
         # save weights
-        weights = CaffeData()._transform_weights(
+        weights = ONNXData._transform_weights(
             weights,
             1,
             self.param['coarse_in'],
