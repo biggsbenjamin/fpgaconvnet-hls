@@ -8,35 +8,35 @@
 # -update   = update all project files
 
 # Set SDK workspace
-setws -switch $::env(FPGACONVNET_ROOT)/host
+setws -switch $::env(FPGACONVNET_HLS)/host
 
 # get the device
-#set device_name zc706
-set device_name zedboard
+set device_name zc706
+#set device_name zedboard
 
 # Initialise project
 if {[lsearch -exact $argv -create] >=0} {
     puts " Creating project ..."
    # Create a HW project
-    createhw -name fpgaconvnet_hw -hwspec $::env(FPGACONVNET_ROOT)/host/devices/${device_name}/fpgaconvnet.hdf
+    createhw -name fpgaconvnet_hw -hwspec $::env(FPGACONVNET_HLS)/host/devices/${device_name}/fpgaconvnet.hdf
     # Create a BSP project
     createbsp -name fpgaconvnet_bsp -hwproject fpgaconvnet_hw -proc ps7_cortexa9_0 
     setlib    -bsp fpgaconvnet_bsp -lib xilffs
-    updatemss -mss $::env(FPGACONVNET_ROOT)/host/fpgaconvnet_bsp/system.mss
+    updatemss -mss $::env(FPGACONVNET_HLS)/host/fpgaconvnet_bsp/system.mss
     regenbsp  -bsp fpgaconvnet_bsp
     # Create application project
     createapp -name fpgaconvnet_prj -hwproject fpgaconvnet_hw -bsp fpgaconvnet_bsp -proc ps7_cortexa9_0 -lang C++ -app {Empty Application}
-    importsources -name fpgaconvnet_prj -path $::env(FPGACONVNET_ROOT)/host/.srcs -linker-script
+    importsources -name fpgaconvnet_prj -path $::env(FPGACONVNET_HLS)/host/.srcs -linker-script
 }
 
 # Update project
 if {[lsearch -exact $argv -update] >=0} {
     puts " Updating project ..."
     # Update a HW project
-    updatehw -hw fpgaconvnet_hw -newhwspec $::env(FPGACONVNET_ROOT)/host/devices/${device_name}/fpgaconvnet.hdf
+    updatehw -hw fpgaconvnet_hw -newhwspec $::env(FPGACONVNET_HLS)/host/devices/${device_name}/fpgaconvnet.hdf
     # Update a BSP project
     setlib    -bsp fpgaconvnet_bsp -lib xilffs
-    updatemss -mss $::env(FPGACONVNET_ROOT)/host/fpgaconvnet_bsp/system.mss
+    updatemss -mss $::env(FPGACONVNET_HLS)/host/fpgaconvnet_bsp/system.mss
     regenbsp  -bsp fpgaconvnet_bsp
 }
 
@@ -54,12 +54,12 @@ rst
 rst -system 
 
 # Program bitstream
-fpga -file $::env(FPGACONVNET_ROOT)/host/devices/${device_name}/fpgaconvnet.bit
+fpga -file $::env(FPGACONVNET_HLS)/host/devices/${device_name}/fpgaconvnet.bit
 
 # PS7 initialization
 namespace eval xsdb {
-    loadhw $::env(FPGACONVNET_ROOT)/host/fpgaconvnet_hw/system.hdf
-    source $::env(FPGACONVNET_ROOT)/host/fpgaconvnet_hw/ps7_init.tcl
+    loadhw $::env(FPGACONVNET_HLS)/host/fpgaconvnet_hw/system.hdf
+    source $::env(FPGACONVNET_HLS)/host/fpgaconvnet_hw/ps7_init.tcl
     ps7_init
     ps7_post_config
 }
@@ -68,7 +68,7 @@ namespace eval xsdb {
 #bpadd -addr &main
 
 # Download the elf
-dow $::env(FPGACONVNET_ROOT)/host/fpgaconvnet_prj/Debug/fpgaconvnet_prj.elf
+dow $::env(FPGACONVNET_HLS)/host/fpgaconvnet_prj/Debug/fpgaconvnet_prj.elf
 
 # set breakpoint at exit
 bpadd -addr &exit
