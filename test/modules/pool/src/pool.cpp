@@ -1,8 +1,4 @@
 #include "pool_tb.hpp"
-
-#define MODULE_NAME POOL
-#define name        test
-
 #include "pool.hpp"
 
 void pool_top(
@@ -13,9 +9,12 @@ void pool_top(
 
 #pragma HLS DATAFLOW
 
-    test_pool<0>(in,out);
+    pool<
+        POOL_BATCH_SIZE,
+        POOL_ROWS,
+        POOL_COLS,
+        POOL_CHANNELS,
+        POOL_KERNEL_SIZE
+    >(in,out);
 
 }
-
-#undef MODULE_NAME
-#undef name

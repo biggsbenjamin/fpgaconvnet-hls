@@ -1,18 +1,23 @@
 conv_template = """
-{indent}{name}_conv{pointwise}<0>({input},{weights},{output});
+{indent}conv<
+{indent}    {NAME}_BATCH_SIZE,
+{indent}    {NAME}_ROWS,
+{indent}    {NAME}_COLS,
+{indent}    {NAME}_CHANNELS,
+{indent}    {NAME}_FILTERS
+#if {NAME}_KERNEL_SIZE > 1
+{indent}    ,{NAME}_FINE,
+{indent}    {NAME}_KERNEL_SIZE
+#endif
+{indent}>({input_stream},{weights_stream},{output_stream});
 
 """
 
-def gen_conv_module(name,param,input,weights,output,indent=0,single_stream=False):
+def gen_conv_module(name,input_stream,weights_stream,output_stream,indent=0):
     return conv_template.format(
-        name            =name,
-        input_t         =param['input_t'],
-        weight_t        =param['weight_t'],
-        output_t        =param['output_t'],
-        input           =input,
-        weights         =weights,
-        output          =output,
-        indent          =" "*indent,
-        #single_stream   ="" if not single_stream else "//",
-        pointwise       ="_pw" if single_stream else ""
+        NAME            =name.upper(),
+        input_stream    =input_stream,
+        weights_stream  =weights_stream,
+        output_stream   =output_stream,
+        indent          =" "*indent
     )

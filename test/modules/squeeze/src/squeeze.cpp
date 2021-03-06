@@ -1,7 +1,4 @@
 #include "squeeze_tb.hpp"
-
-#define MODULE_NAME SQUEEZE
-#define name        test
 #include "squeeze.hpp"
 
 void squeeze_top(
@@ -11,9 +8,13 @@ void squeeze_top(
 {
 
     #pragma HLS DATAFLOW
-    test_squeeze<0>(in,out);
+    squeeze<
+        SQUEEZE_BATCH_SIZE,
+        SQUEEZE_ROWS,
+        SQUEEZE_COLS,
+        SQUEEZE_CHANNELS,
+        SQUEEZE_COARSE_IN,
+        SQUEEZE_COARSE_OUT
+    >(in,out);
 
 }
-
-#undef MODULE_NAME
-#undef name

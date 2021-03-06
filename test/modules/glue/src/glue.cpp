@@ -1,8 +1,4 @@
 #include "glue_tb.hpp"
-
-#define MODULE_NAME GLUE
-#define name        test
-
 #include "glue.hpp"
 
 void glue_top(
@@ -13,9 +9,13 @@ void glue_top(
 
     #pragma HLS DATAFLOW
 
-    test_glue<0>(in,out);
+    glue<
+        GLUE_BATCH_SIZE,
+        GLUE_ROWS,
+        GLUE_COLS,
+        GLUE_FILTERS,
+        GLUE_COARSE_IN,
+        GLUE_COARSE_OUT
+    >(in,out);
 
 }
-
-#undef MODULE_NAME
-#undef name

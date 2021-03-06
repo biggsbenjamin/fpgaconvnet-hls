@@ -1,5 +1,4 @@
 import yaml
-import caffe
 import sys, os, getopt
 import numpy as np
 from PIL import Image
@@ -15,11 +14,10 @@ import onnx
 import onnxruntime
 import onnx.numpy_helper
 
-import tools.graphs as graphs
-import tools.layer_enum as layer_enum
-import tools.onnx_helper as onnx_helper
+import fpgaconvnet_optimiser.tools.graphs as graphs
+import fpgaconvnet_optimiser.tools.layer_enum as layer_enum
+import fpgaconvnet_optimiser.tools.onnx_helper as onnx_helper
 
-from tools.layer_enum import LAYER_TYPE
 from tools.array_init import array_init
 
 SCALE=256
@@ -199,8 +197,7 @@ class ONNXData:
         output_node = self.partition.output_node
         output_data = np.array( self.sess.run([output_node], { self.input_name : self.data } )[0] )
         output_data = self.transform_featuremap(output_data)
-        print(output_data.shape)
-        self.save_featuremap(output_data, os.path.join(output_path, onnx_helper._format_name(input_node)), 
+        self.save_featuremap(output_data, os.path.join(output_path, onnx_helper._format_name(output_node)), 
             to_yaml=False, to_bin=to_bin, to_csv=to_csv)
         # save yaml data
         data = {
@@ -219,7 +216,8 @@ class ONNXData:
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     """
 
-    def _transform_weights(self,weights_raw,wr_factor=1,coarse_in=1,coarse_out=1):
+    @staticmethod
+    def _transform_weights(weights_raw,wr_factor=1,coarse_in=1,coarse_out=1):
         # parameters
         num_filters  = int(weights_raw.shape[0]/(coarse_out*wr_factor))
         num_channels = int(weights_raw.shape[1]/coarse_in)

@@ -8,14 +8,13 @@ import random
 import os
 import onnx
 from PIL import Image
-from google.protobuf import json_format
+from google.protobuf import text_format
 
-sys.path.append(os.environ.get("FPGACONVNET_OPTIMISER"))
 sys.path.append(os.environ.get("FPGACONVNET_HLS"))
 
-import proto.fpgaconvnet_pb2
-import tools.onnx_helper as onnx_helper
-#import tools.third_party.prototxt
+import fpgaconvnet_optimiser.proto.fpgaconvnet_pb2
+import fpgaconvnet_optimiser.tools.onnx_helper as onnx_helper
+
 from tools.onnx_data import ONNXData
 
 if __name__ == "__main__":
@@ -29,9 +28,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
     
     # load partition information
-    partitions = proto.fpgaconvnet_pb2.partitions()
+    partitions = fpgaconvnet_optimiser.proto.fpgaconvnet_pb2.partitions()
     with open(args.partition_path,'r') as f:
-        json_format.Parse(f.read(), partitions)
+        text_format.Parse(f.read(), partitions)
     
     # iterate over partitions
     for i, partition in enumerate(partitions.partition): 
