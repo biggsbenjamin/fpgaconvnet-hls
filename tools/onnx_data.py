@@ -197,8 +197,7 @@ class ONNXData:
         output_node = self.partition.output_node
         output_data = np.array( self.sess.run([output_node], { self.input_name : self.data } )[0] )
         output_data = self.transform_featuremap(output_data)
-        print(output_data.shape)
-        self.save_featuremap(output_data, os.path.join(output_path, onnx_helper._format_name(input_node)), 
+        self.save_featuremap(output_data, os.path.join(output_path, onnx_helper._format_name(output_node)), 
             to_yaml=False, to_bin=to_bin, to_csv=to_csv)
         # save yaml data
         data = {

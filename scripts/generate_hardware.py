@@ -8,7 +8,7 @@ import random
 import os
 import onnx
 from PIL import Image
-from google.protobuf import json_format
+from google.protobuf import text_format
 
 sys.path.append(os.environ.get("FPGACONVNET_ROOT"))
 
@@ -37,7 +37,7 @@ if __name__ == "__main__":
     # load partition information
     partitions = proto.fpgaconvnet_pb2.partitions()
     with open(args.partition_path,'r') as f:
-        json_format.Parse(f.read(), partitions)
+        text_format.Parse(f.read(), partitions)
     
     # iterate over partitions
     if args.partition_index:

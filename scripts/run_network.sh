@@ -76,28 +76,14 @@ for i in $( seq 1 ${NUM_PARTITIONS} ); do
     # partition frequency
     FREQ=100 # TODO: get from partition information file
 
-    # script to generate network
-    GEN_NETWORK_ARGS=" \
-        -n $NETWORK \
-        -p $PARTITION_INFO_PATH \
-        -m $MODEL_PATH \
-        -i $PARTITION_INDEX" 
-    
-    # add path to image
-    if [ "$IMAGE_PATH" ]; then
-        GEN_NETWORK_ARGS="$GEN_NETWORK_ARGS -d $IMAGE_PATH"
-    fi
-     
-    # add path to weights
-    #if [ "$WEIGHTS_PATH" ]; then
-    #    GEN_NETWORK_ARGS="$GEN_NETWORK_ARGS -w $WEIGHTS_PATH"
-    #fi
-
     # create hardware
     python $FPGACONVNET_HLS/scripts/generate_hardware.py -n $NETWORK -m $MODEL_PATH -p $PARTITION_INFO_PATH -i $PARTITION_INDEX
 
     # format weights
     python $FPGACONVNET_HLS/scripts/format_weights.py -m $MODEL_PATH -p $PARTITION_INFO_PATH
+
+    # format featuremaps
+    python $FPGACONVNET_HLS/scripts/format_featuremaps.py -m $MODEL_PATH -p $PARTITION_INFO_PATH -d $IMAGE_PATH
 
     # run the network
     cd partition_${PARTITION_INDEX}
