@@ -33,13 +33,17 @@ if __name__ == "__main__":
     partitions = fpgaconvnet_optimiser.proto.fpgaconvnet_pb2.partitions()
     with open(args.partition_path,'r') as f:
         text_format.Parse(f.read(), partitions)
-    
+   
+
     # iterate over partitions
     for i, partition in enumerate(partitions.partition): 
         
         # onnx data manipulation
         onnx_data = ONNXData(partition, args.onnx_path)
-    
+ 
+        # load input image
+        onnx_data.load_input(args.image_path)
+   
         # save feature maps
         onnx_data.save_featuremap_in_out(
             f'partition_{i}/data', 

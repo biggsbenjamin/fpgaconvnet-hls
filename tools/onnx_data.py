@@ -30,7 +30,6 @@ def fixed_point(val,total_width=16,int_width=8):
 
 class ONNXData:
     def __init__(self, partition, model_path):
-        #self.data_in = np.array(Image.open(filepath),dtype=np.float32)
         # partitions
         self.partition = partition
         # model
@@ -58,6 +57,17 @@ class ONNXData:
         self.output_shape = self.sess.get_outputs()[0].shape
         # create random data input 
         self.data = np.random.uniform(0,1,self.input_shape).astype(np.float32)
+
+    def load_input(self,filepath):
+        self.data = np.array(Image.open(filepath),dtype=np.float32)
+        if len(self.data.shape) == 2:
+           self.data = np.expand_dims(self.data,axis=0)
+        self.data = np.stack([self.data for _ in range(self.partition.batch_size)], axis=0 )
+
+    def get_layer(self,layer_name):
+        for layer in self.partition.layers:
+            if layer.name == layer_name:
+                return layer
 
     def get_type(self,layer):
         return self.net.layers[list(self.net._layer_names).index(layer)].type
@@ -107,7 +117,7 @@ class ONNXData:
             stream_out[index] = fixed_point(val,total_width=total_width,int_width=int_width)
         return stream_out
 
-    def _fixed_point_stream_to_bin(self, stream, output_path=None, streams=1, port_width=64, ports=1):
+    def _fixed_point_stream_to_bin(self, stream, output_path, streams=1, port_width=64, ports=1):
         # check it's only a 1D array
         assert len(stream.shape) == 1
         # check the stream is fixed-point
@@ -160,12 +170,12 @@ class ONNXData:
 
     def transform_featuremap(self, featuremap):
         # normalise
-        featuremap = self.normalise(featuremap) # TODO: remove
+        #featuremap = self.normalise(featuremap) # TODO: remove
         # transform featuremap
         return np.moveaxis(featuremap, 1, -1)
         # TODO: handle 1D and 2D featuremaps
 
-    def save_featuremap(self, featuremap, output_path, to_yaml=False, to_bin=False, to_csv=False):
+    def save_featuremap(self, featuremap, output_path, parallel_streams=1, to_yaml=False, to_bin=False, to_csv=False):
         # yaml format
         if to_yaml:
             # save to yaml file
@@ -181,7 +191,7 @@ class ONNXData:
             # get feature map stream
             stream = self._convert_fixed_port_stream(featuremap.reshape(-1))
             # save to binary file
-            self._fixed_point_stream_to_bin(stream, output_path=output_path) # TODO: add port info
+            self._fixed_point_stream_to_bin(stream, output_path, streams=parallel_streams)
         # csv format
         if to_csv:
             pass
@@ -191,14 +201,16 @@ class ONNXData:
         input_node = self.partition.input_node
         input_data = np.array( self.sess.run([input_node], { self.input_name : self.data } )[0] )
         input_data = self.transform_featuremap(input_data)
+        input_streams = int(self.partition.layers[0].parameters.coarse_in)
         self.save_featuremap(input_data, os.path.join(output_path, onnx_helper._format_name(input_node)), 
-            to_yaml=False, to_bin=to_bin, to_csv=to_csv)
+            parallel_streams=input_streams, to_yaml=False, to_bin=to_bin, to_csv=to_csv)
         # save output layer
         output_node = self.partition.output_node
         output_data = np.array( self.sess.run([output_node], { self.input_name : self.data } )[0] )
         output_data = self.transform_featuremap(output_data)
+        output_streams = int(self.partition.layers[-1].parameters.coarse_out)
         self.save_featuremap(output_data, os.path.join(output_path, onnx_helper._format_name(output_node)), 
-            to_yaml=False, to_bin=to_bin, to_csv=to_csv)
+            parallel_streams=output_streams, to_yaml=False, to_bin=to_bin, to_csv=to_csv)
         # save yaml data
         data = {
             "in"  : input_data.reshape(-1).tolist(),
@@ -328,124 +340,3 @@ class ONNXData:
                 yaml.dump(tmp, f)
         # return weights
         return weights
-
-    """
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    WEIGHTS
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    """
-
-    def save_batch_norm(self,node_info,output_path):
-        # weights
-        scale = {}
-        shift = {}
-        # iterate over each layer
-        for node in node_info:
-            if node_info[node]['type'] != LAYER_TYPE.BatchNorm:
-               continue
-            # scale layer
-            scale_layer = node_info['hw'].scale_layer
-            # get parameters
-            mean  = self.net.params[layer][0].data
-            var   = self.net.params[layer][1].data
-            gamma = self.net.params[scale_layer][0].data
-            beta  = self.net.params[scale_layer][1].data
-            eps   = np.float_power(10,-5)
-            # transform to 2 operations
-            scale[node] = gamma / np.sqrt( var + eps )
-            shift[node] = ( beta / scale[node] - mean )
-
-        if output_path:
-            # save scale coeffients
-            with open(output_path + '/scale.yaml', 'w') as f:
-                yaml.dump(scale, f)
-            # save shift coeffients
-            with open(output_path + '/shift.yaml', 'w') as f:
-                yaml.dump(shift, f)
-
-        return scale, shift
-
-    def transform_batch_norm_coef(self,coef_raw,coarse=1):
-        # parameters
-        num_channels = int(coef_raw.shape[0]/coarse)
-
-        # correct output shape for weights
-        coef = np.ndarray(
-            shape=(
-                coarse,
-                num_channels),dtype=float,order='C')
-
-        # transform weights raw shape
-        for index,_ in np.ndenumerate(coef):
-            coef[index] = coef_raw[index[1]*coarse+index[0]]
-            #coef[index] = coef_raw[index[0]*num_channels+index[1]]
-
-        return coef
-
-    def save_batch_norm_csv(self,output_path,net_info):
-        # find layers with weights
-        for layer in self.net.params:
-            if self.get_type(layer) == 'BatchNorm':
-                layer_index = list(self.net.params.keys()).index(layer)
-                next_layer  = list(self.net.params.keys())[layer_index+1]
-                mean  = self.net.params[layer][0].data
-                var   = self.net.params[layer][1].data
-                gamma = self.net.params[next_layer][0].data
-                beta  = self.net.params[next_layer][1].data
-
-                print(layer)
-
-                eps = np.float_power(10,-5)
-                # get coarse factor
-                try:
-                    coarse_in  = net_info[layer]['coarse_in']
-                except KeyError:
-                    coarse_in  = 1
-
-                # channels
-                num_channels = int(self.net.params[layer][0].shape[0]/coarse_in)
-
-                # scale
-                scale = np.ndarray([
-                    num_channels,
-                    coarse_in
-                ],dtype=float)
-                for index,_ in np.ndenumerate(scale):
-                    i = index[0]*coarse_in+index[1]
-                    scale[index] = gamma[i]/np.sqrt(var[i]+eps)
-                # scale
-                offset = np.ndarray([
-                    num_channels,
-                    coarse_in
-                ],dtype=float)
-                for index,_ in np.ndenumerate(offset):
-                    i = index[0]*coarse_in+index[1]
-                    offset[index] = beta[i] - mean[i]*gamma[i]/np.sqrt(var[i]+eps)
-                # save csv
-                filepath = '{path}/{layer}_scale.csv'.format( path=output_path,layer=layer.replace("/","_") )
-                with open(filepath, 'w') as writeFile:
-                    writer = csv.writer(writeFile)
-                    writer.writerows([scale.reshape(-1).tolist()])
-                filepath = '{path}/{layer}_offset.csv'.format( path=output_path,layer=layer.replace("/","_") )
-                with open(filepath, 'w') as writeFile:
-                    writer = csv.writer(writeFile)
-                    writer.writerows([offset.reshape(-1).tolist()])
-
-if __name__ == "__main__":
-    caffe_data = CaffeData()
-    caffe_data.load_net(
-        'data/models/lenet.prototxt',
-        'data/weights/lenet.caffemodel'
-    )
-    caffe_data.load_input(
-        #'data/imagenet_0_vgg.jpg'
-        'data/inputs/lenet_0.png'
-    )
-    print('run ...')
-    caffe_data.run_net()
-    print('save data ...')
-    #caffe_data.save_data('.')
-    print('save weight ...')
-    #caffe_data.save_weight('.')
-    print('save weight csv ...')
-    #caffe_data.save_weight_csv('.',{})
