@@ -46,3 +46,6 @@ include/system.hpp
 
 examples/**/outputs/
 examples/**/partition_*/
+
+test/partitions/**/outputs/
+test/partitions/**/partition_*/
