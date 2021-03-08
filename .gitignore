@@ -8,6 +8,7 @@
 **.caffemodel
 **.jou
 **.onnx
+**.str
 
 **/*_prj/
 _prj/
