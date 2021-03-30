@@ -21,6 +21,7 @@ data/
 rpt/
 
 runs/**/logs/
+runs/**.json
 runs/**/*_param.hpp
 
 outputs/
