@@ -1,3 +1,6 @@
+#ifndef SQUEEZE_HPP_
+#define SQUEEZE_HPP_
+
 #include "common.hpp"
 
 template<
@@ -58,3 +61,5 @@ void squeeze(
         }
     }
 }
+
+#endif

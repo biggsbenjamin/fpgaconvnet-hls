@@ -1,3 +1,6 @@
+#ifndef CONV_HPP_
+#define CONV_HPP_
+
 #include "common.hpp"
 
 /**
@@ -295,3 +298,4 @@ void conv(
     }
 }
 
+#endif

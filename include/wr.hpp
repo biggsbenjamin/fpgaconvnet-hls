@@ -1,3 +1,6 @@
+#ifndef WR_HPP_
+#define WR_HPP_
+
 #include "common.hpp"
 
 /**
@@ -43,3 +46,5 @@ void NAME_SUB(name,_wr)(
         }
     }
 }
+
+#endif

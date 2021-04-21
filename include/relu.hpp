@@ -1,3 +1,6 @@
+#ifndef RELU_HPP_
+#define RELU_HPP_
+
 #include "common.hpp"
 
 /**
@@ -34,3 +37,5 @@ void relu(
             out.write(tmp);
     }
 }
+
+#endif

@@ -1,3 +1,6 @@
+#ifndef BATCH_NORM_HPP_ 
+#define BATCH_NORM_HPP_ 
+
 #include "common.hpp"
 
 /**
@@ -36,3 +39,4 @@ void NAME_SUB(name,_batch_norm)(
     }
 }
 
+#endif

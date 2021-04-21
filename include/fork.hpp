@@ -1,3 +1,6 @@
+#ifndef FORK_HPP_
+#define FORK_HPP_
+
 #include "common.hpp"
 
 /**
@@ -96,4 +99,4 @@ void fork(
     }
 }
 
-
+#endif

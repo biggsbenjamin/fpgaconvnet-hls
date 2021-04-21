@@ -1,3 +1,6 @@
+#ifndef MEM_WRITE_HPP_
+#define MEM_WRITE_HPP_
+
 #include "common.hpp"
 
 template<
@@ -51,3 +54,4 @@ void mem_write(
     }
 }
 
+#endif

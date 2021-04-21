@@ -1,3 +1,6 @@
+#ifndef GLUE_HPP_
+#define GLUE_HPP_
+
 #include "common.hpp"
 
 /**
@@ -55,3 +58,5 @@ void glue(
 	}
     }
 }
+
+#endif

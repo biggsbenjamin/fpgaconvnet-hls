@@ -1,3 +1,6 @@
+#ifndef ACCUM_HPP_ 
+#define ACCUM_HPP_ 
+
 #include "common.hpp"
 
 template<
@@ -54,3 +57,4 @@ void accum(
     }
 }
 
+#endif

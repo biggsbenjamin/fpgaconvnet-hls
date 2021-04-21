@@ -4,6 +4,7 @@
  *  BIAS FUNCTION
  */
 
+/*
 template<int _>
 void bias(
     stream_t(data_t) &in,
@@ -40,3 +41,4 @@ void bias(
     }
 #endif
 }
+*/

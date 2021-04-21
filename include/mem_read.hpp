@@ -1,3 +1,6 @@
+#ifndef MEM_READ_HPP_
+#define MEM_READ_HPP_
+
 #include "common.hpp"
 
 template<
@@ -56,3 +59,4 @@ void mem_read(
     }
 }
 
+#endif

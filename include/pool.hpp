@@ -1,3 +1,6 @@
+#ifndef POOL_HPP_
+#define POOL_HPP_
+
 #include "common.hpp"
 
 /**
@@ -47,3 +50,5 @@ void pool(
         out.write(cache);
     }
 }
+
+#endif

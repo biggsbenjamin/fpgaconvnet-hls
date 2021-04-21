@@ -1,3 +1,6 @@
+#ifndef SLIDING_WINDOW_HPP_
+#define SLIDING_WINDOW_HPP_
+
 #include "common.hpp"
 
 template<
@@ -268,3 +271,5 @@ void sliding_window(
     >(frame_buffer,out);
  
 }
+
+#endif
