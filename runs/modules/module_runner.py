@@ -29,9 +29,9 @@ class ModuleRunner(Runner):
     def gen_parameters(self):
         # dimensions
         self.parameters['batch_size'] = random.randint(1,100)
-        self.parameters['rows']       = random.randint(1,224)
-        self.parameters['cols']       = random.randint(1,224)
-        self.parameters['channels']   = random.randint(1,512)
+        self.parameters['rows']       = random.randint(1,128)
+        self.parameters['cols']       = random.randint(1,128)
+        self.parameters['channels']   = random.randint(1,96)
         # basic 
         self.parameters['data_width'] = random.choice([4,8,16,32])
         self.parameters['freq']       = random.randint(50,150)
@@ -107,6 +107,7 @@ class ModuleRunner(Runner):
         results['resources'] = self.get_resources()        
         results['clk_impl'] = self.get_clk_impl()
 
+        os.system(f"mkdir -p modules/{self.name}/logs")
         with open("modules/{name}/logs/{param}.json".format(name=self.name,param=self.get_param_string()),"w") as f:
             json.dump(results,f)
 

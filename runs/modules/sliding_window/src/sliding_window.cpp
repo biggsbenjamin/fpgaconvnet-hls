@@ -2,8 +2,8 @@
 #include "sliding_window.hpp"
 
 void sliding_window_top(
-    hls::stream<sliding_window_t> &in,
-    hls::stream<sliding_window_t> out[SLIDING_WINDOW_KERNEL_SIZE][SLIDING_WINDOW_KERNEL_SIZE]
+    stream_t(data_t) &in,
+    stream_t(data_t) out[SLIDING_WINDOW_KERNEL_SIZE][SLIDING_WINDOW_KERNEL_SIZE]
 )
 {
 

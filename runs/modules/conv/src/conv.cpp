@@ -2,11 +2,11 @@
 #include "conv.hpp"
 
 #if CONV_KERNEL_SIZE == 1
-const static weight_t weights[CONV_CHANNELS][CONV_FILTERS] = {
+const static weight_t weights[CONV_CHANNELS*CONV_FILTERS] = {
 #include "weights.csv"
 };
 #else
-const static weight_t weights[CONV_CHANNELS][CONV_FILTERS][CONV_KERNEL_SIZE][CONV_KERNEL_SIZE] = {
+const static weight_t weights[CONV_CHANNELS*CONV_FILTERS][CONV_KERNEL_SIZE][CONV_KERNEL_SIZE] = {
 #include "weights.csv"
 };
 #endif

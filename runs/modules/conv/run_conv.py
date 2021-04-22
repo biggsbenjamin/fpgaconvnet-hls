@@ -7,7 +7,7 @@ runner = ModuleRunner("conv")
 while 1:
     # generate parameters
     runner.gen_parameters()
-    runner.parameters['filters']     = random.randint(1,512)
+    runner.parameters['filters']     = random.randint(1,96)
     runner.parameters['kernel_size'] = random.randint(1,11)
     runner.parameters['fine']        = random.choice(
         [1,runner.parameters['kernel_size'],runner.parameters['kernel_size']**2])
@@ -15,8 +15,7 @@ while 1:
     max_value = 2**((runner.parameters['data_width']/2)-1)
     runner.gen_data(
         [
-            runner.parameters['channels'],
-            runner.parameters['filters'],
+            runner.parameters['channels']*runner.parameters['filters'],
             runner.parameters['kernel_size'],
             runner.parameters['kernel_size']
             

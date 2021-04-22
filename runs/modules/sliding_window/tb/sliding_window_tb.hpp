@@ -13,8 +13,8 @@
 #define SLIDING_WINDOW_COLS_OUT (DIVIDE((SLIDING_WINDOW_COLS-SLIDING_WINDOW_KERNEL_SIZE+2*SLIDING_WINDOW_PAD),SLIDING_WINDOW_STRIDE)+1)
 
 void sliding_window_top(
-    hls::stream<sliding_window_t> &in,
-    hls::stream<sliding_window_t> out[SLIDING_WINDOW_KERNEL_SIZE][SLIDING_WINDOW_KERNEL_SIZE]
+    stream_t(data_t) &in,
+    stream_t(data_t) out[SLIDING_WINDOW_KERNEL_SIZE][SLIDING_WINDOW_KERNEL_SIZE]
 );
 
 #endif
