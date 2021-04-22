@@ -1,5 +1,12 @@
 from modules.module_model import ModuleModel
-from fpgaconvnet_optimiser.models.modules.Accum import Accum
+from fpgaconvnet_optimiser.models.modules import Accum
+
+MAX_RSC = {
+    "LUT"   : 53200,
+    "FF"    : 106400,
+    "BRAM"  : 280,
+    "DSP"   : 220
+}
 
 # define resource model
 def build_module(parameter):
@@ -12,20 +19,9 @@ def build_module(parameter):
         parameter['data_width']
     )
 
+# load accum model
 accum_model = ModuleModel(build_module)
-
 accum_model.load_points("modules/accum/logs")
-print(accum_model.points[0])
-
-accum_model.fit_model()
-
-err = accum_model.get_absolute_error()
-print(err)
-
-
-"""
-# create module model
-accum_model = ModuleModel("accum")
 
 # filter parameters 
 filters = {
@@ -33,9 +29,9 @@ filters = {
 }
 accum_model.filter_parameters(filters)
 
-# create models
-## dynamic power model TODO
-## static power model TODO
-## resource model
-accum_model.fit_model_resources(resource_model)
-"""
+# fit model
+accum_model.fit_model()
+
+# plot error
+accum_model.plot_error(MAX_RSC)
+
