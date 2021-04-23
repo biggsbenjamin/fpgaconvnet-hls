@@ -2,7 +2,7 @@
 #define COMMON_TB_HPP_
 
 #include "common.hpp"
-#include "yaml-cpp/yaml.h"
+//#include "yaml-cpp/yaml.h"
 #include <string>
 #include <iostream>
 #include <fstream>
@@ -539,7 +539,7 @@ int checkStreamEqual_file(
 ////////////////////////////////////////////////
 ////////// LOAD DATA FROM YAML (NET) ///////////
 ////////////////////////////////////////////////
-
+/*
 template<
     int INPUTS,
     int SIZE, 
@@ -644,5 +644,5 @@ void load_net_fc_data(
 		data[c][0][0] = data_t(pixel);
 	}
 }
-
+*/
 #endif
