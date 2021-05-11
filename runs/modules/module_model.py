@@ -100,22 +100,76 @@ class ModuleModel:
         for rsc_type in RSC_TYPES:
             self.coef[rsc_type] = self.get_nnls_coef(np.array(model), np.array(actual[rsc_type]))
 
+    def save_coefficients(self, filepath):
+        # LUT
+        with open(f"{filepath}_lut.npy", "wb") as f:
+            np.save(f, self.coef["LUT"])
+        # FF 
+        with open(f"{filepath}_ff.npy", "wb") as f:
+            np.save(f, self.coef["FF"])
+        # DSP 
+        with open(f"{filepath}_dsp.npy", "wb") as f:
+            np.save(f, self.coef["DSP"])
+        # BRAM 
+        with open(f"{filepath}_bram.npy", "wb") as f:
+            np.save(f, self.coef["BRAM"])
+
     def plot_error(self, max_rsc):
-        # iterate over resource types
-        for rsc_type in RSC_TYPES:
-            # get coordinates
-            x = np.array([ np.dot(self.module(p["parameters"]).utilisation_model(), self.coef[rsc_type])
-                    for p in self.points ])
-            y = np.array([ p["resources"][rsc_type] for p in self.points ])
-            # create scatter plot
-            plt.scatter(x/max_rsc[rsc_type], y/max_rsc[rsc_type], label=rsc_type, marker='x')
+        
+        # get the 
+        fig, axs = plt.subplots(2,2)
+
+        # LUT
+        ## get coordinates
+        x = np.array([ self.module(p["parameters"]).rsc(self.coef)["LUT"]
+                for p in self.points ])
+        y = np.array([ p["resources"]["LUT"] for p in self.points ])
+        ## create scatter plot
+        axs[0,0].scatter(x, y, label="LUT", color="r", marker='x')
+        axs[0,0].set_title("LUT")
+
+        # FF
+        ## get coordinates
+        x = np.array([ self.module(p["parameters"]).rsc(self.coef)["FF"]
+                for p in self.points ])
+        y = np.array([ p["resources"]["FF"] for p in self.points ])
+        ## create scatter plot
+        axs[0,1].scatter(x, y, label="FF", color="g", marker='x')
+        axs[0,1].set_title("FF")
+
+        # BRAM 
+        ## get coordinates
+        x = np.array([ self.module(p["parameters"]).rsc(self.coef)["BRAM"]
+                for p in self.points ])
+        y = np.array([ p["resources"]["BRAM"] for p in self.points ])
+        ## create scatter plot
+        axs[1,0].scatter(x, y, label="BRAM", color="b", marker='x')
+        axs[1,0].set_title("BRAM")
+
+        # DSP 
+        ## get coordinates
+        x = np.array([ self.module(p["parameters"]).rsc(self.coef)["DSP"]
+                for p in self.points ])
+        y = np.array([ p["resources"]["DSP"] for p in self.points ])
+        ## create scatter plot
+        axs[1,1].scatter(x, y, label="DSP", color="y", marker='x')
+        axs[1,1].set_title("DSP")
+
+        for ax in axs.flatten():
+            ax.set_xlim(xmin=0)
+            ax.set_ylim(ymin=0)
+            ax.grid()
+            lims = [
+                np.min([ax.get_xlim(), ax.get_ylim()]),  # min of both axes
+                np.max([ax.get_xlim(), ax.get_ylim()]),  # max of both axes
+            ]
+            ax.plot(lims, lims, 'k-', alpha=0.75, zorder=0)
+
+        fig.add_subplot(111, frameon=False)
+        plt.tick_params(labelcolor='none', which='both', top=False, bottom=False, left=False, right=False)
 
         plt.xlabel("Predicted")
         plt.ylabel("Actual")
         
-        plt.legend()
-        plt.xlim(xmin=0)
-        plt.ylim(ymin=0)
-        plt.grid()
         plt.show()
 

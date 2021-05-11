@@ -36,6 +36,8 @@ sliding_window_model.filter_parameters(filters)
 # fit model
 sliding_window_model.fit_model()
 
+print(sliding_window_model.coef)
+
 # plot error
 sliding_window_model.plot_error(MAX_RSC)
 

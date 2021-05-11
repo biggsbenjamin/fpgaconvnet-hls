@@ -32,6 +32,9 @@ accum_model.filter_parameters(filters)
 # fit model
 accum_model.fit_model()
 
+# save coefficients
+model.save_coefficients("coefficients/accum")
+
 # plot error
 accum_model.plot_error(MAX_RSC)
 

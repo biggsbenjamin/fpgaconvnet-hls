@@ -19,18 +19,20 @@ def build_module(parameter):
     )
 
 # load accum model
-pool_model = ModuleModel(build_module)
-pool_model.load_points("modules/pool/logs")
+model = ModuleModel(build_module)
+model.load_points("modules/pool/logs")
 
 # filter parameters 
 filters = {
     "data_width" : [15,17]
 }
-pool_model.filter_parameters(filters)
+model.filter_parameters(filters)
 
 # fit model
-pool_model.fit_model()
+model.fit_model()
+
+# save coefficients
+model.save_coefficients("coefficients/pool")
 
 # plot error
-pool_model.plot_error(MAX_RSC)
-
+model.plot_error(MAX_RSC)
