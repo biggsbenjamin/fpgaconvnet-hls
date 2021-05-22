@@ -6,26 +6,26 @@ sys.path.append("..")
 sys.path.append(os.environ.get("FPGACONVNET_OPTIMISER"))
 sys.path.append(os.environ.get("FPGACONVNET_HLS"))
 
-from fpgaconvnet_optimiser.models.layers.ReLULayer import ReLULayer
-import generate.layers.relu
+from fpgaconvnet_optimiser.models.layers.SqueezeLayer import SqueezeLayer
+import generate.layers.squeeze
 from Layer import Layer
 
-class ReLULayerTB(Layer):
+class SqueezeLayerTB(Layer):
     def __init__(self):
-        self.name = 'relu_layer'
+        self.name = 'squeeze_layer'
         Layer.__init__(self,self.name)
 
     # update stimulus generation
     def gen_stimulus(self):
         # Init Module
-        layer = ReLULayer(
+        layer = SqueezeLayer(
             [
                 self.param['channels_in'],
                 self.param['rows_in'],
                 self.param['cols_in']
             ],
-            self.param['coarse'],
-            self.param['coarse']
+            coarse_in=self.param['coarse_in'],
+            coarse_out=self.param['coarse_out']
         )
         layer.load_coef()
         # data in
@@ -56,7 +56,7 @@ class ReLULayerTB(Layer):
 
     # update layer generation
     def gen_layer(self,src_path,header_path):
-        generate.layers.relu.gen_relu_layer(
+        generate.layers.squeeze.gen_squeeze_layer(
             self.name,
             self.param,
             os.path.join(src_path,'{}.cpp'.format(self.name)),
@@ -64,5 +64,5 @@ class ReLULayerTB(Layer):
         )
 
 if __name__ == '__main__':
-    relu_layer_tb = ReLULayerTB()
-    relu_layer_tb.main(sys.argv[1:])
+    squeeze_layer_tb = SqueezeLayerTB()
+    squeeze_layer_tb.main(sys.argv[1:])

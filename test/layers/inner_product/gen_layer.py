@@ -2,16 +2,16 @@ import sys
 import os
 import numpy as np
 import csv
-import copy 
+import copy
 
 sys.path.append('..')
 sys.path.append(os.environ.get("FPGACONVNET_OPTIMISER"))
 sys.path.append(os.environ.get("FPGACONVNET_HLS"))
 
-from models.layers.InnerProductLayer import InnerProductLayer
+from fpgaconvnet_optimiser.models.layers.InnerProductLayer import InnerProductLayer
 import generate.layers.inner_product
 from Layer import Layer
-from tools.caffe_data import CaffeData
+from tools.onnx_data import ONNXData
 from tools.array_init import array_init
 
 class InnerProductLayerTB(Layer):
@@ -49,14 +49,15 @@ class InnerProductLayerTB(Layer):
         # data out
         data_out = layer.functional_model(copy.copy(data_in),weights,bias)[0]
         data_out = np.moveaxis(data_out,0,-1)
-        
+
         # reshape weights
-        weights = np.reshape(weights,(self.param['filters'],self.param['cols_in'],self.param['rows_in'],self.param['channels_in'],1,1))  
+        weights = np.reshape(weights,(self.param['filters'],self.param['cols_in'],self.param['rows_in'],self.param['channels_in'],1,1))
         weights = np.rollaxis(weights,1,3)
         weights = np.reshape(weights,(self.param['filters'],self.param['cols_in']*self.param['rows_in']*self.param['channels_in'],1,1))
- 
+
+
         # save weights
-        weights = CaffeData()._transform_weights(
+        weights = ONNXData._transform_weights(
             weights,
             1,
             self.param['coarse_in'],
@@ -81,7 +82,7 @@ class InnerProductLayerTB(Layer):
             'resources' : layer.resource()
         }
         return data, model
-     
+
     # update layer generation
     def gen_layer(self,src_path,header_path):
         generate.layers.inner_product.gen_inner_product_layer(

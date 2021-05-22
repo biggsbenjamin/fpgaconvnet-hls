@@ -9,8 +9,7 @@ squeeze_layer_template_header = """#ifndef {NAME}_HPP_
 #define name        {name}
 #define {NAME}_ID   {id}
 
-#define {name}_input_t          data_t
-#define {name}_output_t         data_t
+#include "squeeze.hpp"
 
 #define {NAME}_BATCH_SIZE   {batch_size}
 #define {NAME}_ROWS         {rows_in}
@@ -24,23 +23,20 @@ squeeze_layer_template_header = """#ifndef {NAME}_HPP_
 #define {NAME}_COLS_OUT     {cols_out}
 #define {NAME}_CHANNELS_OUT {channels_out}
 
-#define MODULE_NAME {NAME}_SQUEEZE
 #define {NAME}_SQUEEZE_BATCH_SIZE   {batch_size}
 #define {NAME}_SQUEEZE_ROWS         {rows_in}
 #define {NAME}_SQUEEZE_COLS         {cols_in}
 #define {NAME}_SQUEEZE_CHANNELS     {channels_in}
 #define {NAME}_SQUEEZE_COARSE_IN    {coarse_in}
 #define {NAME}_SQUEEZE_COARSE_OUT   {coarse_out}
-#include "{name}_squeeze.hpp"
-#undef MODULE_NAME
 
 /**
  * FUNCTION DEFINITION
  */
 
 void {name}(
-    stream_t({name}_input_t)  in[{NAME}_COARSE_IN],
-    stream_t({name}_output_t) out[{NAME}_COARSE_OUT],
+    stream_t(data_t)  in[{NAME}_COARSE_IN],
+    stream_t(data_t) out[{NAME}_COARSE_OUT],
     int mode
 );
 
@@ -51,8 +47,8 @@ void {name}(
 squeeze_layer_template_src = """#include "{name}.hpp"
 
 void {name}(
-    stream_t({name}_input_t)  in[{NAME}_COARSE_IN],
-    stream_t({name}_output_t) out[{NAME}_COARSE_OUT],
+    stream_t(data_t) in[{NAME}_COARSE_IN],
+    stream_t(data_t) out[{NAME}_COARSE_OUT],
     int mode
 )
 {{
@@ -76,13 +72,8 @@ void {name}(
 def gen_squeeze_layer(name,param,src_path,header_path):
 
     # BATCH NORM MODULE INIT
-    squeeze_param = {
-        'input_t'       : "{name}_input_t".format(name=name),
-        'output_t'      : "{name}_output_t".format(name=name)
-    }
     squeeze = generate.modules.squeeze.gen_squeeze_module(
-        name,
-        squeeze_param,
+        name+"_squeeze",
         "in",
         "out",
         indent=4
