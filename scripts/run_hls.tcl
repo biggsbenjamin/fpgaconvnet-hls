@@ -1,8 +1,8 @@
 # load getopt script
-source $::env(FPGACONVNET_ROOT)/scripts/tcl_getopt.tcl
+source $::env(FPGACONVNET_HLS)/scripts/tcl_getopt.tcl
 
 # get fpgaconvnet root folder
-set fpgaconvnet_root $::env(FPGACONVNET_ROOT)
+set fpgaconvnet_root $::env(FPGACONVNET_HLS)
 
 # get input arguments
 set hls_arg [ lindex $argv 2 ]
@@ -81,7 +81,7 @@ if { [ info exists test_num ] } {
 set_part $fpga -tool vivado
 
 # increase fifo depth
-config_dataflow -default_channel fifo -fifo_depth 2 
+config_dataflow -default_channel fifo -fifo_depth 2
 config_dataflow -strict_mode warning
 
 #set_directive_interface -mode m_axi -depth 1 -offset slave -bundle out_0 "mem_write_top" out_hw
@@ -93,7 +93,7 @@ create_clock -period $clk_period -name default
 # define vivado hls procedures
 #proc csim   {} { csim_design -mflags "-j 8" }
 proc csim   {} { csim_design }
-proc csynth {} { csynth_design } 
+proc csynth {} { csynth_design }
 proc cosim  {} { cosim_design -rtl verilog -trace_level all }
 #proc export {} { export_design -flow impl -rtl verilog -format ip_catalog }
 if { $fast_flag == 1 } {
@@ -103,7 +103,7 @@ if { $fast_flag == 1 } {
 }
 # run hls tool
 if { $test_type == "sim" } {
-    
+
     csim
     exit
 
@@ -121,16 +121,16 @@ if { $test_type == "sim" } {
 
     if { $fast_flag == 1 } {
         csynth
-        cosim 
+        cosim
     } else {
         csim
         csynth
-        cosim 
+        cosim
     }
     exit
 
 } elseif { $test_type == "impl" } {
-    
+
     csynth
     export
     exit
@@ -144,7 +144,7 @@ if { $test_type == "sim" } {
     exit
 
 } else      {
-    
+
     exit
 
 }

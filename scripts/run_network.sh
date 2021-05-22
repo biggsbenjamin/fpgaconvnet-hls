@@ -50,16 +50,16 @@ NUM_PARTITIONS=$( jq '.partition | length' $PARTITION_INFO_PATH )
 # iterate over partitions
 for i in $( seq 1 ${NUM_PARTITIONS} ); do
 
-    # get current partition index  
+    # get current partition index
     PARTITION_INDEX=$(( $i - 1 ))
 
     # create folders
     mkdir -p partition_${PARTITION_INDEX}
     mkdir -p partition_${PARTITION_INDEX}/tb
-    mkdir -p partition_${PARTITION_INDEX}/src 
+    mkdir -p partition_${PARTITION_INDEX}/src
     mkdir -p partition_${PARTITION_INDEX}/include
     mkdir -p partition_${PARTITION_INDEX}/data
-    
+
     # get weights reloading factor
     WEIGHTS_RELOADING_FACTOR=$( jq .partition[$PARTITION_INDEX].weights_reloading_factor $PARTITION_INFO_PATH )
     WEIGHTS_RELOADING_LAYER=$( jq .partition[$PARTITION_INDEX].weights_reloading_layer $PARTITION_INFO_PATH )
@@ -89,20 +89,20 @@ for i in $( seq 1 ${NUM_PARTITIONS} ); do
     cd partition_${PARTITION_INDEX}
         if [ "$TEST_TYPE" = "gen_hw" ]; then
             # create fpgaconvnet partition ip
-            vivado_hls -f $FPGACONVNET_ROOT/scripts/run_hls.tcl "_  -type impl -name ${NETWORK} -fpga ${ZYNQ_PART} -network_flag -reset_flag"
+            vivado_hls -f $FPGACONVNET_HLS/scripts/run_hls.tcl "_  -type impl -name ${NETWORK} -fpga ${ZYNQ_PART} -network_flag -reset_flag"
             # create bitstream for given platform
-            vivado -mode batch -notrace -source $FPGACONVNET_ROOT/scripts/gen_hw.tcl \
+            vivado -mode batch -notrace -source $FPGACONVNET_HLS/scripts/gen_hw.tcl \
                 -tclargs $NETWORK $ZYNQ_PART $ZYNQ_BOARD $FREQ $PORT_WIDTH $WEIGHTS_RELOADING_FLAG
             # copy bitstreams for partition, as well as hardware platform definition
-            cp ${NETWORK}_hw_prj/project_1/design_1_wrapper.bin                         ../outputs/p${PARTITION_INDEX}.bin   
-            cp ${NETWORK}_hw_prj/project_1/project_1.runs/impl_1/design_1_wrapper.bit   ../outputs/p${PARTITION_INDEX}.bit   
-            cp ${NETWORK}_hw_prj/project_1/project_1.runs/impl_1/design_1_wrapper.hwdef ../outputs/p${PARTITION_INDEX}.hwdef 
+            cp ${NETWORK}_hw_prj/project_1/design_1_wrapper.bin                         ../outputs/p${PARTITION_INDEX}.bin
+            cp ${NETWORK}_hw_prj/project_1/project_1.runs/impl_1/design_1_wrapper.bit   ../outputs/p${PARTITION_INDEX}.bit
+            cp ${NETWORK}_hw_prj/project_1/project_1.runs/impl_1/design_1_wrapper.hwdef ../outputs/p${PARTITION_INDEX}.hwdef
         else
-            true 
+            true
             # run hls only
-            vivado_hls -f $FPGACONVNET_ROOT/scripts/run_hls.tcl "_  -type ${TEST_TYPE} -name ${NETWORK} -fpga ${ZYNQ_PART} -network_flag -reset_flag"
+            vivado_hls -f $FPGACONVNET_HLS/scripts/run_hls.tcl "_  -type ${TEST_TYPE} -name ${NETWORK} -fpga ${ZYNQ_PART} -network_flag -reset_flag"
         fi
-    cd .. 
+    cd ..
 
 done
 cd ..

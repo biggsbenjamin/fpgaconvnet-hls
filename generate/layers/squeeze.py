@@ -1,6 +1,6 @@
 # import modules
 import os
-import shutil 
+import shutil
 import generate.modules.squeeze
 
 squeeze_layer_template_header = """#ifndef {NAME}_HPP_
@@ -20,9 +20,9 @@ squeeze_layer_template_header = """#ifndef {NAME}_HPP_
 #define {NAME}_COARSE_IN    {coarse_in}
 #define {NAME}_COARSE_OUT   {coarse_out}
 
-#define {NAME}_ROWS_OUT     {rows_out} 
-#define {NAME}_COLS_OUT     {cols_out} 
-#define {NAME}_CHANNELS_OUT {channels_out} 
+#define {NAME}_ROWS_OUT     {rows_out}
+#define {NAME}_COLS_OUT     {cols_out}
+#define {NAME}_CHANNELS_OUT {channels_out}
 
 #define MODULE_NAME {NAME}_SQUEEZE
 #define {NAME}_SQUEEZE_BATCH_SIZE   {batch_size}
@@ -119,9 +119,5 @@ def gen_squeeze_layer(name,param,src_path,header_path):
     # write header file
     with open(header_path,'w') as header_file:
         header_file.write(squeeze_layer_header)
-
-    # save modules 
-    header_path = os.path.dirname(os.path.abspath(header_path))
-    shutil.copy( os.path.join(os.environ['FPGACONVNET_ROOT'],'include/squeeze.hpp') , os.path.join(header_path,"{name}_squeeze.hpp".format(name=name)) )
 
     return

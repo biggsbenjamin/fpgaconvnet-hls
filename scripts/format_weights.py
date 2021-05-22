@@ -26,18 +26,18 @@ if __name__ == "__main__":
 
     # parse arguments
     args = parser.parse_args()
-    
+
     # load partition information
     partitions = fpgaconvnet_optimiser.proto.fpgaconvnet_pb2.partitions()
     with open(args.partition_path,'r') as f:
         text_format.Parse(f.read(), partitions)
-    
+
     # iterate over partitions
-    for i, partition in enumerate(partitions.partition): 
-        
+    for i, partition in enumerate(partitions.partition):
+
         # onnx data manipulation
         onnx_data = ONNXData(partition, args.onnx_path)
-    
+
         ## save weight coefficients ##
         onnx_data.save_weights_partition(
             f'partition_{i}/data',
