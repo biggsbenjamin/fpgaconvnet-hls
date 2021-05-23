@@ -220,10 +220,8 @@ def gen_network(name,partition,output_path):
         f.write(network_tb_src)
 
     # save modules
-    shutil.copy( os.path.join(os.environ['FPGACONVNET_HLS'],'include/mem_read.hpp')  , os.path.join(output_path,f"include/{name}_mem_read.hpp") )
-    shutil.copy( os.path.join(os.environ['FPGACONVNET_HLS'],'include/mem_write.hpp') , os.path.join(output_path,f"include/{name}_mem_write.hpp") )
-    shutil.copy( os.path.join(os.environ['FPGACONVNET_HLS'],'include/mem_read.hpp')  , os.path.join(output_path,f"include/{name}_wr_mem_read.hpp") )
-    shutil.copy( os.path.join(os.environ['FPGACONVNET_HLS'],'include/wr.hpp')        , os.path.join(output_path,f"include/{name}_wr.hpp") )
+    shutil.copy( os.path.join(os.environ['FPGACONVNET_HLS'],'include/wr.hpp'),
+                os.path.join(output_path,f"include/{name}_wr.hpp") ) # TODO fix
 
 if __name__=="__main__":
 

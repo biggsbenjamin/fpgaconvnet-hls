@@ -18,7 +18,7 @@ void mem_read(
 )
 {
 
-#pragma HLS INLINE OFF 
+#pragma HLS INLINE OFF
 
     const unsigned batch_size           = BATCH_SIZE;
     const unsigned rows                 = ROWS;
@@ -29,12 +29,12 @@ void mem_read(
     const unsigned channels_per_stream  = DIVIDE(channels,streams);
     const unsigned dma_channels         = DIVIDE(DMA_WIDTH,DATA_WIDTH);
 
-#pragma HLS STREAM variable=in depth=256 
+#pragma HLS STREAM variable=in depth=256
 #pragma HLS ARRAY_PARTITION variable=in complete dim=0
 
     read_loop: for (unsigned long size_index=0; size_index < batch_size*rows*cols*channels_per_stream; size_index++) {
         #pragma HLS PIPELINE II=1
-                   
+
         mem_int port_cache[ports];
 #pragma HLS ARRAY_PARTITION variable=port_cache complete dim=0
 
@@ -47,9 +47,9 @@ void mem_read(
         stream_loop: for (unsigned int stream_index=0; stream_index < streams; stream_index++) {
 
             //
-            unsigned int port_index = (int)(stream_index/dma_channels);    
-       
-            //     
+            unsigned int port_index = (int)(stream_index/dma_channels);
+
+            //
             type_t stream_cache = 0;
             stream_cache.range() = ( ( ( port_cache[port_index] ) >> ( ( stream_index%dma_channels ) * DATA_WIDTH ) ) & BIT_MASK );
             // write to the stream

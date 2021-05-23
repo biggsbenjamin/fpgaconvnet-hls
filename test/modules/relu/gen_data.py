@@ -7,7 +7,7 @@ from fpgaconvnet_optimiser.models.modules.ReLU import ReLU
 from Data import Data
 
 class ReLUTB(Data):
-    def __init__(self):     
+    def __init__(self):
         Data.__init__(self,'relu')
 
     # update stimulus generation
@@ -30,7 +30,7 @@ class ReLUTB(Data):
         data_out = relu.functional_model(data_in)
         # return data
         data = {
-            'input'     : data_in.reshape(-1).tolist(),            
+            'input'     : data_in.reshape(-1).tolist(),
             'output'    : data_out.reshape(-1).tolist()
         }
         # resource and latency model
@@ -42,5 +42,5 @@ class ReLUTB(Data):
 
 if __name__ == '__main__':
     relu_tb = ReLUTB()
-    relu_tb.main(sys.argv[1:])    
- 
+    relu_tb.main(sys.argv[1:])
+
