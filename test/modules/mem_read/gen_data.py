@@ -22,8 +22,7 @@ class MemReadTB(Data):
         latency = self.param['rows_in']*self.param['cols_in']*int(self.param['channels_in']/self.param["streams_in"])
         # return data
         data = {
-            'input'     : data_in.reshape(-1).tolist(),
-            'output'    : data_in.reshape(-1).tolist()
+            'data'     : data_in.reshape(-1).tolist(),
         }
         # resource and latency model
         model = {
