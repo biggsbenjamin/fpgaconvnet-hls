@@ -8,7 +8,7 @@ int main()
     std::string data_path = std::string(DATA_DIR)+"/data.yaml";
 
     const int size_in = MEM_READ_BATCH_SIZE*MEM_READ_ROWS_IN*MEM_READ_COLS_IN*DIVIDE(MEM_READ_CHANNELS_IN,MEM_READ_STREAMS_IN);
-    
+
     // in/out streams
     stream_t(data_t) out[MEM_READ_STREAMS_IN];
     stream_t(data_t) out_valid[MEM_READ_STREAMS_IN];

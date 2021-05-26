@@ -2,9 +2,10 @@ import sys
 import os
 import numpy as np
 import csv
-import copy 
+import copy
 
-sys.path.append('..')
+sys.path.append("..")
+sys.path.append(os.environ.get("FPGACONVNET_OPTIMISER"))
 sys.path.append(os.environ.get("FPGACONVNET_HLS"))
 
 from fpgaconvnet_optimiser.models.layers.ConvolutionLayer import ConvolutionLayer
@@ -37,7 +38,7 @@ class ConvolutionLayerTB(Layer):
             self.param['fine']
         )
         layer.load_coef()
-        
+
         self.param['pad_top']       = layer.pad_top
         self.param['pad_right']     = layer.pad_right
         self.param['pad_bottom']    = layer.pad_bottom
@@ -89,7 +90,7 @@ class ConvolutionLayerTB(Layer):
             'resources' : layer.resource()
         }
         return data, model
-     
+
     # update layer generation
     def gen_layer(self,src_path,header_path):
         generate.layers.convolution.gen_convolution_layer(

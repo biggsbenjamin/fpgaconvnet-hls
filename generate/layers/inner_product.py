@@ -1,6 +1,6 @@
 # import modules
 import os
-import shutil 
+import shutil
 
 import generate.modules.sliding_window
 import generate.modules.fork
@@ -13,6 +13,11 @@ inner_product_layer_template_header = """#ifndef {NAME}_HPP_
 
 #define name        {name}
 #define {NAME}_ID   {id}
+
+#include "fork.hpp"
+#include "conv.hpp"
+#include "accum.hpp"
+#include "glue.hpp"
 
 #define {NAME}_BATCH_SIZE   {batch_size}
 #define {NAME}_ROWS         {rows}
@@ -33,18 +38,14 @@ inner_product_layer_template_header = """#ifndef {NAME}_HPP_
 
 
 // FORK
-#define MODULE_NAME {NAME}_FORK
 #define {NAME}_FORK_BATCH_SIZE  {batch_size}
 #define {NAME}_FORK_ROWS        1
 #define {NAME}_FORK_COLS        1
 #define {NAME}_FORK_CHANNELS    {channels_per_module}
 #define {NAME}_FORK_COARSE      {coarse_out}
 #define {NAME}_FORK_KERNEL_SIZE 1
-#include "{name}_fork.hpp"
-#undef MODULE_NAME
 
 // CONV
-#define MODULE_NAME {NAME}_CONV
 #define {NAME}_CONV_BATCH_SIZE  {batch_size}
 #define {NAME}_CONV_ROWS        1
 #define {NAME}_CONV_COLS        1
@@ -53,11 +54,8 @@ inner_product_layer_template_header = """#ifndef {NAME}_HPP_
 #define {NAME}_CONV_KERNEL_SIZE 1
 #define {NAME}_CONV_FINE        1
 #define {NAME}_CONV_INTERVAL    1
-#include "{name}_conv.hpp"
-#undef MODULE_NAME
 
 // ACCUM
-#define MODULE_NAME {NAME}_ACCUM
 #define {NAME}_ACCUM_BATCH_SIZE         {batch_size}
 #define {NAME}_ACCUM_ROWS               1
 #define {NAME}_ACCUM_COLS               1
@@ -66,11 +64,8 @@ inner_product_layer_template_header = """#ifndef {NAME}_HPP_
 #define {NAME}_ACCUM_FILTERS            {filters_per_module}
 #define {NAME}_ACCUM_CHANNELS_PER_GROUP {channels_per_module}
 #define {NAME}_ACCUM_FILTERS_PER_GROUP  {filters_per_module}
-#include "{name}_accum.hpp"
-#undef MODULE_NAME
 
 // GLUE
-#define MODULE_NAME {NAME}_GLUE
 #define {NAME}_GLUE_BATCH_SIZE  {batch_size}
 #define {NAME}_GLUE_ROWS        1
 #define {NAME}_GLUE_COLS        1
@@ -78,8 +73,6 @@ inner_product_layer_template_header = """#ifndef {NAME}_HPP_
 #define {NAME}_GLUE_COARSE_IN   {coarse_in}
 #define {NAME}_GLUE_COARSE_OUT  {coarse_out}
 #define {NAME}_GLUE_ACC         {glue_acc}
-#include "{name}_glue.hpp"
-#undef MODULE_NAME
 
 /**
  * FUNCTION DEFINITION
@@ -119,7 +112,7 @@ void {name}(
     {streams}
 
     {name}_coarse_in_loop: for(int i=0;i<{NAME}_COARSE_IN;i++) {{
-        #pragma HLS UNROLL 
+        #pragma HLS UNROLL
 
         {fork}
 
@@ -174,13 +167,13 @@ def gen_inner_product_layer(name,param,src_path,header_path):
         """
         inputs['glue'] = "conv_out"
         inputs.pop('accum',None)
-        outputs.pop('accum',None)    
- 
+        outputs.pop('accum',None)
+
     if (param['channels_in'])/(param['coarse_in']) == 1:
         inputs['glue'] = "conv_out"
         inputs.pop('accum',None)
-        outputs.pop('accum',None)    
-        
+        outputs.pop('accum',None)
+
     streams = ""
 
     # FORK MODULE INIT
@@ -190,17 +183,11 @@ def gen_inner_product_layer(name,param,src_path,header_path):
     #pragma HLS STREAM variable=fork_out
     #pragma HLS ARRAY_PARTITION variable=fork_out complete dim=0
         """.format(NAME=name.upper(),name=name)
-        fork_param = {
-            'input_t'       : "{name}_input_t".format(name=name),
-            'output_t'      : "{name}_fork_t".format(name=name)
-        }
         fork = generate.modules.fork.gen_fork_module(
-            name,
-            fork_param,
+            "_".join((name,"fork")),
             inputs['fork'],
             outputs['fork'],
             indent=8,
-            single_stream=True
         )
     else:
         fork = ''
@@ -212,19 +199,12 @@ def gen_inner_product_layer(name,param,src_path,header_path):
     #pragma HLS STREAM variable=conv_out
     #pragma HLS ARRAY_PARTITION variable=conv_out complete dim=0
         """.format(NAME=name.upper(),name=name)
-        conv_param = {
-            'input_t'       : "{name}_fork_t".format(name=name),
-            'weight_t'      : "{name}_weight_t".format(name=name),
-            'output_t'      : "{name}_conv_t".format(name=name)
-        }
         conv = generate.modules.conv.gen_conv_module(
-            name,
-            conv_param,
+            "_".join((name,"conv")),
             inputs['conv'],
             "weights[i][j]",
             outputs['conv'],
             indent=12,
-            single_stream=True
         )
     else:
         conv = ''
@@ -236,30 +216,19 @@ def gen_inner_product_layer(name,param,src_path,header_path):
     #pragma HLS STREAM variable=accum_out
     #pragma HLS ARRAY_PARTITION variable=accum_out complete dim=0
         """.format(NAME=name.upper(),name=name)
-        accum_param = {
-            'input_t'       : "{name}_conv_t".format(name=name),
-            'output_t'      : "{name}_accum_t".format(name=name)
-        }
         accum = generate.modules.accum.gen_accum_module(
-            name,
-            accum_param,
+            "_".join((name,"accum")),
             inputs['accum'],
             outputs['accum'],
             indent=12,
-            grouped=False
         )
     else:
         accum = ''
 
     # GLUE MODULE INIT
     if 'glue' in inputs:
-        glue_param = {
-            'input_t'       : "{name}_accum_t".format(name=name),
-            'output_t'      : "{name}_output_t".format(name=name)
-        }
         glue = generate.modules.glue.gen_glue_module(
-            name,
-            glue_param,
+            "_".join((name,"glue")),
             inputs['glue'],
             outputs['glue'],
             indent=4
@@ -295,8 +264,8 @@ def gen_inner_product_layer(name,param,src_path,header_path):
         cols_out        =param['cols_out'],
         channels_out    =param['channels_out'],
         filters         =param['filters'],
-        channels_per_module =int(param['channels_in']*param['rows_in']*param['cols_in']/param['coarse_in']), 
-        filters_per_module  =int(param['filters']/param['coarse_out']), 
+        channels_per_module =int(param['channels_in']*param['rows_in']*param['cols_in']/param['coarse_in']),
+        filters_per_module  =int(param['filters']/param['coarse_out']),
         coarse_in           =param['coarse_in'],
         coarse_out          =param['coarse_out'],
         glue_acc            =glue_acc
@@ -309,12 +278,5 @@ def gen_inner_product_layer(name,param,src_path,header_path):
     # write header file
     with open(header_path,'w') as header_file:
         header_file.write(inner_product_layer_header)
-
-    # save modules 
-    header_path = os.path.dirname(os.path.abspath(header_path))
-    shutil.copy( os.path.join(os.environ['FPGACONVNET_ROOT'],'include/fork.hpp')    , os.path.join(header_path,"{name}_fork.hpp".format(name=name)) )
-    shutil.copy( os.path.join(os.environ['FPGACONVNET_ROOT'],'include/conv.hpp')    , os.path.join(header_path,"{name}_conv.hpp".format(name=name)) )
-    shutil.copy( os.path.join(os.environ['FPGACONVNET_ROOT'],'include/accum.hpp')   , os.path.join(header_path,"{name}_accum.hpp".format(name=name)))
-    shutil.copy( os.path.join(os.environ['FPGACONVNET_ROOT'],'include/glue.hpp')    , os.path.join(header_path,"{name}_glue.hpp".format(name=name)) )
 
     return
