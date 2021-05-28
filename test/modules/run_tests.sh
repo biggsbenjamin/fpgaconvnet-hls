@@ -47,7 +47,7 @@ if [ $TEST_NUM ]; then
     mkdir -p data/test_${TEST_NUM}
     python3 gen_data.py -c config/config_${TEST_NUM}.json -o $FPGACONVNET_HLS/test/modules/$MODULE/data/test_${TEST_NUM} -h tb
     # RUN TEST
-    vivado_hls -f $FPGACONVNET_HLS/scripts/run_hls.tcl "_ -num ${TEST_NUM} -type ${TEST_TYPE} -name ${MODULE} -module_flag "
+    vivado_hls -f $FPGACONVNET_HLS/scripts/run_hls.tcl "_ -num ${TEST_NUM} -type ${TEST_TYPE} -name ${MODULE} -module_flag -fast"
 
 else
 
