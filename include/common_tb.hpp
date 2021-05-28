@@ -540,6 +540,7 @@ int checkStreamEqual_file(
 ////////// LOAD DATA FROM YAML (NET) ///////////
 ////////////////////////////////////////////////
 
+/*
 template<
     int INPUTS,
     int SIZE,
@@ -644,5 +645,5 @@ void load_net_fc_data(
 		data[c][0][0] = data_t(pixel);
 	}
 }
-
+*/
 #endif

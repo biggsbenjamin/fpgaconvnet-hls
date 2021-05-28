@@ -28,7 +28,7 @@ if __name__ == "__main__":
         help='Path to partition info (.json)')
     parser.add_argument('-m','--onnx_path',metavar='PATH',required=True,
         help='Path to onnx model (.onnx)')
-    parser.add_argument('-i','--partition_index',metavar='N',required=False, type=int,
+    parser.add_argument('-i','--partition_index',metavar='N',required=True, type=int,
         help='Partition index')
 
     # parse arguments
@@ -39,12 +39,15 @@ if __name__ == "__main__":
     with open(args.partition_path,'r') as f:
         json_format.Parse(f.read(), partitions)
 
-    # iterate over partitions
-    if args.partition_index:
-        # generate network
-        generate.partition.gen_network(args.name, partitions.partition[args.partition_index], f"partition_{args.partition_index}")
-    else:
-        for i, partition in enumerate(partitions.partition):
-            # generate network
-            generate.partition.gen_network(args.name, partition, f"partition_{i}")
+    # generate network
+    generate.partition.gen_network(args.name, partitions.partition[args.partition_index], f"partition_{args.partition_index}")
+
+    # # iterate over partitions
+    # if args.partition_index:
+    #     # generate network
+    #     generate.partition.gen_network(args.name, partitions.partition[args.partition_index], f"partition_{args.partition_index}")
+    # else:
+    #     for i, partition in enumerate(partitions.partition):
+    #         # generate network
+    #         generate.partition.gen_network(args.name, partition, f"partition_{i}")
 
