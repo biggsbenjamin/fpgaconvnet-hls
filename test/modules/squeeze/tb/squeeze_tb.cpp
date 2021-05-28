@@ -49,7 +49,7 @@ int main()
     squeeze_top(in,out);
 
     for(int j=0;j<SQUEEZE_COARSE_OUT;j++) {
-        printf("\r\n\t SQUEEZE #%d\r\n",j);
+        printf("\t SQUEEZE #%d\r\n",j);
         err += checkStreamEqual<data_t>(out[j],out_valid[j]);
     }
 
