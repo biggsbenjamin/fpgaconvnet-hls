@@ -16,7 +16,7 @@ void mem_read_top(
     #pragma HLS INTERFACE axis port=in
 
     #pragma HLS DATAFLOW
-    test_mem_read<
+    mem_read<
         MEM_READ_BATCH_SIZE,
         MEM_READ_ROWS_IN,
         MEM_READ_COLS_IN,

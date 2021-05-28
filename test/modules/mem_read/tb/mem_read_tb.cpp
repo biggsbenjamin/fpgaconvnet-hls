@@ -5,7 +5,9 @@ int main()
 {
 
     int err = 0;
-    std::string data_path = std::string(DATA_DIR)+"/data.yaml";
+    std::string input_path  = std::string(DATA_DIR)+"/input.dat";
+    std::string output_path = std::string(DATA_DIR)+"/output.dat";
+
 
     const int size_in = MEM_READ_BATCH_SIZE*MEM_READ_ROWS_IN*MEM_READ_COLS_IN*DIVIDE(MEM_READ_CHANNELS_IN,MEM_READ_STREAMS_IN);
 
@@ -18,25 +20,24 @@ int main()
     static data_t test_out[size_in][MEM_READ_STREAMS_IN] = {0};
 
     // load data_in
-    load_net_data<
+    load_data<
         MEM_READ_PORTS_IN,
-        MEM_READ_BATCH_SIZE,
-        MEM_READ_ROWS_IN,
-        MEM_READ_COLS_IN,
-        MEM_READ_CHANNELS_IN,
-        MEM_READ_STREAMS_IN
-    >(data_path,"data_in",test_in);
+        size_in,
+        mem_int
+    >(input_path,test_in);
 
     // load data_out
     load_data<
         size_in,
-        MEM_READ_STREAMS_IN
-    >(data_path,"data_out",test_out);
+        MEM_READ_STREAMS_IN,
+        data_t
+    >(input_path,test_out);
 
     // convert to out valid stream
     to_stream<
         size_in,
-        MEM_READ_STREAMS_IN
+        MEM_READ_STREAMS_IN,
+        data_t
     >(test_out,out_valid);
 
     // run mem read
