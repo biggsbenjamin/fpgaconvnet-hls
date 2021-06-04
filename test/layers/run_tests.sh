@@ -3,21 +3,21 @@ TEST_TYPE=all
 
 while getopts ":l:n:cseih" opt; do
     case ${opt} in
-        l ) 
+        l )
             LAYER=$OPTARG
             ;;
-        n ) 
+        n )
             TEST_NUM=$OPTARG
             ;;
-        c ) 
+        c )
             # c simulation
             TEST_TYPE=sim
             ;;
-        s ) 
+        s )
             # synthesis
             TEST_TYPE=synth
             ;;
-        e ) 
+        e )
             # co-simulation
             TEST_TYPE=cosim
             ;;
@@ -45,9 +45,9 @@ if [ $TEST_NUM ]; then
   echo "RUNNING TEST ${TEST_NUM}"
   # GENERATE INPUTS
   mkdir -p data/test_${TEST_NUM}
-  python3.6 gen_layer.py -c config/config_${TEST_NUM}.json -o $FPGACONVNET_ROOT/test/layers/$LAYER/data/test_${TEST_NUM} -s src/ -h include/ -t tb/
+  python gen_layer.py -c config/config_${TEST_NUM}.json -o $FPGACONVNET_HLS/test/layers/$LAYER/data/test_${TEST_NUM} -s src/ -h include/ -t tb/
   # RUN TEST
-  vivado_hls -f $FPGACONVNET_ROOT/scripts/run_hls.tcl "_  -num ${TEST_NUM} -type ${TEST_TYPE} -name ${LAYER} -layer_flag "
+  vivado_hls -f $FPGACONVNET_HLS/scripts/run_hls.tcl "_  -num ${TEST_NUM} -type ${TEST_TYPE} -name ${LAYER} -layer_flag "
 
 else
 
@@ -59,12 +59,12 @@ else
       echo "RUNNING TEST ${i}"
       # GENERATE INPUTS
       mkdir -p data/test_${i}
-      python3.6 gen_layer.py -c config/config_${i}.json -o $FPGACONVNET_ROOT/test/layers/$LAYER/data/test_${i} -s src/ -h include/ -t tb/
+      python gen_layer.py -c config/config_${i}.json -o $FPGACONVNET_HLS/test/layers/$LAYER/data/test_${i} -s src/ -h include/ -t tb/
       # RUN TEST
-      vivado_hls -f $FPGACONVNET_ROOT/scripts/run_hls.tcl "_  -num ${i} -type ${TEST_TYPE} -name ${LAYER} -layer_flag "
+      vivado_hls -f $FPGACONVNET_HLS/scripts/run_hls.tcl "_  -num ${i} -type ${TEST_TYPE} -name ${LAYER} -layer_flag "
   done
 
 fi
 
 # GENERATE REPORTS
-python3 ../report.py -l $LAYER
+python ../report.py -l $LAYER

@@ -19,7 +19,7 @@
 
 | TEST | LUT | FF | DSP | BRAM || LUT (model) | FF (model) | DSP (model) | BRAM (model) |
 |:----:|:---:|:--:|:---:|:----:||:---:|:--:|:---:|:----:|
-| 0 | N/A | N/A | N/A | N/A || 0 | 0 | 1 | 1 | 
+| 0 | N/A | N/A | N/A | N/A || 0 | 0 | 1 | 2 | 
 
 
 ## Timing Results

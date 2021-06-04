@@ -55,7 +55,7 @@ class ONNXData:
         # get output data
         self.output_name  = self.sess.get_outputs()[0].name
         self.output_shape = self.sess.get_outputs()[0].shape
-        # create random data input 
+        # create random data input
         self.data = np.random.uniform(0,1,self.input_shape).astype(np.float32)
 
     def load_input(self,filepath):
@@ -202,14 +202,14 @@ class ONNXData:
         input_data = np.array( self.sess.run([input_node], { self.input_name : self.data } )[0] )
         input_data = self.transform_featuremap(input_data)
         input_streams = int(self.partition.layers[0].parameters.coarse_in)
-        self.save_featuremap(input_data, os.path.join(output_path, onnx_helper._format_name(input_node)), 
+        self.save_featuremap(input_data, os.path.join(output_path, onnx_helper._format_name(input_node)),
             parallel_streams=input_streams, to_yaml=False, to_bin=to_bin, to_csv=to_csv)
         # save output layer
         output_node = self.partition.output_node
         output_data = np.array( self.sess.run([output_node], { self.input_name : self.data } )[0] )
         output_data = self.transform_featuremap(output_data)
         output_streams = int(self.partition.layers[-1].parameters.coarse_out)
-        self.save_featuremap(output_data, os.path.join(output_path, onnx_helper._format_name(output_node)), 
+        self.save_featuremap(output_data, os.path.join(output_path, onnx_helper._format_name(output_node)),
             parallel_streams=output_streams, to_yaml=False, to_bin=to_bin, to_csv=to_csv)
         # save yaml data
         data = {
@@ -278,9 +278,9 @@ class ONNXData:
         rows        = layer.parameters.rows_in
         cols        = layer.parameters.cols_in
         #reshape for transforming
-        weights_raw = np.reshape(weights_raw,(filters,channels,rows,cols))
+        weights_raw = np.reshape(weights_raw,(filters*wr_factor,channels,rows,cols))
         weights_raw = np.rollaxis(weights_raw,1,3)
-        weights_raw = np.reshape(weights_raw,(filters,rows*cols*channels,1,1))
+        weights_raw = np.reshape(weights_raw,(filters*wr_factor,rows*cols*channels,1,1))
         # return transformed weights
         return self._transform_weights(weights_raw,wr_factor,coarse_in,coarse_out)
 

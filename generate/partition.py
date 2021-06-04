@@ -1,23 +1,24 @@
 import json
 import os
-import shutil 
+import shutil
 import numpy as np
 import sys
-sys.path.append('..')
+
+sys.path.append(os.environ.get("FPGACONVNET_OPTIMISER"))
+sys.path.append(os.environ.get("FPGACONVNET_HLS"))
 
 from generate.partition_template import *
 
 from generate.layers.convolution    import gen_convolution_layer
 from generate.layers.pooling        import gen_pooling_layer
-from generate.layers.concat         import gen_concat_layer
+#from generate.layers.concat         import gen_concat_layer
 from generate.layers.relu           import gen_relu_layer
-from generate.layers.split          import gen_split_layer
+#from generate.layers.split          import gen_split_layer
 from generate.layers.inner_product  import gen_inner_product_layer
 from generate.layers.squeeze        import gen_squeeze_layer
 
-import tools.graphs as graphs
-#import tools.fpgaconvnet_pb2 as fpgaconvnet_pb2
-import proto.fpgaconvnet_pb2 as fpgaconvnet_pb2
+import fpgaconvnet_optimiser.tools.graphs as graphs
+import fpgaconvnet_optimiser.proto.fpgaconvnet_pb2 as fpgaconvnet_pb2
 from google.protobuf.json_format import MessageToDict
 
 # class for weight definition
@@ -27,11 +28,11 @@ class generate_weight_def:
         self.name       = name
         self.type       = "static" if wr else "const static"
         self.kernel_dim = " " if not kernel_size > 1 else "[{NAME}_KERNEL_SIZE][{NAME}_KERNEL_SIZE]".format(NAME=self.name.upper())
-    
+
     def __str__(self):
         return """
-{type} weight_t {name}_weights[{NAME}_COARSE_IN][{NAME}_COARSE_OUT][DIVIDE({NAME}_WEIGHTS,{NAME}_COARSE_IN*{NAME}_COARSE_OUT*{NAME}_KERNEL_SIZE*{NAME}_KERNEL_SIZE)]{kernel_dim} = {{ 
-#include "{name}_weights_0.csv" 
+{type} weight_t {name}_weights[{NAME}_COARSE_IN][{NAME}_COARSE_OUT][DIVIDE({NAME}_WEIGHTS,{NAME}_COARSE_IN*{NAME}_COARSE_OUT*{NAME}_KERNEL_SIZE*{NAME}_KERNEL_SIZE)]{kernel_dim} = {{
+#include "{name}_weights_0.csv"
 }};
 """.format(
         NAME=self.name.upper(),
@@ -54,7 +55,7 @@ class generate_weight_init():
 #pragma HLS RESOURCE variable={name}_weights core={bram_type}
 //#pragma HLS STREAM variable={name}_weights off
 #pragma HLS STABLE variable={name}_weights
-   
+
 """.format(name=self.name,bram_type=self.bram_type)
 
 """
@@ -85,7 +86,7 @@ def gen_network(name,partition,output_path):
             streams.append((stream_in.name, stream_in.coarse))
         for stream_out in layer.streams_out:
             streams.append((stream_out.name, stream_out.coarse))
-    
+
     # remove duplicates
     streams = list(set(streams))
 
@@ -94,7 +95,7 @@ def gen_network(name,partition,output_path):
     for stream in streams:
         streams_init +=  """
     stream_t(data_t) {stream_name}[{coarse}];
-#pragma HLS STREAM variable={stream_name} 
+#pragma HLS STREAM variable={stream_name}
 #pragma HLS ARRAY_PARTITION variable={stream_name} complete dim=0
 """.format(stream_name=stream[0],coarse=stream[1])
 
@@ -102,9 +103,9 @@ def gen_network(name,partition,output_path):
     weights = ""
     weights_init = ""
 
-    # layers initialisation 
+    # layers initialisation
     layers = ""
- 
+
     # generate hardware
     for layer in partition.layers:
         # get parameters of layer
@@ -125,12 +126,12 @@ def gen_network(name,partition,output_path):
             gen_convolution_layer(*args)
             # create weights
             weights += str(generate_weight_def(
-                layer.name, 
-                kernel_size=int(parameters["kernel_size"]), 
+                layer.name,
+                kernel_size=int(parameters["kernel_size"]),
                 wr=True if layer.name == wr_layer else False
             ))
             weights_init += str(generate_weight_init(
-                layer.name, 
+                layer.name,
                 wr=True if layer.name == wr_layer else False
             ))
         if layer.type == fpgaconvnet_pb2.layer.layer_type.POOLING:
@@ -148,12 +149,12 @@ def gen_network(name,partition,output_path):
             gen_inner_product_layer(*args)
             # create weights
             weights += str(generate_weight_def(
-                layer.name, 
+                layer.name,
                 kernel_size=1,
                 wr=True if layer.name == wr_layer else False
             ))
             weights_init += str(generate_weight_init(
-                layer.name, 
+                layer.name,
                 wr=True if layer.name == wr_layer else False
             ))
         if layer.type == fpgaconvnet_pb2.layer.layer_type.SQUEEZE:
@@ -166,12 +167,12 @@ def gen_network(name,partition,output_path):
         fn_args.append("mode")
         fn_args = ", ".join(fn_args)
         layers += f"    {layer.name}({fn_args});\n"
-           
+
     # include generation
     include = ""
     for layer in partition.layers:
         include +=f"#include \"{layer.name}.hpp\"\n"
-    
+
     # HEADER
     network_header = network_header_template.format(
         name        =name,
@@ -219,10 +220,8 @@ def gen_network(name,partition,output_path):
         f.write(network_tb_src)
 
     # save modules
-    shutil.copy( os.path.join(os.environ['FPGACONVNET_ROOT'],'include/mem_read.hpp')  , os.path.join(output_path,f"include/{name}_mem_read.hpp") )
-    shutil.copy( os.path.join(os.environ['FPGACONVNET_ROOT'],'include/mem_write.hpp') , os.path.join(output_path,f"include/{name}_mem_write.hpp") )
-    shutil.copy( os.path.join(os.environ['FPGACONVNET_ROOT'],'include/mem_read.hpp')  , os.path.join(output_path,f"include/{name}_wr_mem_read.hpp") )
-    shutil.copy( os.path.join(os.environ['FPGACONVNET_ROOT'],'include/wr.hpp')        , os.path.join(output_path,f"include/{name}_wr.hpp") )
+    shutil.copy( os.path.join(os.environ['FPGACONVNET_HLS'],'include/wr.hpp'),
+                os.path.join(output_path,f"include/{name}_wr.hpp") ) # TODO fix
 
 if __name__=="__main__":
 

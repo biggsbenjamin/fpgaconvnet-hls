@@ -1,14 +1,18 @@
-relu_template="""
-{indent}{name}_relu<0>({input},{output});
+relu_template = """
+{indent}relu<
+{indent}    {NAME}_BATCH_SIZE,
+{indent}    {NAME}_ROWS,
+{indent}    {NAME}_COLS,
+{indent}    {NAME}_CHANNELS
+{indent}>({input_stream},{output_stream});
 
 """
 
-def gen_relu_module(name,param,input,output,indent=0):
+def gen_relu_module(name,input_stream,output_stream,indent=0):
     return relu_template.format(
-        name            =name,
-        input_t         =param['input_t'],
-        output_t        =param['output_t'],
-        input           =input,
-        output          =output,
+        NAME            =name.upper(),
+        input_stream    =input_stream,
+        output_stream   =output_stream,
         indent          =" "*indent
     )
+

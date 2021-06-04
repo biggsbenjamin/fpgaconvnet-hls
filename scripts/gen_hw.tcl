@@ -37,8 +37,8 @@ if { $argc < 3 } {
     update_ip_catalog
 
     # Generate the base block design for system implementation
-    source $::env(FPGACONVNET_ROOT)/scripts/gen_bd.tcl 
-    generate_hardware $BOARD $WR_ON $PORT_WIDTH $FREQ 0 0 
+    source $::env(FPGACONVNET_HLS)/scripts/gen_bd.tcl
+    generate_hardware $BOARD $WR_ON $PORT_WIDTH $FREQ 0 0
 
     # Reset output products
     reset_target all [get_files  $PATH/$dir_name/project_1/project_1.srcs/sources_1/bd/design_1/design_1.bd]

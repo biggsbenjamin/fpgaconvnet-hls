@@ -20,7 +20,7 @@ void mem_write(
 )
 {
 
-#pragma HLS INLINE OFF 
+#pragma HLS INLINE OFF
 #pragma HLS INTERFACE ap_ctrl_chain port=return
 
     const unsigned batch_size               = BATCH_SIZE;
@@ -30,14 +30,14 @@ void mem_write(
     const unsigned ports                    = PORTS;
     const unsigned streams                  = STREAMS;
     const unsigned weights_reloading_factor = WEIGHTS_RELOADING_FACTOR;
-    const unsigned channels_per_stream      = DIVIDE(channels_out,streams_out);
+    const unsigned channels_per_stream      = DIVIDE(channels,streams);
     const unsigned dma_channels             = DIVIDE(DMA_WIDTH,DATA_WIDTH);
 
 #pragma HLS STREAM variable=out depth=256
 #pragma HLS ARRAY_PARTITION variable=out complete dim=0
 
     pixel_loop: for(unsigned pixel_index=0;pixel_index<batch_size*rows*cols;pixel_index++) {
-        channel_loop: for(unsigned channel_index=0;channel_index<channels_per_stream;channel_index++) { 
+        channel_loop: for(unsigned channel_index=0;channel_index<channels_per_stream;channel_index++) {
             #pragma HLS PIPELINE II=1
             mem_int port_cache[ports] = {0};
             #pragma HLS dependence variable=port_cache intra RAW true

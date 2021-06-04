@@ -8,7 +8,7 @@ import random
 import os
 import onnx
 from PIL import Image
-from google.protobuf import text_format
+from google.protobuf import json_format
 
 sys.path.append(os.environ.get("FPGACONVNET_HLS"))
 
@@ -23,25 +23,24 @@ if __name__ == "__main__":
         help='Path to partition info (.pb.bin)')
     parser.add_argument('-m','--onnx_path',metavar='PATH',required=True,
         help='Path to onnx model (.onnx)')
+    parser.add_argument('-i','--partition_index',metavar='N',required=True, type=int,
+        help='Partition index')
 
     # parse arguments
     args = parser.parse_args()
-    
+
     # load partition information
     partitions = fpgaconvnet_optimiser.proto.fpgaconvnet_pb2.partitions()
     with open(args.partition_path,'r') as f:
-        text_format.Parse(f.read(), partitions)
-    
-    # iterate over partitions
-    for i, partition in enumerate(partitions.partition): 
-        
-        # onnx data manipulation
-        onnx_data = ONNXData(partition, args.onnx_path)
-    
-        ## save weight coefficients ##
-        onnx_data.save_weights_partition(
-            f'partition_{i}/data',
-            to_yaml=True,
-            to_csv=True,
-            to_bin=True )
+        json_format.Parse(f.read(), partitions)
+
+    # onnx data manipulation
+    onnx_data = ONNXData(partitions.partition[args.partition_index], args.onnx_path)
+
+    ## save weight coefficients ##
+    onnx_data.save_weights_partition(
+        f'partition_{args.partition_index}/data',
+        to_yaml=True,
+        to_csv=True,
+        to_bin=True )
 

@@ -20,7 +20,7 @@ void load_data(
     T data[SIZE][STREAMS]
 ) {
     // read in file
-    const char *filepath_cstr = filepath.c_str(); 
+    const char *filepath_cstr = filepath.c_str();
     FILE * fp = fopen(filepath_cstr,"r");
 
     // check file opened
@@ -65,21 +65,21 @@ void load_data(
     T data[SIZE]
 ) {
     // read in file
-    const char *filepath_cstr = filepath.c_str(); 
+    const char *filepath_cstr = filepath.c_str();
     FILE * fp = fopen(filepath_cstr,"r");
 
     // check file opened
     if (fp == NULL) {
         perror("Failed: ");
     }
-    
+
     // save to array
     for(int i=0;i<SIZE;i++) {
         float val;
         fscanf(fp,"%f\n", &val);
         data[i] = T( val );
     }
-    
+
     // close file
     fclose(fp);
 }
@@ -103,7 +103,7 @@ void load_data(
 ) {
 
     // read in file
-    const char *filepath_cstr = filepath.c_str(); 
+    const char *filepath_cstr = filepath.c_str();
     FILE * fp = fopen(filepath_cstr,"r");
 
     // check file opened
@@ -146,14 +146,14 @@ void load_data(
     T data[SIZE][COARSE][KERNEL_SIZE][KERNEL_SIZE]
 ) {
     // read in file
-    const char *filepath_cstr = filepath.c_str(); 
+    const char *filepath_cstr = filepath.c_str();
     FILE * fp = fopen(filepath_cstr,"r");
 
     // check file opened
     if (fp == NULL) {
         perror("Failed: ");
     }
-     
+
     // save to array
     for(int i=0;i<SIZE;i++) {
         for(int c=0;c<COARSE;c++) {
@@ -194,7 +194,7 @@ void load_data(
     T data[COARSE_IN][COARSE_OUT][DIVIDE(CHANNELS,COARSE_IN)*DIVIDE(FILTERS,COARSE_OUT)][KERNEL_SIZE][KERNEL_SIZE]
 ) {
     // read in file
-    const char *filepath_cstr = filepath.c_str(); 
+    const char *filepath_cstr = filepath.c_str();
     FILE * fp = fopen(filepath_cstr,"r");
 
     // check file opened
@@ -204,7 +204,7 @@ void load_data(
 
     const int channels_per_coarse_in = DIVIDE(CHANNELS,COARSE_IN);
     const int filters_per_coarse_out = DIVIDE(FILTERS,COARSE_OUT);
-     
+
     // save to array
     for(int i=0;i<channels_per_coarse_in;i++) {
         for(int cin=0;cin<COARSE_IN;cin++) {
@@ -235,7 +235,7 @@ void load_data(
     T data[COARSE_IN][COARSE_OUT][DIVIDE(CHANNELS,COARSE_IN)*DIVIDE(FILTERS,COARSE_OUT)]
 ) {
     // read in file
-    const char *filepath_cstr = filepath.c_str(); 
+    const char *filepath_cstr = filepath.c_str();
     FILE * fp = fopen(filepath_cstr,"r");
 
     // check file opened
@@ -245,7 +245,7 @@ void load_data(
 
     const int channels_per_coarse_in = DIVIDE(CHANNELS,COARSE_IN);
     const int filters_per_coarse_out = DIVIDE(FILTERS,COARSE_OUT);
-     
+
     // save to array
     for(int i=0;i<channels_per_coarse_in;i++) {
         for(int cin=0;cin<COARSE_IN;cin++) {
@@ -290,14 +290,14 @@ void load_data(
     T data[COARSE_IN][COARSE_OUT][SIZE]
 ) {
     // read in file
-    const char *filepath_cstr = filepath.c_str(); 
+    const char *filepath_cstr = filepath.c_str();
     FILE * fp = fopen(filepath_cstr,"r");
 
     // check file opened
     if (fp == NULL) {
         perror("Failed: ");
     }
-     
+
     // save to array
     for(int cin=0;cin<COARSE_IN;cin++) {
         for(int cout=0;cout<COARSE_OUT;cout++) {
@@ -334,14 +334,14 @@ void load_data(
     T data[COARSE_IN][COARSE_OUT][SIZE][FINE]
 ) {
     // read in file
-    const char *filepath_cstr = filepath.c_str(); 
+    const char *filepath_cstr = filepath.c_str();
     FILE * fp = fopen(filepath_cstr,"r");
 
     // check file opened
     if (fp == NULL) {
         perror("Failed: ");
     }
-     
+
     // save to array
     for(int cin=0;cin<COARSE_IN;cin++) {
         for(int cout=0;cout<COARSE_OUT;cout++) {
@@ -384,14 +384,14 @@ void load_data(
 ) {
 
     // read in file
-    const char *filepath_cstr = filepath.c_str(); 
+    const char *filepath_cstr = filepath.c_str();
     FILE * fp = fopen(filepath_cstr,"r");
 
     // check file opened
     if (fp == NULL) {
         perror("Failed: ");
     }
-     
+
     // save to array
     for(int i=0;i<SIZE;i++) {
         for(int a=0;a<COARSE_IN;a++) {
@@ -539,10 +539,11 @@ int checkStreamEqual_file(
 ////////////////////////////////////////////////
 ////////// LOAD DATA FROM YAML (NET) ///////////
 ////////////////////////////////////////////////
+
 /*
 template<
     int INPUTS,
-    int SIZE, 
+    int SIZE,
     int WR_FACTOR=1
 >
 void load_net_weights(
@@ -573,13 +574,13 @@ void load_net_weights(
 }
 
 template<
-    int INPUTS, 
+    int INPUTS,
     int BATCH_SIZE,
-    int ROWS, 
-    int COLS, 
-    int CHANNELS, 
-    int STREAMS, 
-    int WR_FACTOR=1 
+    int ROWS,
+    int COLS,
+    int CHANNELS,
+    int STREAMS,
+    int WR_FACTOR=1
 >
 void load_net_data(
     std::string filepath,
@@ -603,11 +604,11 @@ void load_net_data(
             for(int k=0;k<channels_per_stream;k++) {
                 int input_index = 0;
                 for(int l=0;l<STREAMS;l++) {
-                    // 
+                    //
                     data_t pixel = data_t(data_raw[index].as<float>());
                     //
                     if (j == wr_index) {
-                        // 
+                        //
                         int out_index = i*channels_per_stream*WR_FACTOR + j*channels_per_stream + k;
                         data[(int)(l/dma_channels)][out_index] |= ( ( pixel.range() & BIT_MASK ) << ( ( l%dma_channels ) * DATA_WIDTH ) );
                     }

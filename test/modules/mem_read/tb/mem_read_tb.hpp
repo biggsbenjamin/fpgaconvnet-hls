@@ -2,7 +2,6 @@
 #define MEM_READ_TB_HPP_
 
 #include "common.hpp"
-
 #include "mem_read_param.hpp"
 
 /////////////////////////////////

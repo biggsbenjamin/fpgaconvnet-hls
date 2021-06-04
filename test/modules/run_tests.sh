@@ -3,21 +3,21 @@ TEST_TYPE=all
 
 while getopts ":m:n:cseih" opt; do
     case ${opt} in
-        m ) 
+        m )
             MODULE=$OPTARG
             ;;
-        n ) 
+        n )
             TEST_NUM=$OPTARG
             ;;
-        c ) 
+        c )
             # c simulation
             TEST_TYPE=sim
             ;;
-        s ) 
+        s )
             # synthesis
             TEST_TYPE=synth
             ;;
-        e ) 
+        e )
             # co-simulation
             TEST_TYPE=cosim
             ;;
@@ -45,9 +45,9 @@ if [ $TEST_NUM ]; then
     echo "RUNNING TEST ${TEST_NUM}"
     # GENERATE INPUTS
     mkdir -p data/test_${TEST_NUM}
-    python3 gen_data.py -c config/config_${TEST_NUM}.json -o $FPGACONVNET_ROOT/test/modules/$MODULE/data/test_${TEST_NUM} -h tb
+    python3 gen_data.py -c config/config_${TEST_NUM}.json -o $FPGACONVNET_HLS/test/modules/$MODULE/data/test_${TEST_NUM} -h tb
     # RUN TEST
-    vivado_hls -f $FPGACONVNET_ROOT/scripts/run_hls.tcl "_ -num ${TEST_NUM} -type ${TEST_TYPE} -name ${MODULE} -module_flag "
+    vivado_hls -f $FPGACONVNET_HLS/scripts/run_hls.tcl "_ -num ${TEST_NUM} -type ${TEST_TYPE} -name ${MODULE} -module_flag -fast"
 
 else
 
@@ -59,10 +59,10 @@ else
         echo "RUNNING TEST ${i}"
         # GENERATE INPUTS
         mkdir -p data/test_${i}
-        python3 gen_data.py -c config/config_${i}.json -o $FPGACONVNET_ROOT/test/modules/$MODULE/data/test_${i} -h tb
+        python3 gen_data.py -c config/config_${i}.json -o $FPGACONVNET_HLS/test/modules/$MODULE/data/test_${i} -h tb
         # RUN TEST
-        #vivado_hls -f ../run_test_module.tcl -test ${i} $TEST_TYPE $MODULE 
-        vivado_hls -f $FPGACONVNET_ROOT/scripts/run_hls.tcl "_  -num ${i} -type ${TEST_TYPE} -name ${MODULE} -module_flag "
+        #vivado_hls -f ../run_test_module.tcl -test ${i} $TEST_TYPE $MODULE
+        vivado_hls -f $FPGACONVNET_HLS/scripts/run_hls.tcl "_  -num ${i} -type ${TEST_TYPE} -name ${MODULE} -module_flag "
     done
 
 fi
