@@ -34,5 +34,8 @@ model.fit_model()
 # save coefficients
 model.save_coefficients("coefficients/pool")
 
-# plot error
-model.plot_error(MAX_RSC)
+# # plot error
+# model.plot_error(MAX_RSC)
+
+# print out error
+model.print_absolute_error()

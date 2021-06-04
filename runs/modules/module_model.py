@@ -1,8 +1,10 @@
 import os
 import json
 import scipy
+import math
 import numpy as np
 import sklearn.linear_model
+#import sklearn.metrics.mean_absolute_error
 import matplotlib.pyplot as plt
 
 RSC_TYPES=["LUT", "FF", "BRAM", "DSP"]
@@ -114,9 +116,22 @@ class ModuleModel:
         with open(f"{filepath}_bram.npy", "wb") as f:
             np.save(f, self.coef["BRAM"])
 
+    def print_absolute_error(self):
+    
+        # iterate over the different resource types
+        rsc_types = ["FF", "LUT", "DSP", "BRAM"]
+        for rsc_type in rsc_types:
+            # get the difference in resource usage
+            actual = np.array([ p["resources"][rsc_type] for p in self.points ])
+            predicted = np.array([ self.module(p["parameters"]).rsc(self.coef)[rsc_type] for p in self.points ])
+            # get the mean absolute error
+            err = np.average(np.absolute(actual - predicted))
+            var = math.sqrt(np.var(np.absolute(actual - predicted)))
+            print(f"{rsc_type}: error = {err}, var = {var}")
+
     def plot_error(self, max_rsc):
         
-        # get the 
+        # create 4 subplots 
         fig, axs = plt.subplots(2,2)
 
         # LUT

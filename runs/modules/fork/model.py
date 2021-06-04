@@ -20,18 +20,23 @@ def build_module(parameter):
     )
 
 # load accum model
-fork_model = ModuleModel(build_module)
-fork_model.load_points("modules/fork/logs")
+model = ModuleModel(build_module)
+model.load_points("modules/fork/logs")
 
 # filter parameters 
 filters = {
     "data_width" : [15,17]
 }
-fork_model.filter_parameters(filters)
+model.filter_parameters(filters)
 
 # fit model
-fork_model.fit_model()
+model.fit_model()
 
-# plot error
-fork_model.plot_error(MAX_RSC)
+# save coefficients
+model.save_coefficients("coefficients/fork")
 
+# # plot error
+# model.plot_error(MAX_RSC)
+
+# print out error
+model.print_absolute_error()

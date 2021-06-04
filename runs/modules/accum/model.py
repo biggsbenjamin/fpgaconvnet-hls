@@ -20,21 +20,23 @@ def build_module(parameter):
     )
 
 # load accum model
-accum_model = ModuleModel(build_module)
-accum_model.load_points("modules/accum/logs")
+model = ModuleModel(build_module)
+model.load_points("modules/accum/logs")
 
 # filter parameters 
 filters = {
     "data_width" : [15,17]
 }
-accum_model.filter_parameters(filters)
+model.filter_parameters(filters)
 
 # fit model
-accum_model.fit_model()
+model.fit_model()
 
 # save coefficients
 model.save_coefficients("coefficients/accum")
 
 # plot error
-accum_model.plot_error(MAX_RSC)
+# accum_model.plot_error(MAX_RSC)
 
+# print out error
+model.print_absolute_error()
