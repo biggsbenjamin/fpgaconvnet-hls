@@ -81,7 +81,7 @@ class Data:
         return stream_out.tolist()
 
     def main(self,argv):
-        
+
 
         config_path = ''
         output_path = ''
@@ -111,6 +111,8 @@ class Data:
         data, model = self.gen_stimulus()
 
         # save data as .dat files
+        if not os.path.exists(output_path):
+            os.makedirs(output_path)
         for filename in data:
             with open(os.path.join(output_path,filename+".dat"), 'w') as f:
                 f.write("\n".join([str(i) for i in data[filename]]))
@@ -122,7 +124,7 @@ class Data:
         # save data
         with open(output_path+'/model.json', 'w') as f:
             json.dump(model, f)
-        
+
         # save header file
         self.gen_param_header(header_path,output_path)
 

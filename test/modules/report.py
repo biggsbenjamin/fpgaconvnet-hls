@@ -78,6 +78,8 @@ if __name__ == "__main__":
         except AssertionError:
             pass
         # save results
+        if not os.path.exists("rpt/"):
+            os.makedirs("rpt/")
         with open(f"rpt/result_{test_num}.json","w") as f:
             json.dump(results,f)
         # append to module report
