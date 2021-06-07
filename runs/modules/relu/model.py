@@ -18,18 +18,23 @@ def build_module(parameter):
     )
 
 # load relu model
-relu_model = ModuleModel(build_module)
-relu_model.load_points("modules/relu/logs")
+model = ModuleModel(build_module)
+model.load_points("modules/relu/logs")
 
 # filter parameters 
 filters = {
     "data_width" : [15,17]
 }
-relu_model.filter_parameters(filters)
+model.filter_parameters(filters)
 
 # fit model
-relu_model.fit_model()
+model.fit_model()
 
-# plot error
-relu_model.plot_error(MAX_RSC)
+# save coefficients
+model.save_coefficients("coefficients/relu")
 
+# # plot error
+# model.plot_error(MAX_RSC)
+
+# print out error
+model.print_absolute_error()

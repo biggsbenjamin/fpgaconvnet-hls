@@ -22,18 +22,23 @@ def build_module(parameter):
     )
 
 # load accum model
-conv_model = ModuleModel(build_module)
-conv_model.load_points("modules/conv/logs")
+model = ModuleModel(build_module)
+model.load_points("modules/conv/logs")
 
 # filter parameters 
 filters = {
     "data_width" : [15,17]
 }
-conv_model.filter_parameters(filters)
+model.filter_parameters(filters)
 
 # fit model
-conv_model.fit_model()
+model.fit_model()
 
-# plot error
-conv_model.plot_error(MAX_RSC)
+# save coefficients
+model.save_coefficients("coefficients/conv")
 
+# # plot error
+# model.plot_error(MAX_RSC)
+
+# print out error
+model.print_absolute_error()

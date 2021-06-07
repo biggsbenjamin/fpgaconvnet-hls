@@ -21,18 +21,23 @@ def build_module(parameter):
     )
 
 # load accum model
-glue_model = ModuleModel(build_module)
-glue_model.load_points("modules/glue/logs")
+model = ModuleModel(build_module)
+model.load_points("modules/glue/logs")
 
 # filter parameters 
 filters = {
     "data_width" : [15,17]
 }
-glue_model.filter_parameters(filters)
+model.filter_parameters(filters)
 
 # fit model
-glue_model.fit_model()
+model.fit_model()
 
-# plot error
-glue_model.plot_error(MAX_RSC)
+# save coefficients
+model.save_coefficients("coefficients/glue")
 
+# # plot error
+# model.plot_error(MAX_RSC)
+
+# print out error
+model.print_absolute_error()
