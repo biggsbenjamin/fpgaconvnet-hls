@@ -6,10 +6,10 @@
 #include "relu_param.hpp"
 
 /////////////////////////////////
-
+typedef data_t relu_t;
 void relu_top(
-	stream_t(data_t) &in,
-	stream_t(data_t) &out
+	stream_t(relu_t) &in,
+	stream_t(relu_t) &out
 );
 
 /////////////////////////////////

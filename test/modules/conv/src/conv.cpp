@@ -2,13 +2,13 @@
 #include "conv.hpp"
 
 void conv_top(
-    stream_t(data_t) in[CONV_KERNEL_SIZE][CONV_KERNEL_SIZE],
+    stream_t(Conv_data) in[CONV_KERNEL_SIZE][CONV_KERNEL_SIZE],
 #if CONV_KERNEL_SIZE == 1
-    weight_t weights[CONV_CHANNELS*DIVIDE(CONV_FILTERS,CONV_GROUP)],
+    Conv_weight weights[CONV_CHANNELS*DIVIDE(CONV_FILTERS,CONV_GROUP)],
 #else
-    weight_t weights[CONV_CHANNELS*DIVIDE(CONV_FILTERS,CONV_GROUP)][CONV_KERNEL_SIZE][CONV_KERNEL_SIZE],
+    Conv_weight weights[CONV_CHANNELS*DIVIDE(CONV_FILTERS,CONV_GROUP)][CONV_KERNEL_SIZE][CONV_KERNEL_SIZE],
 #endif
-    stream_t(acc_t) &out
+    stream_t(Conv_acc) &out
 )
 {
 
@@ -21,7 +21,10 @@ void conv_top(
         CONV_ROWS,
         CONV_COLS,
         CONV_CHANNELS,
-        CONV_FILTERS
+        CONV_FILTERS,
+  		  Conv_data,
+		    Conv_weight,
+		    Conv_acc
     >(in[0][0],weights,out);
 #else
     conv<
@@ -31,7 +34,10 @@ void conv_top(
         CONV_CHANNELS,
         CONV_FILTERS,
         CONV_FINE,
-        CONV_KERNEL_SIZE    
+        CONV_KERNEL_SIZE,
+		    Conv_data,
+		    Conv_weight,
+		    Conv_acc   
     >(in,weights,out);
 #endif
 

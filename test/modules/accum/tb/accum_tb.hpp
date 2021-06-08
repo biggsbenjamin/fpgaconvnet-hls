@@ -3,10 +3,10 @@
 
 #include "common.hpp"
 #include "accum_param.hpp"
-
+typedef acc_t acc;
 void accum_top(
-	stream_t(acc_t) &in,
-	stream_t(acc_t) &out
+	stream_t(acc) &in,
+	stream_t(acc) &out
 );
 
 #endif

@@ -28,14 +28,14 @@ relu_layer_template_header = """#ifndef {NAME}_HPP_
 #define {NAME}_RELU_ROWS         {rows}
 #define {NAME}_RELU_COLS         {cols}
 #define {NAME}_RELU_CHANNELS     {channels_per_module}
-
+typedef {datatype}               {NAME}_RELU_t;
 /**
  * FUNCTION DEFINITION
  */
 
 void {name}(
-    stream_t(data_t) in[{NAME}_COARSE],
-    stream_t(data_t) out[{NAME}_COARSE],
+    stream_t({NAME}_RELU_t) in[{NAME}_COARSE],
+    stream_t({NAME}_RELU_t) out[{NAME}_COARSE],
     int mode
 );
 
@@ -46,8 +46,8 @@ void {name}(
 relu_layer_template_src = """#include "{name}.hpp"
 
 void {name}(
-    stream_t(data_t) in[{NAME}_COARSE],
-    stream_t(data_t) out[{NAME}_COARSE],
+    stream_t({NAME}_RELU_t) in[{NAME}_COARSE],
+    stream_t({NAME}_RELU_t) out[{NAME}_COARSE],
     int mode
 )
 {{
@@ -108,7 +108,8 @@ def gen_relu_layer(name,param,src_path,header_path):
         coarse              =param['coarse_in'],
         rows_out            =param['rows_out'],
         cols_out            =param['cols_out'],
-        channels_out        =param['channels_out']
+        channels_out        =param['channels_out'],
+        datatype            =param['datatype']
     )
 
     # write source file

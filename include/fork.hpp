@@ -11,11 +11,12 @@ unsigned int BATCH_SIZE,
 unsigned int ROWS,
 unsigned int COLS,
 unsigned int CHANNELS,
-unsigned int COARSE
+unsigned int COARSE,
+typename fork_t
 >
 void fork(
-    stream_t(data_t) &in,
-    stream_t(data_t) out[COARSE]
+    stream_t(fork_t) &in,
+    stream_t(fork_t) out[COARSE]
 )
 {
 
@@ -32,7 +33,7 @@ void fork(
 
 #pragma HLS ARRAY_PARTITION variable=out complete dim=0
 
-    data_t local_cache;
+    fork_t local_cache;
 #pragma HLS DEPENDENCE variable=local_cache RAW intra true
 
     pixel_loop: for (unsigned long pixel_index = 0; pixel_index < batch_size*rows*cols*channels; pixel_index++) {
@@ -56,11 +57,12 @@ unsigned int ROWS,
 unsigned int COLS,
 unsigned int CHANNELS,
 unsigned int COARSE,
-unsigned int KERNEL_SIZE
+unsigned int KERNEL_SIZE,
+typename fork_t
 >
 void fork(
-    stream_t(data_t) in[KERNEL_SIZE][KERNEL_SIZE],
-    stream_t(data_t) out[COARSE][KERNEL_SIZE][KERNEL_SIZE]
+    stream_t(fork_t) in[KERNEL_SIZE][KERNEL_SIZE],
+    stream_t(fork_t) out[COARSE][KERNEL_SIZE][KERNEL_SIZE]
 )
 {
 
@@ -79,7 +81,7 @@ void fork(
 #pragma HLS ARRAY_PARTITION variable=in complete dim=0
 #pragma HLS ARRAY_PARTITION variable=out complete dim=0
 
-    data_t local_cache[kernel_size][kernel_size];
+    fork_t local_cache[kernel_size][kernel_size];
 #pragma HLS ARRAY_PARTITION variable=local_cache complete dim=0
 #pragma HLS DEPENDENCE variable=local_cache RAW intra true
 

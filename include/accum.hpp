@@ -9,11 +9,12 @@ template<
     unsigned int COLS,
     unsigned int CHANNELS,
     unsigned int FILTERS,
-    unsigned int GROUPS
+    unsigned int GROUPS,
+    typename acc
 >
 void accum(
-    stream_t(acc_t) &in,
-    stream_t(acc_t) &out
+    stream_t(acc) &in,
+    stream_t(acc) &out
 )
 {
 
@@ -33,7 +34,7 @@ void accum(
     #pragma HLS STREAM variable=out
     DO_PRAGMA(HLS STREAM variable=out depth=filters_per_group+1)
     
-    acc_t acc[filters_per_group];
+    acc acc_vector[filters_per_group];
     #pragma HLS dependence variable=acc intra RAW true
     #pragma HLS resource variable=acc core=RAM_2P_BRAM
 
@@ -44,11 +45,11 @@ void accum(
                 stream_filter_loop: for(unsigned int filter_index=0;filter_index<filters_per_group;filter_index++) {
                     #pragma HLS PIPELINE II=1 rewind 
                    
-                    acc_t prev = ( channel_index == 0 ) ? acc_t(0) : acc[filter_index] ;
-                    acc[filter_index] = prev + in.read() ;
+                    acc prev = ( channel_index == 0 ) ? acc(0) : acc_vector[filter_index] ;
+                    acc_vector[filter_index] = prev + in.read() ;
                 
                     if( channel_index == (channels_per_group-1) ) {
-                        out.write( acc[filter_index] ) ;
+                        out.write(acc_vector[filter_index] ) ;
                     }
 
                 }

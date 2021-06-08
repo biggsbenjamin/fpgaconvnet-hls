@@ -5,7 +5,8 @@ accum_template = """
 {indent}    {NAME}_COLS,
 {indent}    {NAME}_CHANNELS,
 {indent}    {NAME}_FILTERS,
-{indent}    {NAME}_GROUPS
+{indent}    {NAME}_GROUPS,
+{indent}    {NAME}_t
 {indent}>({input_stream},{output_stream});
 """
 

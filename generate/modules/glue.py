@@ -5,7 +5,9 @@ glue_template="""
 {indent}    {NAME}_COLS,
 {indent}    {NAME}_FILTERS,
 {indent}    {NAME}_COARSE_IN,
-{indent}    {NAME}_COARSE_OUT
+{indent}    {NAME}_COARSE_OUT,
+{indent}    {NAME}_acc_t,
+{indent}    {NAME}_data_t
 {indent}>({input_stream},{output_stream});
 
 """
