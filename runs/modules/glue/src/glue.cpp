@@ -14,7 +14,9 @@ void glue_top(
         GLUE_COLS,
         GLUE_FILTERS,
         GLUE_COARSE_IN,
-        GLUE_COARSE_OUT
+        GLUE_COARSE_OUT,
+        ap_fixed<GLUE_ACC_WORDLENGTH,GLUE_ACC_WORDLENGTH_INTEGER,AP_RND,AP_SAT>,
+        ap_fixed<GLUE_DATA_WORDLENGTH,GLUE_DATA_WORDLENGTH_INTEGER,AP_RND,AP_SAT>
     >(in,out);
 
 

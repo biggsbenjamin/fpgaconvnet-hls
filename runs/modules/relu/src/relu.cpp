@@ -13,7 +13,8 @@ void relu_top(
         RELU_BATCH_SIZE,
         RELU_ROWS,
         RELU_COLS,
-        RELU_CHANNELS
+        RELU_CHANNELS,
+        ap_fixed<RELU_DATA_WORDLENGTH,RELU_DATA_WORDLENGTH_INTEGER,AP_RND,AP_SAT>
     >(in,out);
 
 }

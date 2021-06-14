@@ -13,7 +13,8 @@ void pool_top(
         POOL_ROWS,
         POOL_COLS,
         POOL_CHANNELS,
-        POOL_KERNEL_SIZE
+        POOL_KERNEL_SIZE,
+        ap_fixed<POOL_DATA_WORDLENGTH,POOL_DATA_WORDLENGTH_INTEGER,AP_RND,AP_SAT>
     >(in,out);
 
 }

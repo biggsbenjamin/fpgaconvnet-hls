@@ -22,5 +22,11 @@ while 1:
         ],
         "modules/conv/data/weights.csv",
         data_range=[-max_value,max_value])
+    runner.parameters['data_wordlength_integer']=random.randint(1,16)
+    runner.parameters['data_wordlength']=2*runner.parameters['data_wordlength_integer']
+    runner.parameters['weight_wordlength_integer']=random.randint(1,16)
+    runner.parameters['weight_wordlength']=2*runner.parameters['weight_wordlength_integer']
+    runner.parameters['acc_wordlength_integer']=random.randint(1,16)
+    runner.parameters['acc_wordlength']=2*runner.parameters['acc_wordlength_integer']
     # run tests
     runner.run()

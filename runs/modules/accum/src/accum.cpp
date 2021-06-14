@@ -16,7 +16,8 @@ void accum_top(
         ACCUM_COLS,  
         ACCUM_CHANNELS,  
         ACCUM_FILTERS,  
-        ACCUM_GROUPS 
+        ACCUM_GROUPS,
+        ap_fixed<ACCUM_DATA_WORDLENGTH,ACCUM_DATA_WORDLENGTH_INTEGER,AP_RND,AP_SAT>
     >(in,out);
 
 }

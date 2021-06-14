@@ -11,5 +11,7 @@ while 1:
     channels_group_factor = runner.get_factors(runner.parameters['channels']) 
     filters_group_factor  = runner.get_factors(runner.parameters['filters'])
     runner.parameters['groups'] = random.choice(list(set(channels_group_factor)&set(filters_group_factor)))
+    runner.parameters['data_wordlength_integer']=random.randint(1,16)
+    runner.parameters['data_wordlength']=2*runner.parameters['data_wordlength_integer']
     # run tests
     runner.run()

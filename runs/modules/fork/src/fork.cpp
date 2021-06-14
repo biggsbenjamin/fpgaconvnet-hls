@@ -19,7 +19,8 @@ void fork_top(
         FORK_ROWS,
         FORK_COLS,
         FORK_CHANNELS,
-        FORK_COARSE
+        FORK_COARSE,
+        ap_fixed<FORK_DATA_WORDLENGTH,FORK_DATA_WORDLENGTH_INTEGER,AP_RND,AP_SAT>
     >(in,out);
 #else
     fork<
@@ -28,7 +29,8 @@ void fork_top(
         FORK_COLS,
         FORK_CHANNELS,
         FORK_COARSE,
-        FORK_KERNEL_SIZE
+        FORK_KERNEL_SIZE,
+        ap_fixed<FORK_DATA_WORDLENGTH,FORK_DATA_WORDLENGTH_INTEGER,AP_RND,AP_SAT>
     >(in,out);
 #endif
 
