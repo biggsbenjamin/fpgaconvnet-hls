@@ -1,0 +1,11 @@
+{
+    "type": "REDUCEMAX",
+    "rows": 1,
+    "cols": 10,
+    "channels": 1,
+    "rows_out": 1,
+    "cols_out": 1,
+    "channels_out": 1,
+    "batch_size": 1,
+    "description": "module name: reducemax, layer name: reducemax TBD, net name: TBD"
+}

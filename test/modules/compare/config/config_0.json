@@ -1,0 +1,9 @@
+{
+    "type": "COMPARE",
+    "batch_size": 1,
+    "thr_val" : "0.001",
+    "rows" : "rows", 
+    "cols" : "cols",
+    "channels" : "channels", 
+    "description": "module name: compare, layer name: softmax compare TBD, net name: TBD"
+}
