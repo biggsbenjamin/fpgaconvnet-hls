@@ -67,6 +67,8 @@ typedef ap_fixed<DATA_WIDTH,INTEGER_BITS,AP_RND> data_t;
 typedef ap_fixed<30,16,AP_RND> acc_t;
 typedef ap_fixed<16,8,AP_RND> weight_t;
 
+typedef ap_fixed<64,32> bdata_t;
+
 //#define stream_t(x) hlslib::Stream<x>
 #define stream_t(x) hls::stream<x>
 

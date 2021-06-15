@@ -426,7 +426,6 @@ void to_stream(
 ////////// CHECK STREAM TO VALID OUTPUT ////////
 ////////////////////////////////////////////////
 
-
 template<typename T>
 int checkStreamEqual(
 		stream_t(T) &test,
@@ -466,6 +465,44 @@ int checkStreamEqual(
 		err++;
 	}
 	return err;
+}
+
+template<>
+int checkStreamEqual <float> (
+		hls::stream <float> &test,
+		hls::stream <float> &valid,
+		bool print_out
+)
+{
+	while(!valid.empty())
+	{
+		if(test.empty())
+		{
+			printf("ERROR: empty early\n");
+			return 1;
+		}
+		float tmp = test.read();
+		float tmp_valid = valid.read();
+
+		if(print_out) printf("%x,%x\n",tmp,tmp_valid);
+
+		if(
+				(tmp > tmp_valid+ERROR_TOLERANCE) ||
+				(tmp < tmp_valid-ERROR_TOLERANCE)
+		)
+		{
+			//printf("ERROR: wrong value\n");
+			printf("ERROR: wrong value %x, %x \n",tmp, tmp_valid);
+			return 1;
+		}
+	}
+
+	if(!test.empty())
+	{
+		printf("ERROR: still data in stream\n");
+		return 1;
+	}
+	return 0;
 }
 
 template<int SIZE>

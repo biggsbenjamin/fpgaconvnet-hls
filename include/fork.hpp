@@ -106,4 +106,51 @@ void fork(
     }
 }
 
+/*
+ * FORK - FLOATING POINT VERSION
+ */
+
+template<
+unsigned int BATCH_SIZE,
+unsigned int ROWS,
+unsigned int COLS,
+unsigned int CHANNELS,
+unsigned int COARSE,
+bool FP_VER,
+>
+void fork(
+    hls::stream<float> &in,
+    hls::stream<float> out[COARSE]
+)
+{
+
+#pragma HLS INLINE OFF 
+
+    const unsigned int batch_size   = BATCH_SIZE;
+    const unsigned int rows         = ROWS;
+    const unsigned int cols         = COLS;
+    const unsigned int channels     = CHANNELS;
+    const unsigned int coarse       = COARSE;
+
+#pragma HLS STREAM variable=in 
+#pragma HLS STREAM variable=out
+
+#pragma HLS ARRAY_PARTITION variable=out complete dim=0
+
+    float local_cache;
+#pragma HLS DEPENDENCE variable=local_cache RAW intra true
+
+    pixel_loop: for (unsigned long pixel_index = 0; pixel_index < batch_size*rows*cols*channels; pixel_index++) {
+        #pragma HLS PIPELINE II=1 rewind
+        coarse_loop: for(unsigned int coarse_index=0;coarse_index < coarse; coarse_index++) {
+            if(coarse_index == 0) {
+                DO_PRAGMA(HLS occurrence cycle=batch_size*rows*cols*channels)
+                local_cache = in.read();
+            }
+            out[coarse_index].write(local_cache);
+        }
+    }
+}
+
+
 #endif

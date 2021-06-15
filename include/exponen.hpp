@@ -2,11 +2,12 @@
 #define EXPONEN_HPP_
 
 #include "common.hpp"
-#include "hls_math.h"
 
 /**
  * EXPONENTIAL FUNCTION
  */
+
+typedef ap_fixed<16,8> exp_t;
 
 template<
     unsigned int BATCH_SIZE,
@@ -17,7 +18,9 @@ template<
 
 void exponen(
     stream_t(data_t) &in,
-    stream_t(data_t) &out
+    //stream_t(data_t) &out
+    hls::stream<float> &out
+    //stream_t(bdata_t) &out
 )
 {
 
@@ -27,16 +30,33 @@ void exponen(
     const unsigned int rows         = ROWS;
     const unsigned int cols         = COLS;
     const unsigned int channels     = CHANNELS;
+    const data_t exp_max_in         = 4.84375;
+    const data_t data_max           = 127.99609375;
  
 #pragma HLS STREAM variable=in 
 #pragma HLS STREAM variable=out //sets up streaming data type
 
     for(unsigned long pixel_index=0 ; pixel_index < batch_size*rows*cols*channels ; pixel_index++) {
-        #pragma HLS PIPELINE II=1 rewind //TODO what does rewind do?
-        data_t tmp = in.read();
+        #pragma HLS PIPELINE II=1 rewind 
+        /*exp_t tmp, res;
+        tmp = exp_t{ in.read() };
+        
+        res = hls::exp(tmp);
+        
+        if (res < 0) { //sat value
+            res = data_max; //approx of the same sat behaviour as data_t
+        }
+        out.write( data_t{res} );*/
+
+        //data_t tmp = in.read();
+        float tmp = in.read().to_float();
+        //bdata_t tmp = bdata_t{in.read()};
         //exponential function options: cordic, lookup table, something else?
-        //for now: convert to float, use built in hls_math exp function
-        out.write(data_t{ hls::exp(tmp.to_float()) });
+        
+        //out.write( data_t{ hls::exp(exp_t{tmp}) } );
+        //out.write(data_t{ hls::exp(tmp.to_float()) });
+        //out.write( hls::exp(tmp.to_float()) );
+        out.write( hls::exp(tmp) );
     }
 }
 
