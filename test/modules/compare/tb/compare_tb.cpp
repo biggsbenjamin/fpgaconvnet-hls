@@ -6,7 +6,8 @@ int main()
 
     int err = 0;
     std::string input_path_max  = std::string(DATA_DIR)+"/input_max.dat";
-    std::string input_path_thr  = std::string(DATA_DIR)+"/input_thr.dat";
+    std::string input_path_thr  = std::string(DATA_DIR)+"/input_thr_mul.dat";
+    std::string path_thr_val  = std::string(DATA_DIR)+"/thr_val.dat";
     std::string output_path = std::string(DATA_DIR)+"/output.dat";
 
     // in/out streams
@@ -18,12 +19,19 @@ int main()
     stream_t(data_t) out;
     stream_t(data_t) out_valid;
 
+    //threshold value
+    float thr_val[1];
     // test inputs data
     //static data_t test_in[COMPARE_ROWS*COMPARE_COLS*COMPARE_CHANNELS];
     //static data_t test_out[COMPARE_ROWS*COMPARE_COLS*COMPARE_CHANNELS];
     static float test_max_in[COMPARE_BATCH_SIZE];
     static float test_thr_in[COMPARE_BATCH_SIZE];
-    static float test_out[COMPARE_BATCH_SIZE];
+    static data_t test_out[COMPARE_BATCH_SIZE];
+
+    //load threshold
+    load_data<
+        float
+    >(path_thr_val, thr_val);
 
     // load data_in
     load_data<
@@ -38,7 +46,7 @@ int main()
     // load data_out
     load_data<
         COMPARE_BATCH_SIZE,
-        float
+        data_t
     >(output_path,test_out);
 
     // convert input stream
@@ -54,11 +62,11 @@ int main()
     // convert to out valid stream
     to_stream<
         COMPARE_BATCH_SIZE,
-        float
+        data_t
     >(test_out,out_valid);
 
     // run compare
-    compare_top(max_in, thr_in, out);
+    compare_top(max_in, thr_in, thr_val, out);
 
     printf("\r\n\t COMPARE #1\r\n");
     err += checkStreamEqual <data_t> (out,out_valid,false);

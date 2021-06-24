@@ -8,7 +8,7 @@ from Data import Data
 
 class CompareTB(Data):
     def __init__(self):
-        Data.__init__(self,'reducemax')
+        Data.__init__(self,'compare')
 
     # update stimulus generation
     def gen_stimulus(self):
@@ -36,7 +36,8 @@ class CompareTB(Data):
         # return data
         data = {
             'input_max' : data_max_in.reshape(-1).tolist(),
-            'input_thr' : data_thr_in.reshape(-1).tolist(),
+            'input_thr_mul' : data_thr_in.reshape(-1).tolist(),
+            'thr_val'   : [cmp.threshold],
             'output'    : data_out.reshape(-1).tolist()
         }
         # resource and latency model

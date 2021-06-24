@@ -4,6 +4,7 @@
 void compare_top(
     hls::stream<float> &max_in,
     hls::stream<float> &thr_in,
+    float thr_val[1],
     stream_t(data_t) &out
 )
 {
@@ -12,8 +13,7 @@ void compare_top(
 
     // DUT
     compare<
-        COMPARE_BATCH_SIZE,
-        COMPARE_THR_VAL
-    >(max_in, thr_in, out);
+        COMPARE_BATCH_SIZE
+    >(max_in, thr_in, thr_val, out);
 
 }

@@ -7,17 +7,17 @@
   * EXIT COMPARE
   */
 template<
-    unsigned int BATCH_SIZE,
+    unsigned int BATCH_SIZE
     //unsigned int ROWS,
     //unsigned int COLS,
     //unsigned int CHANNELS,
-    float THR_VAL,
 >
 void compare(
     //stream_t(data_t) &in,
     //stream_t(data_t) &out
     hls::stream<float> &max_in,
     hls::stream<float> &thr_in,
+    float thr_val[1],
     stream_t(data_t) &ctrl_out //TODO change this to some ctrl signal format
 )
 {
@@ -28,7 +28,7 @@ void compare(
     //const unsigned int rows         = ROWS;
     //const unsigned int cols         = COLS;
     //const unsigned int channels     = CHANNELS;
-    const float thr_val             = THR_VAL;
+    const float threshold = thr_val[0];
  
 #pragma HLS STREAM variable=max_in
 #pragma HLS STREAM variable=thr_in
@@ -49,7 +49,7 @@ void compare(
                 {
         thr_mult = thr_in.read(); //this one will arrive later
         cmp_max = max_in.read();
-        thr_res = thr_mult * thr_value;
+        thr_res = thr_mult * threshold;
         if (cmp_max > thr_res) {
             //exit should occur
             ctrl_out.write(1.0);
