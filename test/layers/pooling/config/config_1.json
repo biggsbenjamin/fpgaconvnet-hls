@@ -17,5 +17,6 @@
     "cols_out": 7,
     "channels_out": 512,
     "batch_size": 1,
+    "buffer_depth": 1,
     "description": "layer name: pool5, net name: vgg16.prototxt"
 }

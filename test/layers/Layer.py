@@ -96,6 +96,8 @@ class Layer:
                     f.write("\n".join([str(i) for i in data[filename]]))
 
         # create layer
+        if not os.path.exists(header_path):
+            os.makedirs(header_path)
         self.gen_layer(src_path,header_path)
 
         # add parameters to yaml file
@@ -103,6 +105,8 @@ class Layer:
             model[key] = val
 
         # save data
+        if not os.path.exists(output_path):
+            os.makedirs(output_path)
         with open(output_path+'/model.json', 'w') as f:
             json.dump(model, f)
 
