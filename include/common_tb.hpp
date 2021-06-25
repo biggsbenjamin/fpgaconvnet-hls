@@ -421,6 +421,31 @@ void to_stream(
     }
 }*/
 
+/* (COMPARE_THR) */
+template<typename T>
+void load_data(
+    std::string filepath,
+    T data[1]
+) {
+    // read in file
+    const char *filepath_cstr = filepath.c_str(); 
+    FILE * fp = fopen(filepath_cstr,"r");
+
+    // check file opened
+    if (fp == NULL) {
+        perror("Failed: ");
+    }
+    
+    // save to array
+    //for(int i=0;i<SIZE;i++) {
+    float val;
+    fscanf(fp,"%f\n", &val);
+    data[0] = val;
+    //}
+    
+    // close file
+    fclose(fp);
+}
 
 ////////////////////////////////////////////////
 ////////// CHECK STREAM TO VALID OUTPUT ////////

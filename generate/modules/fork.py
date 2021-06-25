@@ -23,8 +23,8 @@ fork_fp_template="""
 {indent}    {NAME}_KERNEL_SIZE_X,
 {indent}    {NAME}_KERNEL_SIZE_Y,
 #endif
-{indent}    {fork_t}
-{indent}    true,
+{indent}    {fork_t},
+{indent}    true
 {indent}>({input_stream},{output_stream});
 
 """

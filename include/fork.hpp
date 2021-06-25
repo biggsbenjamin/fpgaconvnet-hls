@@ -116,7 +116,7 @@ unsigned int ROWS,
 unsigned int COLS,
 unsigned int CHANNELS,
 unsigned int COARSE,
-bool FP_VER,
+bool FP_VER
 >
 void fork(
     hls::stream<float> &in,

@@ -1,9 +1,9 @@
-#include "sftmx_cmp_layer_tb.hpp"
-#include "sftmx_cmp_layer.hpp"
+#include "softmax_cmp_layer_tb.hpp"
+#include "softmax_cmp_layer.hpp"
 
-void sftmx_cmp_layer_top(
+void softmax_cmp_layer_top(
   stream_t(data_t) &in, //change to coarse if needed
-  stream_t(data_t) out[SFTMX_CMP_LAYER_CTRL]
+  stream_t(data_t) out[SOFTMAX_CMP_LAYER_CTRL]
 )
 {
 #pragma HLS DATAFLOW
@@ -14,7 +14,7 @@ void sftmx_cmp_layer_top(
 #pragma HLS STREAM variable=in
 #pragma HLS STREAM variable=out
 
-    sftmx_cmp_layer(in,out);
+    softmax_cmp_layer(in,out);
 
 }
 

@@ -3,7 +3,7 @@ softmax_sum_template="""
 {indent}    {NAME}_BATCH_SIZE,
 {indent}    {NAME}_ROWS,
 {indent}    {NAME}_COLS,
-{indent}    {NAME}_CHANNELS,
+{indent}    {NAME}_CHANNELS
 {indent}>({input_stream},{output_stream});
 
 """
