@@ -1,9 +1,10 @@
 #include "sliding_window_tb.hpp"
 #include "sliding_window.hpp"
 
+typedef ap_fixed<SLIDING_WINDOW_DATA_WORDLENGTH,SLIDING_WINDOW_DATA_WORDLENGTH_INTEGER,AP_RND,AP_SAT> sliding_window_t;
 void sliding_window_top(
-    stream_t(data_t) &in,
-    stream_t(data_t) out[SLIDING_WINDOW_KERNEL_SIZE][SLIDING_WINDOW_KERNEL_SIZE]
+    stream_t(sliding_window_t) &in,
+    stream_t(sliding_window_t) out[SLIDING_WINDOW_KERNEL_SIZE][SLIDING_WINDOW_KERNEL_SIZE]
 )
 {
 
@@ -21,7 +22,7 @@ void sliding_window_top(
         SLIDING_WINDOW_STRIDE,
         SLIDING_WINDOW_STRIDE,
         SLIDING_WINDOW_KERNEL_SIZE,
-        ap_fixed<SLIDING_WINDOW_DATA_WORDLENGTH,SLIDING_WINDOW_DATA_WORDLENGTH_INTEGER,AP_RND,AP_SAT>
+        sliding_window_t
     >(in,out);
 
 }

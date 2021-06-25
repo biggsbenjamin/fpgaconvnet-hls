@@ -1,9 +1,10 @@
 #include "pool_tb.hpp"
 #include "pool.hpp"
 
+typedef ap_fixed<POOL_DATA_WORDLENGTH,POOL_DATA_WORDLENGTH_INTEGER,AP_RND,AP_SAT> pool_t;
 void pool_top(
-    stream_t(data_t) in[POOL_KERNEL_SIZE][POOL_KERNEL_SIZE],
-    stream_t(data_t) &out
+    stream_t(pool_t) in[POOL_KERNEL_SIZE][POOL_KERNEL_SIZE],
+    stream_t(pool_t) &out
 )
 {
 
@@ -14,7 +15,7 @@ void pool_top(
         POOL_COLS,
         POOL_CHANNELS,
         POOL_KERNEL_SIZE,
-        ap_fixed<POOL_DATA_WORDLENGTH,POOL_DATA_WORDLENGTH_INTEGER,AP_RND,AP_SAT>
+        pool_t
     >(in,out);
 
 }

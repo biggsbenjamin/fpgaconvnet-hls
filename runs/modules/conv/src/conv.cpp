@@ -2,18 +2,21 @@
 #include "conv.hpp"
 
 #if CONV_KERNEL_SIZE == 1
-const static weight_t weights[CONV_CHANNELS*CONV_FILTERS] = {
+typedef     ap_fixed<CONV_DATA_WORDLENGTH,CONV_DATA_WORDLENGTH_INTEGER,AP_RND,AP_SAT> conv_data_t;
+typedef     ap_fixed<CONV_WEIGHT_WORDLENGTH,CONV_WEIGHT_WORDLENGTH_INTEGER,AP_RND,AP_SAT> conv_weight_t;
+typedef     ap_fixed<CONV_ACC_WORDLENGTH,CONV_ACC_WORDLENGTH_INTEGER,AP_RND,AP_SAT> conv_acc_t;
+const static conv_weight_t weights[CONV_CHANNELS*CONV_FILTERS] = {
 #include "weights.csv"
 };
 #else
-const static weight_t weights[CONV_CHANNELS*CONV_FILTERS][CONV_KERNEL_SIZE][CONV_KERNEL_SIZE] = {
+const static conv_weight_t weights[CONV_CHANNELS*CONV_FILTERS][CONV_KERNEL_SIZE][CONV_KERNEL_SIZE] = {
 #include "weights.csv"
 };
 #endif
 
 void conv_top(
-    stream_t(data_t) in[CONV_KERNEL_SIZE][CONV_KERNEL_SIZE],
-    stream_t(acc_t) &out
+    stream_t(conv_data_t) in[CONV_KERNEL_SIZE][CONV_KERNEL_SIZE],
+    stream_t(conv_acc_t) &out
 )
 {
 
@@ -27,9 +30,9 @@ void conv_top(
         CONV_COLS,
         CONV_CHANNELS,
         CONV_FILTERS,
-        ap_fixed<CONV_DATA_WORDLENGTH,CONV_DATA_WORDLENGTH_INTEGER,AP_RND,AP_SAT>,
-        ap_fixed<CONV_WEIGHT_WORDLENGTH,CONV_WEIGHT_WORDLENGTH_INTEGER,AP_RND,AP_SAT>,
-        ap_fixed<CONV_ACC_WORDLENGTH,CONV_ACC_WORDLENGTH_INTEGER,AP_RND,AP_SAT>
+        conv_data_t,
+        conv_weight_t,
+        conv_acc_t
     >(in[0][0],weights,out);
 #else
     conv<
@@ -40,9 +43,9 @@ void conv_top(
         CONV_FILTERS,
         CONV_FINE,
         CONV_KERNEL_SIZE,
-        ap_fixed<CONV_DATA_WORDLENGTH,CONV_DATA_WORDLENGTH_INTEGER,AP_RND,AP_SAT>,
-        ap_fixed<CONV_WEIGHT_WORDLENGTH,CONV_WEIGHT_WORDLENGTH_INTEGER,AP_RND,AP_SAT>,
-        ap_fixed<CONV_ACC_WORDLENGTH,CONV_ACC_WORDLENGTH_INTEGER,AP_RND,AP_SAT>   
+        conv_data_t,
+        conv_weight_t,
+        conv_acc_t
     >(in,weights,out);
 #endif
 
