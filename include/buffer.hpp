@@ -1,5 +1,5 @@
-#ifndef BUFF_HPP_
-#define BUFF_HPP_
+#ifndef BUFFER_HPP_
+#define BUFFER_HPP_
 
 #include "common.hpp"
 
@@ -8,9 +8,9 @@ template<
     unsigned int ROWS,
     unsigned int COLS,
     unsigned int CHANNELS,
-    bool         DROP_MODE, //true = drop on 1, false = drop on 0
+    bool         DROP_MODE //true = drop on 1, false = drop on 0
 >
-void buff(
+void buffer(
     stream_t(data_t) &in, //might need a float version too
     stream_t(data_t) &ctrl_drop, 
     stream_t(data_t) &out
@@ -37,10 +37,11 @@ void buff(
         samp_in_loop: for(unsigned long pxi_index=0;pxi_index<buff_size;pxi_index++) {
             buff[pxi_index] = in.read(); //fill up the buffer
         }
+        while (ctrl_drop.empty()) {}
         drop_tmp = ctrl_drop.read(); //wait for the ctrl signal
         if ((drop_tmp == 1.0 && !drop_mode) || (drop_tmp == 0.0 && drop_mode)) {
             samp_out_loop: for(unsigned long pxo_index=0;pxo_index<buff_size;pxo_index++) {
-                buff[pxo_index] = out.write(); //write out data OR
+                out.write(buff[pxo_index]); //write out data OR
             }
         } //move on to next sample in batch 
     }

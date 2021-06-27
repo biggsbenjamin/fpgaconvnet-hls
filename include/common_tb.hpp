@@ -447,6 +447,44 @@ void load_data(
     fclose(fp);
 }
 
+/* (BUFFER OUT LOAD) */
+template<typename T>
+void load_data(
+    std::string filepath,
+    std::vector<T> &data 
+) {
+    // read in file
+    std::ifstream input_file(filepath);
+    float val;
+
+    // check file opened
+    if (!input_file.is_open()) {
+        perror("Failed: ");
+    }
+    
+    // save to array
+    int i=0;
+    while(input_file >> val) {
+        data.push_back(data_t(val));
+        i++;
+    }
+    
+    // close file
+    input_file.close();
+}
+
+/* BUFFER OUT VARIABLE SIZE */
+template<typename T>
+void to_stream(
+    std::vector<T> in,
+    stream_t(T) &out,
+    int vec_size
+) {
+    for(int i=0;i<vec_size;i++) {
+	    out.write(in[i]);
+    }
+}
+
 ////////////////////////////////////////////////
 ////////// CHECK STREAM TO VALID OUTPUT ////////
 ////////////////////////////////////////////////

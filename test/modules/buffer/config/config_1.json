@@ -1,0 +1,13 @@
+{
+    "type": "BUFFER",
+    "rows": 1,
+    "cols": 10,
+    "channels": 1,
+    "rows_out": 1,
+    "cols_out": 10,
+    "channels_out": 1,
+    "batch_size": 2,
+    "ctrledge": 0,
+    "drop_mode": true,
+    "description": "module name: buffer-batch test, layer name: tbd, net name: tbd"
+}
