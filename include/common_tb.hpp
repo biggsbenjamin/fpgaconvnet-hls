@@ -434,7 +434,8 @@ int checkStreamEqual(
 		bool print_out=false
 )
 {
-	while(!valid.empty())
+    int err = 0;
+    while(!valid.empty())
 	{
 		if(test.empty())
 		{
@@ -453,16 +454,18 @@ int checkStreamEqual(
 		{
 			//printf("ERROR: wrong value\n");
 			printf("ERROR: wrong value %x, %x \n",tmp.range()&BIT_MASK, tmp_valid.range()&BIT_MASK);
-			return 1;
+			/* return 1; */
+			err++;
 		}
 	}
 
 	if(!test.empty())
 	{
 		printf("ERROR: still data in stream\n");
-		return 1;
+		/* return 1; */
+		err++;
 	}
-	return 0;
+	return err;
 }
 
 template<int SIZE>

@@ -25,12 +25,17 @@ while getopts ":l:n:cseih" opt; do
             # implementation
             TEST_TYPE=impl
             ;;
+        a )
+            # implementation
+            TEST_TYPE=all
+            ;;
         h )
-            echo "USAGE: run_test.sh [-l (layer)] [-n (test number)] [-c,-s,-e,-i]"
+            echo "USAGE: run_test.sh [-l (layer)] [-n (test number)] [-c,-s,-e,-i,-a]"
             echo "  -c = C simulation"
             echo "  -s = Synthesis"
             echo "  -e = Co-simulation"
             echo "  -i = Implementation"
+            echo "  -a = All"
             exit
             ;;
     esac

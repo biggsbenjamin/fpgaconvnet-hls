@@ -59,10 +59,8 @@ class ConvolutionLayerTB(Layer):
         ])
         bias     = np.zeros(self.param['filters'])
         # data out
-        print(data_in.shape)
         data_out = layer.functional_model(copy.copy(data_in),weights,bias)[0]
         data_out = np.moveaxis(data_out,0,-1)
-        print(data_out.shape)
 
         # save weights
         weights = ONNXData._transform_weights(
