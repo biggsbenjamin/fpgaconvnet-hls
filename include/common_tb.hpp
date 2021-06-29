@@ -41,6 +41,7 @@ void load_data(
     fclose(fp);
 }
 
+
 template<int SIZE, int STREAMS, typename T>
 void to_stream(
     T in[SIZE][STREAMS],
