@@ -12,5 +12,7 @@ while 1:
     runner.parameters['pad']         = random.randint(0,10)
     runner.parameters['stride'] = random.choice(
         runner.get_factors( int(runner.parameters['cols'] - runner.parameters['kernel_size'] +2*runner.parameters['pad']) ))
+    runner.parameters['data_wordlength_integer']=random.randint(1,16)
+    runner.parameters['data_wordlength']=2*runner.parameters['data_wordlength_integer']
     # run tests
     runner.run()

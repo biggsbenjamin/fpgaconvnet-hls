@@ -11,11 +11,12 @@ template<
     unsigned int ROWS,
     unsigned int COLS,
     unsigned int CHANNELS,
-    unsigned int KERNEL_SIZE
+    unsigned int KERNEL_SIZE,
+    typename pool_t
 >
 void pool(
-    stream_t(data_t)  in[KERNEL_SIZE][KERNEL_SIZE],
-    stream_t(data_t) &out
+    stream_t(pool_t)  in[KERNEL_SIZE][KERNEL_SIZE],
+    stream_t(pool_t) &out
 )
 {
 
@@ -31,7 +32,7 @@ void pool(
 #pragma HLS STREAM variable=out
 #pragma HLS ARRAY_PARTITION variable=in complete dim=0
 
-    data_t cache;
+    pool_t cache;
     #pragma HLS DEPENDENCE variable=cache RAW intra true
 
     pixel_loop: for(unsigned long pixel_index=0;pixel_index<batch_size*rows*cols*channels;pixel_index++) {
@@ -42,7 +43,7 @@ void pool(
                     cache = in[k1][k2].read();
                 }
                 else {
-                    data_t tmp = in[k1][k2].read();
+                    pool_t tmp = in[k1][k2].read();
                     cache = (cache > tmp ) ? cache : tmp ;
                 }
             }

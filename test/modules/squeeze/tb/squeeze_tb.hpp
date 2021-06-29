@@ -4,12 +4,12 @@
 #include "common.hpp"
 
 #include "squeeze_param.hpp"
-
+typedef data_t squeeze_t;
 /////////////////////////////////
 
 void squeeze_top(
-    stream_t(data_t) in[SQUEEZE_COARSE_IN],
-    stream_t(data_t) out[SQUEEZE_COARSE_OUT]
+    stream_t(squeeze_t) in[SQUEEZE_COARSE_IN],
+    stream_t(squeeze_t) out[SQUEEZE_COARSE_OUT]
 );
 
 /////////////////////////////////

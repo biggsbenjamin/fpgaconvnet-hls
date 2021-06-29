@@ -13,5 +13,6 @@
     "cols_out": 28,
     "channels_out": 64,
     "batch_size": 1,
+    "datatype":"ap_fixed<16,8,AP_RND,AP_SAT>",
     "description": "layer name: inception_3b/relu_pool_proj, net name: googlenet.prototxt"
 }

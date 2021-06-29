@@ -2,8 +2,8 @@
 #include "squeeze.hpp"
 
 void squeeze_top(
-    stream_t(data_t) in[SQUEEZE_COARSE_IN],
-    stream_t(data_t) out[SQUEEZE_COARSE_OUT]
+    stream_t(squeeze_t) in[SQUEEZE_COARSE_IN],
+    stream_t(squeeze_t) out[SQUEEZE_COARSE_OUT]
 )
 {
 
@@ -14,7 +14,8 @@ void squeeze_top(
         SQUEEZE_COLS,
         SQUEEZE_CHANNELS,
         SQUEEZE_COARSE_IN,
-        SQUEEZE_COARSE_OUT
+        SQUEEZE_COARSE_OUT,
+        squeeze_t
     >(in,out);
 
 }

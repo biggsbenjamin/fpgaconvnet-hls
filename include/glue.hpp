@@ -12,11 +12,13 @@ template<
     unsigned int COLS,
     unsigned int FILTERS,
     unsigned int COARSE_IN,
-    unsigned int COARSE_OUT
+    unsigned int COARSE_OUT,
+    typename glue_acc,
+    typename glue_data
 >
 void glue(
-    stream_t(acc_t) in[COARSE_IN][COARSE_OUT],
-    stream_t(data_t) out[COARSE_OUT]
+    stream_t(glue_acc) in[COARSE_IN][COARSE_OUT],
+    stream_t(glue_data) out[COARSE_OUT]
 )
 {
 
@@ -36,7 +38,7 @@ void glue(
 #pragma HLS ARRAY_PARTITION variable=in  complete dim=0
 #pragma HLS ARRAY_PARTITION variable=out complete dim=0
 
-    acc_t acc[coarse_out];
+    glue_acc acc[coarse_out];
 #pragma HLS ARRAY_PARTITION variable=acc complete dim=0
 
     pixel_loop: for(unsigned long pixel_index=0;pixel_index<batch_size*rows*cols;pixel_index++) {
@@ -47,11 +49,11 @@ void glue(
             coarse_out_loop: for(unsigned int out_index=0; out_index<coarse_out; out_index++) {
                 coarse_in_loop: for(unsigned int in_index=0; in_index<coarse_in; in_index++) {
                     // update accumulation cache
-                    acc_t prev = ( in_index == 0 ) ? acc_t(0) : acc[out_index] ;
+                    glue_acc prev = ( in_index == 0 ) ? glue_acc (0) : acc[out_index] ;
                     acc[out_index] = prev + in[in_index][out_index].read() ;
                     // write to output stream 
                     if( in_index == (coarse_in-1) ) {
-                        out[out_index].write( data_t(acc[out_index]) ) ;
+                        out[out_index].write(glue_data(acc[out_index]) ) ;
                     }
                 }
             }

@@ -10,11 +10,12 @@ template<
     unsigned int BATCH_SIZE,
     unsigned int ROWS,
     unsigned int COLS,
-    unsigned int CHANNELS
+    unsigned int CHANNELS,
+    typename relu_t
 >
 void relu(
-    stream_t(data_t)  &in,
-    stream_t(data_t)  &out
+    stream_t(relu_t)  &in,
+    stream_t(relu_t)  &out
 )
 {
 
@@ -30,7 +31,7 @@ void relu(
 
     for(unsigned long pixel_index=0 ; pixel_index < batch_size*rows*cols*channels ; pixel_index++) {
         #pragma HLS PIPELINE II=1 rewind
-        data_t tmp = in.read();
+        relu_t tmp = in.read();
         if(tmp[DATA_WIDTH-1])
             out.write(0.0);
         else

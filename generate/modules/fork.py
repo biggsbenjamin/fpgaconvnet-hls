@@ -4,10 +4,11 @@ fork_template="""
 {indent}    {NAME}_ROWS,
 {indent}    {NAME}_COLS,
 {indent}    {NAME}_CHANNELS,
-{indent}    {NAME}_COARSE
+{indent}    {NAME}_COARSE,
 #if {NAME}_KERNEL_SIZE > 1
-{indent}    ,{NAME}_KERNEL_SIZE
+{indent}    {NAME}_KERNEL_SIZE,
 #endif
+{indent}    {NAME}_t
 {indent}>({input_stream},{output_stream});
 
 """

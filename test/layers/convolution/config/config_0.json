@@ -19,5 +19,13 @@
     "cols_out": 28,
     "channels_out": 48,
     "batch_size": 1,
+    "sliding_window_t":"ap_fixed<16,8,AP_RND,AP_SAT>",
+    "fork_t":"ap_fixed<16,8,AP_RND,AP_SAT>",
+    "conv_data_t":"ap_fixed<16,8,AP_RND,AP_SAT>",
+    "conv_weight_t":"ap_fixed<16,8,AP_RND,AP_SAT>",
+    "conv_acc_t":"ap_fixed<30,16,AP_RND,AP_SAT>",
+    "accum_t":"ap_fixed<30,16,AP_RND,AP_SAT>",
+    "glue_acc_t":"ap_fixed<30,16,AP_RND,AP_SAT>",
+    "glue_data_t":"ap_fixed<16,8,AP_RND,AP_SAT>",
     "description": "layer name: inception_3b/5x5, net name: googlenet.prototxt"
 }

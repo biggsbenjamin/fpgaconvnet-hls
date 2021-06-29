@@ -2,8 +2,8 @@
 #include "sliding_window.hpp"
 
 void sliding_window_top(
-    stream_t(data_t) &in,
-    stream_t(data_t) out[SLIDING_WINDOW_KERNEL_SIZE][SLIDING_WINDOW_KERNEL_SIZE]
+    stream_t(sliding_window_t) &in,
+    stream_t(sliding_window_t) out[SLIDING_WINDOW_KERNEL_SIZE][SLIDING_WINDOW_KERNEL_SIZE]
 )
 {
     #pragma HLS ARRAY_PARTITION variable=out complete dim=0
@@ -20,7 +20,8 @@ void sliding_window_top(
         SLIDING_WINDOW_PAD_LEFT,
         SLIDING_WINDOW_STRIDE,
         SLIDING_WINDOW_STRIDE,
-        SLIDING_WINDOW_KERNEL_SIZE
+        SLIDING_WINDOW_KERNEL_SIZE,
+        sliding_window_t
     >(in,out);
 
 }

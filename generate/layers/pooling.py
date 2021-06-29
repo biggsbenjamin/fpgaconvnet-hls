@@ -14,9 +14,7 @@ pooling_layer_template_header = """#ifndef {NAME}_HPP_
 #define name        {name}
 #define {NAME}_ID   {id}
 
-#define {name}_input_t          data_t
-#define {name}_sliding_window_t data_t
-#define {name}_output_t         data_t
+
 
 #define {NAME}_BATCH_SIZE   {batch_size}
 #define {NAME}_ROWS         {rows}
@@ -46,7 +44,7 @@ pooling_layer_template_header = """#ifndef {NAME}_HPP_
 #define {NAME}_SLIDING_WINDOW_PAD_RIGHT    {pad_right}
 #define {NAME}_SLIDING_WINDOW_PAD_TOP      {pad_top}
 #define {NAME}_SLIDING_WINDOW_PAD_BOTTOM   {pad_bottom}
-
+typedef {sliding_window_t}                 {NAME}_SLIDING_WINDOW_t;
 // POOL
 #define {NAME}_POOL_BATCH_SIZE   {batch_size}
 #define {NAME}_POOL_ROWS         {rows_out}
@@ -54,14 +52,15 @@ pooling_layer_template_header = """#ifndef {NAME}_HPP_
 #define {NAME}_POOL_CHANNELS     {channels_per_module}
 #define {NAME}_POOL_KERNEL_SIZE  {kernel_size}
 #define {NAME}_POOL_FINE         {fine}
+typedef {pool_t}       {NAME}_POOL_t;
 
 /**
  * FUNCTION DEFINITION
  */
 
 void {name}(
-    stream_t({name}_input_t)  in[{NAME}_COARSE],
-    stream_t({name}_output_t) out[{NAME}_COARSE],
+    stream_t({NAME}_SLIDING_WINDOW_t)  in[{NAME}_COARSE],
+    stream_t({NAME}_POOL_t) out[{NAME}_COARSE],
     int mode
 );
 
@@ -72,8 +71,8 @@ void {name}(
 pooling_layer_template_src = """#include "{name}.hpp"
 
 void {name}(
-    stream_t({name}_input_t)  in[{NAME}_COARSE],
-    stream_t({name}_output_t) out[{NAME}_COARSE],
+    stream_t({NAME}_SLIDING_WINDOW_t)  in[{NAME}_COARSE],
+    stream_t({NAME}_POOL_t) out[{NAME}_COARSE],
     int mode
 )
 {{
@@ -87,7 +86,7 @@ void {name}(
 #pragma HLS ARRAY_PARTITION variable=in  complete dim=0
 #pragma HLS ARRAY_PARTITION variable=out complete dim=0
 
-    stream_t(data_t) sw_out[{NAME}_COARSE][{NAME}_KERNEL_SIZE][{NAME}_KERNEL_SIZE]; //sliding window output
+    stream_t({NAME}_SLIDING_WINDOW_t) sw_out[{NAME}_COARSE][{NAME}_KERNEL_SIZE][{NAME}_KERNEL_SIZE]; //sliding window output
 
 #pragma HLS STREAM variable=sw_out
 #pragma HLS ARRAY_PARTITION variable=sw_out complete dim=0
@@ -153,7 +152,9 @@ def gen_pooling_layer(name,param,src_path,header_path):
         fine                =param['fine'] if 'fine' in param else "1",
         rows_out            =param['rows_out'],
         cols_out            =param['cols_out'],
-        channels_out        =param['channels_out']
+        channels_out        =param['channels_out'],
+        sliding_window_t    =param['sliding_window_t'],
+        pool_t              =param['pool_t']
     )   
 
     # write source file

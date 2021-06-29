@@ -2,8 +2,8 @@
 #include "accum.hpp"
 
 void accum_top(
-	stream_t(acc_t) &in,
-	stream_t(acc_t) &out
+	stream_t(acc) &in,
+	stream_t(acc) &out
 )
 {
 
@@ -19,7 +19,8 @@ void accum_top(
         ACCUM_COLS,  
         ACCUM_CHANNELS,  
         ACCUM_FILTERS,  
-        ACCUM_GROUPS 
+        ACCUM_GROUPS,
+        acc
     >(in,out);
 
 }

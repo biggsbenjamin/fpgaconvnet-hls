@@ -12,11 +12,12 @@ template<
     unsigned int PAD_RIGHT,
     unsigned int PAD_BOTTOM,
     unsigned int PAD_LEFT,
-    unsigned int KERNEL_SIZE
+    unsigned int KERNEL_SIZE,
+    typename sliding_window_t
 >
 void sliding_window_line_shift(
-    stream_t(data_t) &in,
-    stream_t(data_t) frame_buffer[KERNEL_SIZE][KERNEL_SIZE]
+    stream_t(sliding_window_t) &in,
+    stream_t(sliding_window_t) frame_buffer[KERNEL_SIZE][KERNEL_SIZE]
 )
 {
 
@@ -36,17 +37,17 @@ void sliding_window_line_shift(
     #pragma HLS STREAM variable=frame_buffer
     #pragma HLS ARRAY_PARTITION variable=frame_buffer complete dim=0
  
-    stream_t(data_t) line_buffer[kernel_size-1];
+    stream_t(sliding_window_t) line_buffer[kernel_size-1];
     DO_PRAGMA( HLS STREAM variable=line_buffer depth=cols*channels+pad_left*channels+pad_right*channels+1 )
     #pragma HLS ARRAY_PARTITION variable=line_buffer complete dim=0
     #pragma HLS resource variable=line_buffer core=FIFO_BRAM
 
-    stream_t(data_t) window_buffer[kernel_size][kernel_size-1]; // pixel window cache
+    stream_t(sliding_window_t) window_buffer[kernel_size][kernel_size-1]; // pixel window cache
     DO_PRAGMA( HLS STREAM variable=window_buffer depth=channels+1 )
     #pragma HLS ARRAY_PARTITION variable=window_buffer complete dim=0
     #pragma HLS resource variable=frame_buffer core=FIFO_BRAM
 
-    data_t frame_cache[kernel_size][kernel_size];
+    sliding_window_t frame_cache[kernel_size][kernel_size];
     #pragma HLS ARRAY_PARTITION variable=frame_cache complete dim=0
 
     in_loop_batch: for(unsigned int batch_index=0;batch_index<batch_size;batch_index++) {
@@ -59,7 +60,7 @@ void sliding_window_line_shift(
                     #pragma HLS DEPENDENCE variable=line_buffer     WAR intra true
                     #pragma HLS DEPENDENCE variable=window_buffer   WAR intra true
                     #pragma HLS DEPENDENCE variable=frame_cache     WAR intra true
-                    data_t pixel;
+                    sliding_window_t pixel;
 
                     // read in pixel
                     if( row_index < pad_bottom ) {
@@ -156,11 +157,12 @@ template<
     unsigned int PAD_LEFT,
     unsigned int ROW_STRIDE,
     unsigned int COL_STRIDE,
-    unsigned int KERNEL_SIZE
+    unsigned int KERNEL_SIZE,
+    typename sliding_window_t
 >
 void sliding_window_out(
-    stream_t(data_t) frame_buffer[KERNEL_SIZE][KERNEL_SIZE],
-    stream_t(data_t) out[KERNEL_SIZE][KERNEL_SIZE]
+    stream_t(sliding_window_t) frame_buffer[KERNEL_SIZE][KERNEL_SIZE],
+    stream_t(sliding_window_t) out[KERNEL_SIZE][KERNEL_SIZE]
 )
 {
 
@@ -194,7 +196,7 @@ void sliding_window_out(
                     if ( !( (row_index < (kernel_size-1)) || ( (row_index == (kernel_size-1)) && (col_index < kernel_size-1) ) ) ) {
                         for(unsigned char k1=0;k1<kernel_size;k1++) {
                             for(unsigned char k2=0;k2<kernel_size;k2++) {
-                                data_t tmp = frame_buffer[k1][k2].read();
+                                sliding_window_t tmp = frame_buffer[k1][k2].read();
                                 if ( 
                                         (row_index > (kernel_size-2)) && 
                                         ((row_index-kernel_size+1)%row_stride == 0) && 
@@ -223,11 +225,12 @@ template<
     unsigned int PAD_LEFT,
     unsigned int ROW_STRIDE,
     unsigned int COL_STRIDE,
-    unsigned int KERNEL_SIZE
+    unsigned int KERNEL_SIZE,
+    typename sliding_window_t
 >
 void sliding_window(
-    stream_t(data_t) &in,
-    stream_t(data_t) out[KERNEL_SIZE][KERNEL_SIZE]
+    stream_t(sliding_window_t) &in,
+    stream_t(sliding_window_t) out[KERNEL_SIZE][KERNEL_SIZE]
 )
 {
 
@@ -240,7 +243,7 @@ void sliding_window(
 
     const unsigned int kernel_size = KERNEL_SIZE;
 
-    stream_t(data_t) frame_buffer[kernel_size][kernel_size];
+    stream_t(sliding_window_t) frame_buffer[kernel_size][kernel_size];
     #pragma HLS STREAM variable=frame_buffer
     #pragma HLS ARRAY_PARTITION variable=frame_buffer complete dim=0
 
@@ -253,7 +256,8 @@ void sliding_window(
         PAD_RIGHT,
         PAD_BOTTOM,
         PAD_LEFT,
-        KERNEL_SIZE
+        KERNEL_SIZE,
+        sliding_window_t
     >(in,frame_buffer);
     
     sliding_window_out<
@@ -267,7 +271,8 @@ void sliding_window(
         PAD_LEFT,
         ROW_STRIDE,
         COL_STRIDE,
-        KERNEL_SIZE
+        KERNEL_SIZE,
+        sliding_window_t
     >(frame_buffer,out);
  
 }

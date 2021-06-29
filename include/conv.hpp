@@ -14,13 +14,15 @@ template<
     unsigned int CHANNELS,
     unsigned int FILTERS,
     unsigned int FINE,
-    unsigned int KERNEL_SIZE
+    unsigned int KERNEL_SIZE,
+    typename Conv_data,
+    typename Conv_weight
 >
 void conv_intr(
-    stream_t(data_t)    in[KERNEL_SIZE][KERNEL_SIZE],
-    const weight_t      weights[CHANNELS*FILTERS][KERNEL_SIZE][KERNEL_SIZE],
-    stream_t(data_t)    window_stream[FINE],
-    stream_t(weight_t)  weight_stream[FINE]
+    stream_t(Conv_data)    in[KERNEL_SIZE][KERNEL_SIZE],
+    const Conv_weight      weights[CHANNELS*FILTERS][KERNEL_SIZE][KERNEL_SIZE],
+    stream_t(Conv_data)    window_stream[FINE],
+    stream_t(Conv_weight)  weight_stream[FINE]
 )
 {
 
@@ -51,7 +53,7 @@ DO_PRAGMA(HLS ARRAY_PARTITION variable=weights block factor=weights_partition_fa
 DO_PRAGMA(HLS ARRAY_PARTITION variable=weights block factor=weights_partition_factor_k2 dim=3) 
 
     // INTERLEAVING LOOP
-    data_t window_cache[kernel_size][kernel_size];
+    Conv_data window_cache[kernel_size][kernel_size];
     #pragma HLS ARRAY_PARTITION variable=window_cache complete dim=0
 
     intr_pixel_loop: for(unsigned int pixel_index=0;pixel_index<batch_size*rows*cols;pixel_index++) {
@@ -91,12 +93,15 @@ template<
     unsigned int CHANNELS,
     unsigned int FILTERS,
     unsigned int FINE,
-    unsigned int KERNEL_SIZE
+    unsigned int KERNEL_SIZE,
+   	typename Conv_data,
+	  typename Conv_weight,
+	  typename Conv_acc
 >
 void conv_mul(
-    stream_t(data_t)    window_stream[FINE],
-    stream_t(weight_t)  weight_stream[FINE],
-    stream_t(acc_t)     acc_stream[FINE]
+    stream_t(Conv_data)    window_stream[FINE],
+    stream_t(Conv_weight)  weight_stream[FINE],
+    stream_t(Conv_acc)     acc_stream[FINE]
 )
 {
 
@@ -121,13 +126,13 @@ void conv_mul(
 
     // MULTIPLICATION LOOP
     mul_pixel_loop: for(unsigned int pixel_index=0;pixel_index<batch_size*rows*cols*channels*filters;pixel_index++) {
-        acc_t acc_cache[fine];
+        Conv_acc acc_cache[fine];
         acc_loop: for(unsigned char acc_index=0;acc_index<interval;acc_index++) {
             #pragma HLS pipeline II=1 rewind
             #pragma HLS unroll region
             mul_loop: for(unsigned char fine_index=0;fine_index<fine;fine_index++) {
                 // update accumulation cache
-                acc_t prev = ( acc_index == 0 ) ? acc_t(0) : acc_cache[fine_index] ;
+                Conv_acc prev = ( acc_index == 0 ) ? acc_t(0) : acc_cache[fine_index] ;
                 acc_cache[fine_index] = prev + window_stream[fine_index].read() * weight_stream[fine_index].read();
                 // write to output stream
                 if( acc_index == (interval-1) ) {
@@ -145,11 +150,12 @@ template<
     unsigned int CHANNELS,
     unsigned int FILTERS,
     unsigned int FINE,
-    unsigned int KERNEL_SIZE
+    unsigned int KERNEL_SIZE,
+    typename Conv_acc
 >
 void conv_acc(
-    stream_t(acc_t) acc_stream[FINE],
-    stream_t(acc_t) &out
+    stream_t(Conv_acc) acc_stream[FINE],
+    stream_t(Conv_acc) &out
 )
 {
 
@@ -172,7 +178,7 @@ void conv_acc(
     acc_pixel_loop: for(unsigned int pixel_index=0;pixel_index<batch_size*rows*cols*channels*filters;pixel_index++) {
         #pragma HLS pipeline II=1 rewind
         #pragma HLS unroll region 
-        acc_t acc = 0 ;
+        Conv_acc acc = 0 ;
         acc_fine_loop: for(unsigned char fine_index=0;fine_index<fine;fine_index++) {
             acc += acc_stream[fine_index].read();
         }
@@ -187,12 +193,15 @@ template<
     unsigned int CHANNELS,
     unsigned int FILTERS,
     unsigned int FINE,
-    unsigned int KERNEL_SIZE
+    unsigned int KERNEL_SIZE,
+   	typename Conv_data,
+	  typename Conv_weight,
+	  typename Conv_acc
 >
 void conv(
-    stream_t(data_t) in[KERNEL_SIZE][KERNEL_SIZE],
-    const weight_t weights[CHANNELS*FILTERS][KERNEL_SIZE][KERNEL_SIZE],
-    stream_t(acc_t) &out
+    stream_t(Conv_data) in[KERNEL_SIZE][KERNEL_SIZE],
+    const Conv_weight weights[CHANNELS*FILTERS][KERNEL_SIZE][KERNEL_SIZE],
+    stream_t(Conv_acc) &out
 )
 {
 
@@ -209,9 +218,9 @@ void conv(
 
     const unsigned int fine = FINE;
     
-    stream_t(data_t)  window_stream[fine];
-    stream_t(weight_t) weight_stream[fine];
-    stream_t(acc_t) acc_stream[fine];
+    stream_t(Conv_data)  window_stream[fine];
+    stream_t(Conv_weight) weight_stream[fine];
+    stream_t(Conv_acc) acc_stream[fine];
 
     #pragma HLS STREAM variable=window_stream 
     #pragma HLS STREAM variable=weight_stream 
@@ -224,7 +233,9 @@ void conv(
         CHANNELS,
         FILTERS,
         FINE,
-        KERNEL_SIZE
+        KERNEL_SIZE,
+  		  Conv_data,
+		    Conv_weight
     >(in,weights,window_stream,weight_stream);
 
     conv_mul<
@@ -234,7 +245,10 @@ void conv(
         CHANNELS,
         FILTERS,
         FINE,
-        KERNEL_SIZE
+        KERNEL_SIZE,
+  		  Conv_data,
+		    Conv_weight,
+		    Conv_acc
     >(window_stream,weight_stream,acc_stream);
 
     conv_acc<
@@ -244,7 +258,8 @@ void conv(
         CHANNELS,
         FILTERS,
         FINE,
-        KERNEL_SIZE
+        KERNEL_SIZE,
+  		  Conv_acc
     >(acc_stream,out);
 
 }
@@ -257,12 +272,15 @@ template<
     unsigned int ROWS,
     unsigned int COLS,
     unsigned int CHANNELS,
-    unsigned int FILTERS
+    unsigned int FILTERS,
+   	typename Conv_data,
+	  typename Conv_weight,
+	  typename Conv_acc
 >
 void conv(
-    stream_t(data_t) &in,
-    const weight_t weights[CHANNELS*FILTERS],
-    stream_t(acc_t) &out
+    stream_t(Conv_data) &in,
+    const Conv_weight weights[CHANNELS*FILTERS],
+    stream_t(Conv_acc) &out
 )
 {
 
@@ -277,7 +295,7 @@ void conv(
 #pragma HLS STREAM variable=in
 #pragma HLS STREAM variable=out
     
-    data_t window_cache;
+    Conv_data window_cache;
     
     pixel_loop: for(unsigned int pixel_index=0;pixel_index<batch_size*rows*cols;pixel_index++) {
         unsigned int weight_index = 0;
@@ -290,7 +308,7 @@ void conv(
                     DO_PRAGMA(HLS occurrence cycle=batch_size*rows*cols*channels)
                     window_cache = in.read();
                 }
-                acc_t acc = window_cache * weights[weight_index];
+                Conv_acc acc = window_cache * weights[weight_index];
                 weight_index++;
                 out.write(acc);
             }
