@@ -9,19 +9,19 @@ import yaml
 class hls_log():
 
     def __init__(self, design_name, solution_path, lang="verilog"):
-        
+
         self.lang = lang
         self.design_name = design_name
         self.solution_path = solution_path
-        
+
         # relevant log file paths
         self.csim_log = os.path.join(self.solution_path,"csim/report",
-                "{}_csim.log".format(self.design_name)) 
+                "{}_csim.log".format(self.design_name))
         self.synth_xml = os.path.join(self.solution_path,"syn/report/csynth.xml")
         self.cosim_rpt = os.path.join(self.solution_path,"sim/report",
-                "{}_cosim.rpt".format(self.design_name)) 
+                "{}_cosim.rpt".format(self.design_name))
         self.impl_xml = os.path.join(self.solution_path,"impl/report",self.lang,
-                "{}_export.xml".format(self.design_name)) 
+                "{}_export.xml".format(self.design_name))
 
     def check_pass_csim(self):
         assert os.path.exists(self.csim_log)
@@ -33,7 +33,7 @@ class hls_log():
 
     def check_pass_synth(self):
         assert os.path.exists(self.synth_xml)
-   
+
     def check_pass_sim(self):
         assert os.path.exists(self.cosim_rpt)
 
@@ -52,17 +52,17 @@ class hls_log():
             self.check_pass_csim()
         except AssertionError:
             test_pass['csim'] = False
-        # synth 
+        # synth
         try:
             self.check_pass_synth()
         except AssertionError:
             test_pass['synth'] = False
-        # sim 
+        # sim
         try:
             self.check_pass_sim()
         except AssertionError:
             test_pass['sim'] = False
-        # impl 
+        # impl
         try:
             self.check_pass_impl()
         except AssertionError:
@@ -74,17 +74,21 @@ class hls_log():
         assert os.path.exists(self.impl_xml)
         obj = untangle.parse(self.impl_xml)
         return {
-            'SLICE' : int(obj.profile.AreaReport.Resources.SLICE.cdata),  
-            'LUT'   : int(obj.profile.AreaReport.Resources.LUT.cdata),    
-            'FF'    : int(obj.profile.AreaReport.Resources.FF.cdata),    
-            'DSP'   : int(obj.profile.AreaReport.Resources.DSP.cdata),    
-            'BRAM'  : int(obj.profile.AreaReport.Resources.BRAM.cdata),    
-            'SRL'   : int(obj.profile.AreaReport.Resources.SRL.cdata)    
+            'SLICE' : int(obj.profile.AreaReport.Resources.SLICE.cdata),
+            'LUT'   : int(obj.profile.AreaReport.Resources.LUT.cdata),
+            'FF'    : int(obj.profile.AreaReport.Resources.FF.cdata),
+            'DSP'   : int(obj.profile.AreaReport.Resources.DSP.cdata),
+            'BRAM'  : int(obj.profile.AreaReport.Resources.BRAM.cdata),
+            'SRL'   : int(obj.profile.AreaReport.Resources.SRL.cdata)
         }
 
     def get_synth_latency(self):
         assert os.path.exists(self.synth_xml)
-        return int(untangle.parse(self.synth_xml).profile.PerformanceEstimates.SummaryOfOverallLatency.Average_caseLatency.cdata)
+        latency = untangle.parse(self.synth_xml).profile.PerformanceEstimates.SummaryOfOverallLatency.Average_caseLatency.cdata
+        if latency == "undef":
+            return "N/A"
+        else:
+            return int(latency)
 
     def get_sim_latency(self):
         assert os.path.exists(self.cosim_rpt)

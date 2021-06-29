@@ -1,5 +1,5 @@
-#ifndef ACCUM_HPP_ 
-#define ACCUM_HPP_ 
+#ifndef ACCUM_HPP_
+#define ACCUM_HPP_
 
 #include "common.hpp"
 
@@ -18,15 +18,15 @@ void accum(
 )
 {
 
-    #pragma HLS INLINE OFF 
-    
+    #pragma HLS INLINE OFF
+
     const unsigned int batch_size = BATCH_SIZE;
     const unsigned int rows       = ROWS;
     const unsigned int cols       = COLS;
     const unsigned int channels   = CHANNELS;
     const unsigned int filters    = FILTERS;
     const unsigned int groups     = GROUPS;
-    
+
     const unsigned int channels_per_group = DIVIDE(channels,groups);
     const unsigned int filters_per_group  = DIVIDE(filters ,groups);
 
@@ -41,7 +41,7 @@ void accum(
     stream_pixel_loop: for(unsigned long pixel_index=0;pixel_index<batch_size*rows*cols;pixel_index++) {
         stream_group_loop: for(unsigned int group_index=0;group_index<groups;group_index++) {
             stream_channel_loop: for(unsigned int channel_index=0;channel_index<channels_per_group;channel_index++) {
-                while( out.full() ) {}; 
+                // while( out.full() ) {}; 
                 stream_filter_loop: for(unsigned int filter_index=0;filter_index<filters_per_group;filter_index++) {
                     #pragma HLS PIPELINE II=1 rewind 
                    
@@ -52,6 +52,8 @@ void accum(
                         out.write(acc_vector[filter_index] ) ;
                     }
 
+                if( channel_index == (channels_per_group-1) ) {
+                    out.write( curr ) ;
                 }
             }
         }

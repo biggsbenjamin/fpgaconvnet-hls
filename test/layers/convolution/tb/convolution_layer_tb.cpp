@@ -46,7 +46,7 @@ int main()
     for(int i=0;i<CONVOLUTION_LAYER_COARSE_OUT;i++)
     {
         printf("TESTING OUTPUT %d: ",i);
-        err += checkStreamEqual<data_t>(out[i],out_correct[i],true);
+        err += checkStreamEqual<data_t>(out[i], out_correct[i], true);
         printf("%s\n",(err==0) ? "passed" : "failed");
     }
 
