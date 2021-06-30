@@ -1,5 +1,5 @@
 from modules.module_model import ModuleModel
-from fpgaconvnet_optimiser.models.modules import SlidingWindow 
+from fpgaconvnet_optimiser.models.modules import SlidingWindow
 
 MAX_RSC = {
     "LUT"   : 53200,
@@ -10,11 +10,10 @@ MAX_RSC = {
 
 # define resource model
 def build_module(parameter):
-    return SlidingWindow([
-            parameter['channels'],
-            parameter['rows'],
-            parameter['cols']
-        ],
+    return SlidingWindow(
+        parameter['rows'],
+        parameter['cols'],
+        parameter['channels'],
         parameter['kernel_size'],
         parameter['stride'],
         parameter['pad'],
@@ -27,7 +26,7 @@ def build_module(parameter):
 model = ModuleModel(build_module)
 model.load_points("modules/sliding_window/logs")
 
-# filter parameters 
+# filter parameters
 filters = {
     "data_width" : [15,17]
 }

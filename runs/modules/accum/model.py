@@ -10,10 +10,10 @@ MAX_RSC = {
 
 # define resource model
 def build_module(parameter):
-    return Accum([
-        parameter['channels'],
+    return Accum(
         parameter['rows'],
-        parameter['cols']],
+        parameter['cols'],
+        parameter['channels'],
         parameter['filters'],
         parameter['groups'],
         parameter['data_width']
@@ -23,7 +23,7 @@ def build_module(parameter):
 model = ModuleModel(build_module)
 model.load_points("modules/accum/logs")
 
-# filter parameters 
+# filter parameters
 filters = {
     "data_width" : [15,17]
 }

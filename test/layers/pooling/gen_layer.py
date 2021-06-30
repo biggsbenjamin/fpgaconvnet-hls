@@ -20,17 +20,14 @@ class PoolingLayerTB(Layer):
     def gen_stimulus(self):
         # Init Module
         layer = PoolingLayer(
-            [
-                self.param['channels_in'],
-                self.param['rows_in'],
-                self.param['cols_in']
-            ],
-            self.param['pool_type'],
-            self.param['kernel_size'],
-            self.param['stride'],
-            self.param['pad'],
-            self.param['coarse'],
-            self.param['coarse']
+            self.param['rows_in'],
+            self.param['cols_in'],
+            self.param['channels_in'],
+            pool_type=self.param['pool_type'],
+            k_size=self.param['kernel_size'],
+            stride=self.param['stride'],
+            pad=self.param['pad'],
+            coarse=self.param['coarse']
         )
         layer.load_coef()
 

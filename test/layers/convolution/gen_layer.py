@@ -23,19 +23,17 @@ class ConvolutionLayerTB(Layer):
     def gen_stimulus(self):
         # Init Module
         layer = ConvolutionLayer(
-            [
-                self.param['channels_in'],
-                self.param['rows_in'],
-                self.param['cols_in']
-            ],
             self.param['filters'],
-            self.param['kernel_size'],
-            self.param['stride'],
-            self.param['groups'],
-            self.param['pad'],
-            self.param['coarse_in'],
-            self.param['coarse_out'],
-            self.param['fine']
+            self.param['rows_in'],
+            self.param['cols_in'],
+            self.param['channels_in'],
+            k_size=self.param['kernel_size'],
+            stride=self.param['stride'],
+            groups=self.param['groups'],
+            pad=self.param['pad'],
+            coarse_in=self.param['coarse_in'],
+            coarse_out=self.param['coarse_out'],
+            fine=self.param['fine']
         )
         layer.load_coef()
 

@@ -7,7 +7,7 @@ from fpgaconvnet_optimiser.models.modules.Conv import Conv
 from Data import Data
 
 class ConvTB(Data):
-    def __init__(self):     
+    def __init__(self):
         Data.__init__(self,'conv')
 
     # update stimulus generation
@@ -15,11 +15,9 @@ class ConvTB(Data):
         # Init Module
         self.param['interval'] = int((self.param['kernel_size']*self.param['kernel_size'])/self.param['fine'])
         conv = Conv(
-            [
-                self.param['channels'],
-                self.param['rows'],
-                self.param['cols']
-            ],
+            self.param['rows'],
+            self.param['cols'],
+            self.param['channels'],
             self.param['filters'],
             self.param['fine'],
             self.param['kernel_size'],
@@ -33,7 +31,7 @@ class ConvTB(Data):
             self.param['kernel_size'],
             self.param['kernel_size']
         ])
-        # weights 
+        # weights
         weights = self.gen_data([
             self.param['channels'],
             int(self.param['filters']/self.param['group']),
@@ -44,7 +42,7 @@ class ConvTB(Data):
         data_out = conv.functional_model(data_in, weights)
         # return data
         data = {
-            'input'     : data_in.reshape(-1).tolist(),            
+            'input'     : data_in.reshape(-1).tolist(),
             'weights'   : weights.reshape(-1).tolist(),
             'output'    : data_out.reshape(-1).tolist()
         }
@@ -57,5 +55,5 @@ class ConvTB(Data):
 
 if __name__ == '__main__':
     conv_tb = ConvTB()
-    conv_tb.main(sys.argv[1:])    
- 
+    conv_tb.main(sys.argv[1:])
+

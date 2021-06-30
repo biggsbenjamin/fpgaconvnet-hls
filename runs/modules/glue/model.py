@@ -1,5 +1,5 @@
 from modules.module_model import ModuleModel
-from fpgaconvnet_optimiser.models.modules import Glue 
+from fpgaconvnet_optimiser.models.modules import Glue
 
 MAX_RSC = {
     "LUT"   : 53200,
@@ -10,11 +10,10 @@ MAX_RSC = {
 
 # define resource model
 def build_module(parameter):
-    return Glue([
-            parameter['channels'],
-            parameter['rows'],
-            parameter['cols']
-        ],
+    return Glue(
+        parameter['rows'],
+        parameter['cols'],
+        parameter['channels'],
         parameter['filters'],
         parameter['coarse_in'],
         parameter['coarse_out']
@@ -24,7 +23,7 @@ def build_module(parameter):
 model = ModuleModel(build_module)
 model.load_points("modules/glue/logs")
 
-# filter parameters 
+# filter parameters
 filters = {
     "data_width" : [15,17]
 }
