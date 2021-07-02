@@ -29,6 +29,11 @@ class Layer:
             data[index] = random.uniform(data_range[0],data_range[1])
         return data
 
+    def gen_ctrl(self, num, choices=[0,1], probs=None): #for EE nets
+        if probs is not None:
+            return np.random.choice(choices, num, p=probs)
+        return np.random.choice(choices, num)
+
     # Stimulus Generation
     # NOTE: need to create for each testbench
     def gen_stimulus(self):

@@ -1,0 +1,17 @@
+{
+    "type": "BUFFER",
+    "buffer_depth" : 0,
+    "rows": 30,
+    "cols": 30,
+    "channels": 5,
+    "coarse": 1,
+    "ctrledge": 0,
+    "drop_mode": true,
+    "coarse_in": 1,
+    "coarse_out": 1,
+    "rows_out": 30,
+    "cols_out": 30,
+    "channels_out": 5,
+    "batch_size": 1,
+    "description": "module name: buffer, layer name: after conv, net name: brn"
+}

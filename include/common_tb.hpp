@@ -54,6 +54,54 @@ void to_stream(
     }
 }
 
+/* (BUFFER LAYER OUT LOAD) */
+template<int COARSE, typename T>
+void load_data(
+    std::string filepath,
+    std::vector<T> data[COARSE] 
+) {
+    // read in file
+    std::ifstream input_file(filepath);
+    float val;
+
+    // check file opened
+    if (!input_file.is_open()) {
+        perror("Failed: ");
+    }
+    
+    // save to array
+    int i=0;
+    while(input_file >> val) {
+        data[i].push_back(data_t(val));
+        i++;
+        if (i>=COARSE){ i=0; }; //reset i every COARSE number of items
+        /*if (i==0){
+            data_t tmp[COARSE];
+        }
+        tmp[i] = data_t(val);
+        if (i>=COARSE){
+            data.push_back(tmp);
+        }
+        i++;*/
+    }
+    
+    // close file
+    input_file.close();
+}
+
+/* BUFFER OUT VARIABLE SIZE */
+template<int COARSE,typename T>
+void to_stream(
+    std::vector<T> in[COARSE],
+    stream_t(T) out[COARSE],
+    int vec_size
+) {
+    for(int i=0;i<vec_size;i++) {
+        for(int c=0;c<COARSE;c++) {
+	        out[c].write(in[c][i]);
+        }
+    }
+}
 ///////////////////////////////////////////////////////////////////////
 /////////////////////////////// MODULES ///////////////////////////////
 ///////////////////////////////////////////////////////////////////////
@@ -448,7 +496,7 @@ void load_data(
     fclose(fp);
 }
 
-/* (BUFFER OUT LOAD) */
+/* (BUFFER MOD OUT LOAD) */
 template<typename T>
 void load_data(
     std::string filepath,
@@ -505,8 +553,12 @@ int checkStreamEqual(
 			printf("ERROR: empty early\n");
 			return 1;
 		}
-		T tmp = test.read();
-		T tmp_valid = valid.read();
+		//T tmp = test.read();
+		//T tmp_valid = valid.read();
+        T tmp;
+        T tmp_valid;
+        test.read_nb(tmp);
+        valid.read_nb(tmp_valid);
 
 		if(print_out) printf("%x,%x\n",tmp.range()&BIT_MASK,tmp_valid.range()&BIT_MASK);
 

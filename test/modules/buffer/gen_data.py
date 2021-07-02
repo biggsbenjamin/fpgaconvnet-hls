@@ -14,7 +14,7 @@ class BufferTB(Data):
     # update stimulus generation
     def gen_stimulus(self):
         # Init Module
-        buffer = Buffer(
+        buff = Buffer(
             self.param['rows'],
             self.param['cols'],
             self.param['channels'],
@@ -33,7 +33,7 @@ class BufferTB(Data):
         # data out
         data_out = []
         for b,ctrl in zip(data_in, ctrl_in):
-            b_out = buffer.functional_model(b, ctrl)
+            b_out = buff.functional_model(b, ctrl)
             if b_out is not None:
                 data_out.append(b_out)
         data_out = np.asarray(data_out)
@@ -45,8 +45,8 @@ class BufferTB(Data):
         }
         # resource and latency model
         model = {
-            'latency'   : buffer.get_latency(),
-            'resources' : buffer.rsc()
+            'latency'   : buff.get_latency(),
+            'resources' : buff.rsc()
         }
         return data, model
 

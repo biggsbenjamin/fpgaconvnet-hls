@@ -35,10 +35,13 @@ void buffer(
     
     batch_loop: for(unsigned long b_index=0;b_index<batch_size;b_index++) {
         samp_in_loop: for(unsigned long pxi_index=0;pxi_index<buff_size;pxi_index++) {
-            buff[pxi_index] = in.read(); //fill up the buffer
+            while (in.empty()) {}
+            //buff[pxi_index] = in.read(); //fill up the buffer
+            in.read_nb(buff[pxi_index]);
         }
         while (ctrl_drop.empty()) {}
-        drop_tmp = ctrl_drop.read(); //wait for the ctrl signal
+        //drop_tmp = ctrl_drop.read(); //wait for the ctrl signal
+        ctrl_drop.read_nb(drop_tmp);
         if ((drop_tmp == 1.0 && !drop_mode) || (drop_tmp == 0.0 && drop_mode)) {
             samp_out_loop: for(unsigned long pxo_index=0;pxo_index<buff_size;pxo_index++) {
                 out.write(buff[pxo_index]); //write out data OR
