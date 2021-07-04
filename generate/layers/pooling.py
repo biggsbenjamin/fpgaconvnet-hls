@@ -112,8 +112,8 @@ void {name}(
 def gen_pooling_layer(name,param,src_path,header_path):
 
     # get sliding window type
-    single_channel = True if param['channels'] == 1 else False
-    #single_channel = True if param['channels_in'] == 1 else False
+    #single_channel = True if param['channels'] == 1 else False
+    single_channel = True if param['channels_in'] == 1 else False
 
     # SLIDING WINDOW MODULE INIT
     sliding_window = generate.modules.sliding_window.gen_sliding_window_module(

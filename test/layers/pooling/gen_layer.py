@@ -42,9 +42,9 @@ class PoolingLayerTB(Layer):
 
         # data in
         data_in = self.gen_data([
-            self.param['rows'],
-            self.param['cols'],
-            self.param['channels']
+            self.param['rows_in'],
+            self.param['cols_in'],
+            self.param['channels_in']
         ])
 
         # data out
