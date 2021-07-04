@@ -285,6 +285,7 @@ def gen_network(name,partition,output_path):
         layers      =layers
     )
     # TB
+    print(os.path.abspath(os.path.join(output_path,'data/')))
     network_tb_src = network_tb_src_template.format(
         name = name,
         NAME = name.upper(),
