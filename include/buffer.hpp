@@ -31,10 +31,12 @@ void buffer(
     #pragma HLS STREAM variable=out
 
     data_t buff[buff_size];
+    #pragma HLS resource variable=buff core=RAM_2P_BRAM
     data_t drop_tmp;
     
     batch_loop: for(unsigned long b_index=0;b_index<batch_size;b_index++) {
         samp_in_loop: for(unsigned long pxi_index=0;pxi_index<buff_size;pxi_index++) {
+#pragma HLS PIPELINE II=1 rewind 
             while (in.empty()) {}
             //buff[pxi_index] = in.read(); //fill up the buffer
             in.read_nb(buff[pxi_index]);
@@ -44,6 +46,7 @@ void buffer(
         ctrl_drop.read_nb(drop_tmp);
         if ((drop_tmp == 1.0 && !drop_mode) || (drop_tmp == 0.0 && drop_mode)) {
             samp_out_loop: for(unsigned long pxo_index=0;pxo_index<buff_size;pxo_index++) {
+#pragma HLS PIPELINE II=1 rewind 
                 out.write(buff[pxo_index]); //write out data OR
             }
         } //move on to next sample in batch 
