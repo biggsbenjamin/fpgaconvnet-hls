@@ -2,11 +2,13 @@
 import os
 import shutil
 
+import generate.modules.fork
 import generate.modules.buff
 
 buffer_layer_template_header = """#ifndef {NAME}_HPP_
 #define {NAME}_HPP_
 
+#include "fork.hpp"
 #include "buffer.hpp"
 
 #define name        {name}
@@ -25,6 +27,14 @@ buffer_layer_template_header = """#ifndef {NAME}_HPP_
 #define {NAME}_COARSE_IN    {NAME}_COARSE
 #define {NAME}_COARSE_OUT   {NAME}_COARSE
 
+// FORK
+#define {NAME}_FORK_BATCH_SIZE    {batch_size}
+#define {NAME}_FORK_ROWS          1
+#define {NAME}_FORK_COLS          1
+#define {NAME}_FORK_CHANNELS      1
+#define {NAME}_FORK_COARSE        {coarse}
+#define {NAME}_FORK_KERNEL_SIZE   1
+
 // BUFFER
 #define {NAME}_BUFFER_BATCH_SIZE    {batch_size}
 #define {NAME}_BUFFER_ROWS          {rows_out}
@@ -39,7 +49,7 @@ buffer_layer_template_header = """#ifndef {NAME}_HPP_
 
 void {name}(
     stream_t({name}_input_t)  in[{NAME}_COARSE],
-    stream_t({name}_input_t)  ctrl_in[{NAME}_COARSE],
+    stream_t({name}_input_t)  &ctrl_in,
     stream_t({name}_output_t) out[{NAME}_COARSE]
 );
 
@@ -51,7 +61,7 @@ buffer_layer_template_src = """#include "{name}.hpp"
 
 void {name}(
     stream_t({name}_input_t)  in[{NAME}_COARSE],
-    stream_t({name}_input_t)  ctrl_in[{NAME}_COARSE],
+    stream_t({name}_input_t)  &ctrl_in,
     stream_t({name}_output_t) out[{NAME}_COARSE]
 )
 {{
@@ -60,12 +70,17 @@ void {name}(
 #pragma HLS DATAFLOW
 
 #pragma HLS STREAM variable=in depth={buffer_depth}
+#pragma HLS STREAM variable=ctrl_in
 #pragma HLS STREAM variable=out
 
 #pragma HLS ARRAY_PARTITION variable=in  complete dim=0
-#pragma HLS ARRAY_PARTITION variable=ctrl_in  complete dim=0
 #pragma HLS ARRAY_PARTITION variable=out complete dim=0
 
+    stream_t(data_t) fork_out[{NAME}_COARSE];
+#pragma HLS STREAM variable=fork_out
+#pragma HLS ARRAY_PARTITION variable=fork_out  complete dim=0
+
+{fork}
 
     for(unsigned int coarseIndex=0;coarseIndex<{NAME}_COARSE;coarseIndex++)
     {{
@@ -78,11 +93,19 @@ void {name}(
 
 def gen_buffer_layer(name,param,src_path,header_path):
 
+    #FORK MODULE INIT
+    fork = generate.modules.fork.gen_fork_module(
+        name+"_fork",
+        "ctrl_in",
+        "fork_out",
+        indent=8
+    )
+
     # BUFFER MODULE INIT
     buff = generate.modules.buff.gen_buff_module(
         name+"_buffer",
         "in[coarseIndex]",
-        "ctrl_in[coarseIndex]",
+        "fork_out[coarseIndex]",
         "out[coarseIndex]",
         indent=8
     )
@@ -92,6 +115,7 @@ def gen_buffer_layer(name,param,src_path,header_path):
         name            =name,
         NAME            =name.upper(),
         buffer_depth=max(param['buffer_depth'],2),
+        fork            =fork,
         buff            =buff
     )
 

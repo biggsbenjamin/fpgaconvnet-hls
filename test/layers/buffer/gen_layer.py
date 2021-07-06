@@ -39,13 +39,13 @@ class BufferLayerTB(Layer):
         # data out
         ctrl_in = self.gen_ctrl(self.param['batch_size'])
         data_out = layer.functional_model(copy.copy(data_in), ctrl_in, self.param['batch_size'])
-        ctrl_in_COARSE = np.repeat(ctrl_in, self.param['coarse']) #dup ctrl signals for hw
-        print(ctrl_in_COARSE)
+        #ctrl_in_COARSE = np.repeat(ctrl_in, self.param['coarse']) #dup ctrl signals for hw
+        print(ctrl_in)
 
         # return data
         data = {
             'input'     : data_in.reshape(-1).tolist(),
-            'ctrl_in'   : ctrl_in_COARSE.reshape(-1).tolist(),
+            'ctrl_in'   : ctrl_in.reshape(-1).tolist(), #ctrl_in_COARSE.reshape(-1).tolist(),
             'output'    : data_out.reshape(-1).tolist()
         }
         # resource and latency model

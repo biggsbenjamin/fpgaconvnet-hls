@@ -13,5 +13,5 @@
     "cols_out": 2,
     "channels_out": 4,
     "batch_size": 4,
-    "description": "layer name: split, net name: tbd"
+    "description": "layer name: buffer, net name: tbd"
 }

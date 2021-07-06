@@ -7,7 +7,7 @@
 
 void buffer_layer_top(
   stream_t(data_t) in[BUFFER_LAYER_COARSE],
-  stream_t(data_t) ctrl_in[BUFFER_LAYER_COARSE],
+  stream_t(data_t) &ctrl_in,
   stream_t(data_t) out[BUFFER_LAYER_COARSE]
 );
 

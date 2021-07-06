@@ -13,13 +13,13 @@ int main()
     std::string output_path = std::string(DATA_DIR)+"/output.dat";
 
     stream_t(data_t) in[BUFFER_LAYER_COARSE];
-    stream_t(data_t) ctrl_in[BUFFER_LAYER_COARSE];
+    stream_t(data_t) ctrl_in;
     stream_t(data_t) out[BUFFER_LAYER_COARSE];
     stream_t(data_t) out_correct[BUFFER_LAYER_COARSE];
 
     // test images
     static data_t test_in[in_size][BUFFER_LAYER_COARSE];
-    static data_t test_ctrl_in[BUFFER_LAYER_BATCH_SIZE][BUFFER_LAYER_COARSE];
+    static data_t test_ctrl_in[BUFFER_LAYER_BATCH_SIZE]; //[BUFFER_LAYER_COARSE];
     std::vector<data_t> test_out[BUFFER_LAYER_COARSE]; 
 
     // load input
@@ -29,8 +29,8 @@ int main()
     >(input_path,test_in);
     
     load_data<
-        BUFFER_LAYER_BATCH_SIZE,
-        BUFFER_LAYER_COARSE
+        BUFFER_LAYER_BATCH_SIZE//,
+        //BUFFER_LAYER_COARSE
     >(ctrl_input_path,test_ctrl_in);
 
     // load output - unknown output size
@@ -42,7 +42,8 @@ int main()
     //ctrl signals are duplicated so only need to check one value
     int ctrl_sum=0;
     for (unsigned int i=0; i<BUFFER_LAYER_BATCH_SIZE;i++) {
-        ctrl_sum += test_ctrl_in[i][0].to_int();
+        //ctrl_sum += test_ctrl_in[i][0].to_int();
+        ctrl_sum += test_ctrl_in[i].to_int();
     }
 
     int out_size;
@@ -59,27 +60,28 @@ int main()
     >(test_in,in);
     
     to_stream<
-        BUFFER_LAYER_BATCH_SIZE,
-        BUFFER_LAYER_COARSE
+        BUFFER_LAYER_BATCH_SIZE//,
+        //BUFFER_LAYER_COARSE
     >(test_ctrl_in, ctrl_in);
     
     //variable stream
+    assert(test_out[0].size()*BUFFER_LAYER_COARSE == out_size);
     to_stream<
         BUFFER_LAYER_COARSE
     >(test_out,out_correct, test_out[0].size());
     
     buffer_layer_top(in, ctrl_in, out);
     
-    /*for(int i=0;i<BUFFER_LAYER_COARSE;i++){
+    for(int i=0;i<BUFFER_LAYER_COARSE;i++){
         printf("TESTING OUTPUT %d: ",i);
         err += checkStreamEqual<data_t>(out[i],out_correct[i],false);
         printf("%s\n",(err==0) ? "passed" : "failed");
-    }*/
+    }
     
         std::cout<< "in: " <<in[0].empty() <<std::endl;
-        assert(in[0].empty() );
+//        assert(in[0].empty() );
         std::cout<< "in: " <<in[1].empty() <<std::endl;
-        assert(in[1].empty() );
+//        assert(in[1].empty() );
 //#ifdef SW
 /*    for (int i;i<BUFFER_LAYER_COARSE;i++){
         std::cout<< "in: " <<in[i].empty() <<std::endl;
