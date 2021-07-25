@@ -23,7 +23,7 @@
 #endif
 
 //////////////////////////////////////////
-typedef data_t sliding_window_t;
+typedef ap_fixed<SLIDING_WINDOW_WORDLENGTH,SLIDING_WINDOW_WORDLENGTH/2, AP_RND,AP_SAT> sliding_window_t;
 void sliding_window_top(
     stream_t(sliding_window_t) &in,
     stream_t(sliding_window_t) out[SLIDING_WINDOW_KERNEL_SIZE][SLIDING_WINDOW_KERNEL_SIZE]

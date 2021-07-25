@@ -3,7 +3,7 @@
 
 #include "common.hpp"
 #include "accum_param.hpp"
-typedef acc_t acc;
+typedef ap_fixed<ACCUM_WORDLENGTH,ACCUM_WORDLENGTH/2, AP_RND,AP_SAT> acc;
 void accum_top(
 	stream_t(acc) &in,
 	stream_t(acc) &out

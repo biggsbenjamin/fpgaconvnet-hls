@@ -22,5 +22,6 @@ void accum_top(
         ACCUM_GROUPS,
         acc
     >(in,out);
-
+    
 }
+

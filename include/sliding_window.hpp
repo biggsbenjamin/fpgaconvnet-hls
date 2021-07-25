@@ -45,7 +45,7 @@ void sliding_window_line_shift(
     stream_t(sliding_window_t) window_buffer[kernel_size][kernel_size-1]; // pixel window cache
     DO_PRAGMA( HLS STREAM variable=window_buffer depth=channels+1 )
     #pragma HLS ARRAY_PARTITION variable=window_buffer complete dim=0
-    #pragma HLS resource variable=frame_buffer core=FIFO_BRAM
+    #pragma HLS resource variable=window_buffer core=FIFO_BRAM
 
     sliding_window_t frame_cache[kernel_size][kernel_size];
     #pragma HLS ARRAY_PARTITION variable=frame_cache complete dim=0

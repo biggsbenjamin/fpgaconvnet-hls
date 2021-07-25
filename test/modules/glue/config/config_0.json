@@ -10,5 +10,6 @@
     "cols_out": 8,
     "channels_out": 50,
     "batch_size": 1,
+    "wordlength":16
     "description": "module name: glue, layer name: conv2, net name: lenet.prototxt"
 }

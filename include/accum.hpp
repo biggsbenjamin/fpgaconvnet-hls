@@ -51,9 +51,6 @@ void accum(
                     if( channel_index == (channels_per_group-1) ) {
                         out.write(acc_vector[filter_index] ) ;
                     }
-
-                if( channel_index == (channels_per_group-1) ) {
-                    out.write( curr ) ;
                 }
             }
         }

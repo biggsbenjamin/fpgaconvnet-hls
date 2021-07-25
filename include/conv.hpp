@@ -135,7 +135,7 @@ void conv_mul(
             mul_loop: for(unsigned char fine_index=0;fine_index<fine;fine_index++) {
                 #pragma HLS pipeline II=1
                 // update accumulation cache
-                Conv_acc prev = ( acc_index == 0 ) ? acc_t(0) : acc_cache[fine_index] ;
+                Conv_acc prev = ( acc_index == 0 ) ? Conv_acc(0) : acc_cache[fine_index] ;
                 acc_cache[fine_index] = prev + window_stream[fine_index].read() * weight_stream[fine_index].read();
                 // write to output stream
                 if( acc_index == (interval-1) ) {
