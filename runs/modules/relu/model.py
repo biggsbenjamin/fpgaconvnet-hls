@@ -14,7 +14,9 @@ def build_module(parameter):
             parameter['channels'],
             parameter['rows'],
             parameter['cols']
-        ]
+        ],
+        parameter['batch_size'],
+        parameter['data_wordlength']
     )
 
 # load relu model
@@ -23,7 +25,7 @@ model.load_points("modules/relu/logs")
 
 # filter parameters 
 filters = {
-    "data_width" : [15,17]
+    "data_wordlength" : [0,32]
 }
 model.filter_parameters(filters)
 
@@ -34,7 +36,7 @@ model.fit_model()
 model.save_coefficients("coefficients/relu")
 
 # # plot error
-# model.plot_error(MAX_RSC)
+model.plot_error(MAX_RSC)
 
 # print out error
 model.print_absolute_error()

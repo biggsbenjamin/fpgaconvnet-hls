@@ -15,7 +15,9 @@ def build_module(parameter):
             parameter['rows'],
             parameter['cols']
         ],
-        parameter['kernel_size']
+        parameter['kernel_size'],
+        parameter['batch_size'],
+        parameter['data_wordlength']
     )
 
 # load accum model
@@ -24,7 +26,7 @@ model.load_points("modules/pool/logs")
 
 # filter parameters 
 filters = {
-    "data_width" : [15,17]
+    "data_wordlength" : [0,36]
 }
 model.filter_parameters(filters)
 
@@ -32,10 +34,10 @@ model.filter_parameters(filters)
 model.fit_model()
 
 # save coefficients
-model.save_coefficients("coefficients/pool")
+model.save_coefficients("coefficients","pool")
 
 # # plot error
-# model.plot_error(MAX_RSC)
+model.plot_error(MAX_RSC)
 
 # print out error
 model.print_absolute_error()

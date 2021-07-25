@@ -20,27 +20,29 @@ def build_module(parameter):
         parameter['pad'],
         parameter['pad'],
         parameter['pad'],
-        parameter['pad']
+        parameter['pad'],
+        parameter['data_wordlength']
     )
 
 # load accum model
 model = ModuleModel(build_module)
 model.load_points("modules/sliding_window/logs")
 
-# filter parameters 
+ #filter parameters 
 filters = {
-    "data_width" : [15,17]
+    "data_wordlength" : [0,36]
 }
 model.filter_parameters(filters)
 
 # fit model
 model.fit_model()
 
-# save coefficients
-model.save_coefficients("coefficients/sliding_window")
 
-# # plot error
-# model.plot_error(MAX_RSC)
+# save coefficients
+model.save_coefficients("coefficients","sliding_window")
+
+ # plot error
+model.plot_error(MAX_RSC)
 
 # print out error
 model.print_absolute_error()

@@ -26,7 +26,7 @@ model.load_points("modules/glue/logs")
 
 # filter parameters 
 filters = {
-    "data_width" : [15,17]
+    "data_width" : [15.5,16.5]
 }
 model.filter_parameters(filters)
 
@@ -37,7 +37,7 @@ model.fit_model()
 model.save_coefficients("coefficients/glue")
 
 # # plot error
-# model.plot_error(MAX_RSC)
+model.plot_error(MAX_RSC)
 
 # print out error
 model.print_absolute_error()

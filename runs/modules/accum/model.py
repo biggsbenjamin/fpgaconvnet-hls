@@ -16,7 +16,7 @@ def build_module(parameter):
         parameter['cols']],
         parameter['filters'],
         parameter['groups'],
-        parameter['data_width']
+        parameter['data_wordlength']
     )
 
 # load accum model
@@ -25,7 +25,7 @@ model.load_points("modules/accum/logs")
 
 # filter parameters
 filters = {
-    "data_width" : [15,17]
+    "data_wordlength" : [0,36]
 }
 model.filter_parameters(filters)
 
@@ -33,10 +33,10 @@ model.filter_parameters(filters)
 model.fit_model()
 
 # save coefficients
-model.save_coefficients("coefficients/accum")
+model.save_coefficients("coefficients","accum")
 
 # plot error
-accum_model.plot_error(MAX_RSC)
+model.plot_error(MAX_RSC)
 
 # print out error
 model.print_absolute_error()

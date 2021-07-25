@@ -16,7 +16,9 @@ def build_module(parameter):
             parameter['cols']
         ],
         parameter['kernel_size'],
-        parameter['coarse']
+        parameter['coarse'],
+        parameter['batch_size'],
+        parameter['data_wordlength']
     )
 
 # load accum model
@@ -25,7 +27,7 @@ model.load_points("modules/fork/logs")
 
 # filter parameters 
 filters = {
-    "data_width" : [15,17]
+    "data_wordlength" : [0,36]
 }
 model.filter_parameters(filters)
 
@@ -33,10 +35,10 @@ model.filter_parameters(filters)
 model.fit_model()
 
 # save coefficients
-model.save_coefficients("coefficients/fork")
+model.save_coefficients("coefficients","fork")
 
 # # plot error
-# model.plot_error(MAX_RSC)
+model.plot_error(MAX_RSC)
 
 # print out error
 model.print_absolute_error()

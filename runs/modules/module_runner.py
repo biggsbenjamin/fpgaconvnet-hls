@@ -33,7 +33,6 @@ class ModuleRunner(Runner):
         self.parameters['cols']       = random.randint(1,128)
         self.parameters['channels']   = random.randint(1,96)
         # basic 
-        self.parameters['data_width'] = random.choice([4,8,16,32])
         self.parameters['freq']       = random.randint(50,150)
 
     def get_param_string(self):

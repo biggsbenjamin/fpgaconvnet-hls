@@ -4,10 +4,17 @@ import scipy
 import math
 import numpy as np
 import sklearn.linear_model
+from sklearn.neural_network import MLPRegressor
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_absolute_error
+from sklearn.metrics import mean_squared_error
+
+import joblib
 #import sklearn.metrics.mean_absolute_error
 import matplotlib.pyplot as plt
 
 RSC_TYPES=["LUT", "FF", "BRAM", "DSP"]
+
 
 class ModuleModel:
 
@@ -15,7 +22,16 @@ class ModuleModel:
         
         # save module
         self.module = build_module
-
+        model1=MLPRegressor(solver='adam', activation='relu', alpha=1e-03, hidden_layer_sizes=[10,10], learning_rate_init=0.01,learning_rate='invscaling', tol=0.001,n_iter_no_change=100,max_iter=10000)
+        model2=MLPRegressor(solver='adam', activation='relu', alpha=1e-03, hidden_layer_sizes=[10,10], learning_rate_init=0.01,learning_rate='invscaling', tol=0.001,n_iter_no_change=100,max_iter=10000)
+        model3=MLPRegressor(solver='adam', hidden_layer_sizes=[4, 2], random_state=0)
+        model4=MLPRegressor(solver='adam', hidden_layer_sizes=[4, 2], random_state=0)
+        self.buildmodel = {
+            "LUT"   : model1,
+            "FF"    : model2,
+            "DSP"   : model3,
+            "BRAM"  : model4
+        }
         # coeffcients for the model
         self.coef = {
             "LUT"   : np.array([]),
@@ -57,6 +73,7 @@ class ModuleModel:
 
     def get_nnls_coef(self, model, rsc):
         nnls = sklearn.linear_model.LinearRegression(positive=True, fit_intercept=False)
+        #nnls=MLPClassifier(solver='lbfgs', hidden_layer_sizes=[4, 2], random_state=0)
         return nnls.fit(model,rsc).coef_
 
     def get_absolute_error(self):
@@ -74,7 +91,7 @@ class ModuleModel:
             actual = point["resources"] 
             for rsc_type in RSC_TYPES:
                 # get modelled resources
-                modelled_rsc = np.dot(model, self.coef[rsc_type])
+                modelled_rsc = np.dot(model[rsc_type], self.coef[rsc_type])
                 # get error
                 err[rsc_type]  += abs(modelled_rsc - actual[rsc_type])/len(self.points)
         # return the error
@@ -82,17 +99,27 @@ class ModuleModel:
 
     def fit_model(self):
         # model and actual resource values
-        model   = []
+        model  = {
+            "LUT"   : [],
+            "FF"    : [],
+            "DSP"   : [],
+            "BRAM"  : []
+        }
         actual  = {
             "LUT"   : [],
             "FF"    : [],
             "DSP"   : [],
             "BRAM"  : []
         }
+        X_train  = []
+        X_test  = []
+        y_train  = []  
+        y_test  = []                    
         # iterate over points
         for point in self.points:
             # get utilisation model
-            model.append( self.module(point["parameters"]).utilisation_model() )
+            for (key,value) in model.items():
+                value.append(self.module(point["parameters"]).utilisation_model()[key])
             # get actual data
             actual["LUT"].append(point["resources"]["LUT"])
             actual["FF"].append(point["resources"]["FF"])
@@ -100,30 +127,77 @@ class ModuleModel:
             actual["BRAM"].append(point["resources"]["BRAM"])
         # get model coefficients
         for rsc_type in RSC_TYPES:
-            self.coef[rsc_type] = self.get_nnls_coef(np.array(model), np.array(actual[rsc_type]))
+            X_train, X_test, y_train, y_test =(train_test_split(model[rsc_type], actual[rsc_type], test_size=0.2))
+            #y_true = y_test
+            times=0
+            previousloss=0
+            cycle=1
+            repeat=0
+            self.buildmodel[rsc_type].fit(X_train, y_train)
+            while 1:            
+                self.buildmodel[rsc_type].partial_fit(X_train, y_train)
+            #print(self.buildmodel[rsc_type].score(X_train, y_train))
+                #y_pred = self.buildmodel[rsc_type].predict(X_test)
+                loss=mean_squared_error(self.buildmodel[rsc_type].predict(model[rsc_type]), actual[rsc_type])
+                print("the loss error of %s in the %dth iteration is %d" %(rsc_type,cycle,loss))
+                if loss>=previousloss:
+                    times+=1
+                    if times>19:
+                        break
+                else:
+                    times=0
+                if loss>previousloss-2 or loss<previousloss+2:
+                    repeat+=1
+                    if repeat>99:
+                        break                    
+                else:
+                    repeat=0                    
+                previousloss=loss
+                cycle+=1
+        #for rsc_type in RSC_TYPES:
+            #self.coef[rsc_type] = self.get_nnls_coef(np.array(model[rsc_type]), np.array(actual[rsc_type]))
+            
+            
 
-    def save_coefficients(self, filepath):
+        
+        
+        
+    def save_coefficients(self,filepath,modulename):
         # LUT
-        with open(f"{filepath}_lut.npy", "wb") as f:
-            np.save(f, self.coef["LUT"])
+        #vecdict=str(dict(zip(utilisation_model_txt,self.coef["LUT"])))
+        #vecdict = bytes(vecdict, encoding = "utf8")
+        #with open(f"{filepath}_lut.txt", "wb") as f:
+            #np.savetxt(f,self.coef["LUT"])
+        #with open(f"{filepath}_lut.npy", "wb") as f:
+            #np.save(f,self.coef["LUT"])
         # FF 
-        with open(f"{filepath}_ff.npy", "wb") as f:
-            np.save(f, self.coef["FF"])
+        #with open(f"{filepath}_ff.txt", "wb") as f:
+            #np.savetxt(f, self.coef["FF"])
+        #with open(f"{filepath}_ff.npy", "wb") as f:
+            #np.save(f, self.coef["FF"])
         # DSP 
-        with open(f"{filepath}_dsp.npy", "wb") as f:
-            np.save(f, self.coef["DSP"])
+        #with open(f"{filepath}_dsp.txt", "wb") as f:
+            #np.savetxt(f, self.coef["DSP"])
+        #with open(f"{filepath}_dsp.npy", "wb") as f:
+            #np.save(f, self.coef["DSP"])
         # BRAM 
-        with open(f"{filepath}_bram.npy", "wb") as f:
-            np.save(f, self.coef["BRAM"])
+        #with open(f"{filepath}_bram.txt", "wb") as f:
+            #np.savetxt(f, self.coef["BRAM"])
+        #with open(f"{filepath}_bram.npy", "wb") as f:
+            #np.save(f, self.coef["BRAM"])
+        os.chdir(filepath)
+        for rsc_type in RSC_TYPES:
+            filename=str(modulename)+'_'+str(rsc_type)
+            joblib.dump(self.buildmodel[rsc_type],filename)
+
 
     def print_absolute_error(self):
-    
         # iterate over the different resource types
         rsc_types = ["FF", "LUT", "DSP", "BRAM"]
         for rsc_type in rsc_types:
             # get the difference in resource usage
             actual = np.array([ p["resources"][rsc_type] for p in self.points ])
-            predicted = np.array([ self.module(p["parameters"]).rsc(self.coef)[rsc_type] for p in self.points ])
+            predicted = np.array([ self.module(p["parameters"]).rsc(self.buildmodel[rsc_type])[rsc_type] for p in self.points ])
             # get the mean absolute error
             err = np.average(np.absolute(actual - predicted))
             var = math.sqrt(np.var(np.absolute(actual - predicted)))
@@ -136,8 +210,7 @@ class ModuleModel:
 
         # LUT
         ## get coordinates
-        x = np.array([ self.module(p["parameters"]).rsc(self.coef)["LUT"]
-                for p in self.points ])
+        x = np.array([ self.module(p["parameters"]).rsc(self.buildmodel["LUT"])["LUT"] for p in self.points ])
         y = np.array([ p["resources"]["LUT"] for p in self.points ])
         ## create scatter plot
         axs[0,0].scatter(x, y, label="LUT", color="r", marker='x')
@@ -145,7 +218,7 @@ class ModuleModel:
 
         # FF
         ## get coordinates
-        x = np.array([ self.module(p["parameters"]).rsc(self.coef)["FF"]
+        x = np.array([ self.module(p["parameters"]).rsc(self.buildmodel["FF"])["FF"]
                 for p in self.points ])
         y = np.array([ p["resources"]["FF"] for p in self.points ])
         ## create scatter plot
@@ -154,7 +227,7 @@ class ModuleModel:
 
         # BRAM 
         ## get coordinates
-        x = np.array([ self.module(p["parameters"]).rsc(self.coef)["BRAM"]
+        x = np.array([ self.module(p["parameters"]).rsc(self.buildmodel["BRAM"])["BRAM"]
                 for p in self.points ])
         y = np.array([ p["resources"]["BRAM"] for p in self.points ])
         ## create scatter plot
@@ -163,7 +236,7 @@ class ModuleModel:
 
         # DSP 
         ## get coordinates
-        x = np.array([ self.module(p["parameters"]).rsc(self.coef)["DSP"]
+        x = np.array([ self.module(p["parameters"]).rsc(self.buildmodel["DSP"])["DSP"]
                 for p in self.points ])
         y = np.array([ p["resources"]["DSP"] for p in self.points ])
         ## create scatter plot
