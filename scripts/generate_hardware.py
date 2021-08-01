@@ -30,6 +30,8 @@ if __name__ == "__main__":
     #    help='Path to onnx model (.onnx)')
     parser.add_argument('-i','--partition_index',metavar='N',required=True, type=int,
         help='Partition index')
+    parser.add_argument('-eep', '--early_exit_profiling', action='store_true',
+        help='early exit profiling flag') #default is false
 
     # parse arguments
     args = parser.parse_args()
@@ -40,7 +42,10 @@ if __name__ == "__main__":
         json_format.Parse(f.read(), partitions)
 
     # generate network
-    generate.partition.gen_network(args.name, partitions.partition[args.partition_index], f"partition_{args.partition_index}")
+    generate.partition.gen_network( args.name,
+                                    partitions.partition[args.partition_index],
+                                    f"partition_{args.partition_index}",
+                                    args.early_exit_profiling)
 
     # # iterate over partitions
     # if args.partition_index:

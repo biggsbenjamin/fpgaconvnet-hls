@@ -102,6 +102,35 @@ void to_stream(
         }
     }
 }
+
+/* GREATER(CMP layer) DUPE INPUT */
+template<int SIZE, int STREAMS, typename T>
+void load_data_dupe(
+    std::string filepath,
+    T data[SIZE][STREAMS]
+) {
+    // read in file
+    std::ifstream input_file(filepath);
+
+    // check file opened
+    if (!input_file.is_open()) {
+    //if (fp == NULL) {
+        perror("Failed: ");
+    }
+
+    // save to array
+    int index = 0;
+    int size_idx=0;
+    float val;
+    while(input_file >> val) {
+        for(int j=0;j<STREAMS;j++) {
+            data[size_idx][j] = T( val );
+        } 
+        size_idx++;
+    }
+    input_file.close(); // close file
+}
+
 ///////////////////////////////////////////////////////////////////////
 /////////////////////////////// MODULES ///////////////////////////////
 ///////////////////////////////////////////////////////////////////////
@@ -583,43 +612,43 @@ int checkStreamEqual(
 	return err;
 }
 
-template<>
-int checkStreamEqual <float> (
-		hls::stream <float> &test,
-		hls::stream <float> &valid,
-		bool print_out
-)
-{
-	while(!valid.empty())
-	{
-		if(test.empty())
-		{
-			printf("ERROR: empty early\n");
-			return 1;
-		}
-		float tmp = test.read();
-		float tmp_valid = valid.read();
-
-		if(print_out) printf("%x,%x\n",tmp,tmp_valid);
-
-		if(
-				(tmp > tmp_valid+ERROR_TOLERANCE) ||
-				(tmp < tmp_valid-ERROR_TOLERANCE)
-		)
-		{
-			//printf("ERROR: wrong value\n");
-			printf("ERROR: wrong value %x, %x \n",tmp, tmp_valid);
-			return 1;
-		}
-	}
-
-	if(!test.empty())
-	{
-		printf("ERROR: still data in stream\n");
-		return 1;
-	}
-	return 0;
-}
+//template<>
+//int checkStreamEqual <float> (
+//		hls::stream <float> &test,
+//		hls::stream <float> &valid,
+//		bool print_out
+//)
+//{
+//	while(!valid.empty())
+//	{
+//		if(test.empty())
+//		{
+//			printf("ERROR: empty early\n");
+//			return 1;
+//		}
+//		float tmp = test.read();
+//		float tmp_valid = valid.read();
+//
+//		if(print_out) printf("%x,%x\n",tmp,tmp_valid);
+//
+//		if(
+//				(tmp > tmp_valid+ERROR_TOLERANCE) ||
+//				(tmp < tmp_valid-ERROR_TOLERANCE)
+//		)
+//		{
+//			//printf("ERROR: wrong value\n");
+//			printf("ERROR: wrong value %x, %x \n",tmp, tmp_valid);
+//			return 1;
+//		}
+//	}
+//
+//	if(!test.empty())
+//	{
+//		printf("ERROR: still data in stream\n");
+//		return 1;
+//	}
+//	return 0;
+//}
 
 template<int SIZE>
 int check_array_equal(

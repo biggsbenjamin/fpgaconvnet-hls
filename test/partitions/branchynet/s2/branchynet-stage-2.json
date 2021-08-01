@@ -1,0 +1,413 @@
+{
+  "partition": [
+    {
+      "id": 2,
+      "ports": 1,
+      "batch_size": 1,
+      "input_node": "NA",
+      "output_node": "34",
+      "weights_reloading_factor": 1,
+      "weights_reloading_layer": "34",
+      "layers": [
+        {
+          "name": "buffer1",
+          "streams_in": [
+            {
+              "name": "in",
+              "coarse": 1,
+              "ctrl": false,
+              "split": false
+            },
+            {
+              "name": "in",
+              "coarse": 1,
+              "ctrl": true,
+              "split": false
+            }
+          ],
+          "streams_out": [
+            {
+              "name": "buffer1_CONVOLUTION26",
+              "coarse": 1,
+              "ctrl": false,
+              "split": false
+            }
+          ],
+          "type": "BUFFER",
+          "parameters": {
+            "rows_in": 16,
+            "cols_in": 16,
+            "channels_in": 5,
+            "rows_out": 16,
+            "cols_out": 16,
+            "channels_out": 5,
+            "coarse_in": 1,
+            "coarse_out": 1,
+            "buffer_depth": 0,
+            "batch_size": 1,
+            "ctrledge": "22",
+            "drop_mode": true
+          },
+          "node_in": [
+            "buffer1"
+          ],
+          "node_out": [
+            "CONVOLUTION26"
+          ]
+        },
+        {
+          "name": "26",
+          "streams_in": [
+            {
+              "name": "buffer1_CONVOLUTION26",
+              "coarse": 1,
+              "ctrl": false,
+              "split": false
+            }
+          ],
+          "streams_out": [
+            {
+              "name": "CONVOLUTION26_POOLING27",
+              "coarse": 1,
+              "ctrl": false,
+              "split": false
+            }
+          ],
+          "type": "CONVOLUTION",
+          "weights_path": "backbone.1.0.layer.0.weight",
+          "bias_path": "",
+          "parameters": {
+            "rows_in": 16,
+            "cols_in": 16,
+            "channels_in": 5,
+            "rows_out": 20,
+            "cols_out": 20,
+            "channels_out": 10,
+            "coarse_in": 1,
+            "coarse_out": 1,
+            "filters": 10,
+            "pad": 4,
+            "pad_top": 4,
+            "pad_right": 4,
+            "pad_bottom": 4,
+            "pad_left": 4,
+            "stride": 1,
+            "groups": 1,
+            "kernel_size": 5,
+            "fine": 1,
+            "buffer_depth": 0,
+            "batch_size": 1
+          },
+          "node_in": [
+            "buffer1"
+          ],
+          "node_out": [
+            "POOLING27"
+          ]
+        },
+        {
+          "name": "27",
+          "streams_in": [
+            {
+              "name": "CONVOLUTION26_POOLING27",
+              "coarse": 1,
+              "ctrl": false,
+              "split": false
+            }
+          ],
+          "streams_out": [
+            {
+              "name": "POOLING27_RELU28",
+              "coarse": 1,
+              "ctrl": false,
+              "split": false
+            }
+          ],
+          "type": "POOLING",
+          "parameters": {
+            "rows_in": 20,
+            "cols_in": 20,
+            "channels_in": 10,
+            "rows_out": 10,
+            "cols_out": 10,
+            "channels_out": 10,
+            "coarse_in": 1,
+            "coarse_out": 1,
+            "pad": 0,
+            "pad_top": 0,
+            "pad_right": 0,
+            "pad_bottom": 0,
+            "pad_left": 0,
+            "stride": 2,
+            "kernel_size": 2,
+            "buffer_depth": 0,
+            "batch_size": 1,
+            "coarse": 1
+          },
+          "node_in": [
+            "CONVOLUTION26"
+          ],
+          "node_out": [
+            "RELU28"
+          ]
+        },
+        {
+          "name": "28",
+          "streams_in": [
+            {
+              "name": "POOLING27_RELU28",
+              "coarse": 1,
+              "ctrl": false,
+              "split": false
+            }
+          ],
+          "streams_out": [
+            {
+              "name": "RELU28_CONVOLUTION29",
+              "coarse": 1,
+              "ctrl": false,
+              "split": false
+            }
+          ],
+          "type": "RELU",
+          "parameters": {
+            "rows_in": 10,
+            "cols_in": 10,
+            "channels_in": 10,
+            "rows_out": 10,
+            "cols_out": 10,
+            "channels_out": 10,
+            "coarse_in": 1,
+            "coarse_out": 1,
+            "buffer_depth": 0,
+            "batch_size": 1,
+            "coarse": 1
+          },
+          "node_in": [
+            "POOLING27"
+          ],
+          "node_out": [
+            "CONVOLUTION29"
+          ]
+        },
+        {
+          "name": "29",
+          "streams_in": [
+            {
+              "name": "RELU28_CONVOLUTION29",
+              "coarse": 1,
+              "ctrl": false,
+              "split": false
+            }
+          ],
+          "streams_out": [
+            {
+              "name": "CONVOLUTION29_POOLING3",
+              "coarse": 1,
+              "ctrl": false,
+              "split": false
+            }
+          ],
+          "type": "CONVOLUTION",
+          "weights_path": "backbone.1.1.layer.0.weight",
+          "bias_path": "",
+          "parameters": {
+            "rows_in": 10,
+            "cols_in": 10,
+            "channels_in": 10,
+            "rows_out": 12,
+            "cols_out": 12,
+            "channels_out": 20,
+            "coarse_in": 1,
+            "coarse_out": 1,
+            "filters": 20,
+            "pad": 3,
+            "pad_top": 3,
+            "pad_right": 3,
+            "pad_bottom": 3,
+            "pad_left": 3,
+            "stride": 1,
+            "groups": 1,
+            "kernel_size": 5,
+            "fine": 1,
+            "buffer_depth": 0,
+            "batch_size": 1
+          },
+          "node_in": [
+            "RELU28"
+          ],
+          "node_out": [
+            "POOLING3"
+          ]
+        },
+        {
+          "name": "3",
+          "streams_in": [
+            {
+              "name": "CONVOLUTION29_POOLING3",
+              "coarse": 1,
+              "ctrl": false,
+              "split": false
+            }
+          ],
+          "streams_out": [
+            {
+              "name": "POOLING3_RELU31",
+              "coarse": 1,
+              "ctrl": false,
+              "split": false
+            }
+          ],
+          "type": "POOLING",
+          "parameters": {
+            "rows_in": 12,
+            "cols_in": 12,
+            "channels_in": 20,
+            "rows_out": 6,
+            "cols_out": 6,
+            "channels_out": 20,
+            "coarse_in": 1,
+            "coarse_out": 1,
+            "pad": 0,
+            "pad_top": 0,
+            "pad_right": 0,
+            "pad_bottom": 0,
+            "pad_left": 0,
+            "stride": 2,
+            "kernel_size": 2,
+            "buffer_depth": 0,
+            "batch_size": 1,
+            "coarse": 1
+          },
+          "node_in": [
+            "CONVOLUTION29"
+          ],
+          "node_out": [
+            "RELU31"
+          ]
+        },
+        {
+          "name": "31",
+          "streams_in": [
+            {
+              "name": "POOLING3_RELU31",
+              "coarse": 1,
+              "ctrl": false,
+              "split": false
+            }
+          ],
+          "streams_out": [
+            {
+              "name": "RELU31_INNERPRODUCT33",
+              "coarse": 1,
+              "ctrl": false,
+              "split": false
+            }
+          ],
+          "type": "RELU",
+          "parameters": {
+            "rows_in": 6,
+            "cols_in": 6,
+            "channels_in": 20,
+            "rows_out": 6,
+            "cols_out": 6,
+            "channels_out": 20,
+            "coarse_in": 1,
+            "coarse_out": 1,
+            "buffer_depth": 0,
+            "batch_size": 1,
+            "coarse": 1
+          },
+          "node_in": [
+            "POOLING3"
+          ],
+          "node_out": [
+            "INNERPRODUCT33"
+          ]
+        },
+        {
+          "name": "33",
+          "streams_in": [
+            {
+              "name": "RELU31_INNERPRODUCT33",
+              "coarse": 1,
+              "ctrl": false,
+              "split": false
+            }
+          ],
+          "streams_out": [
+            {
+              "name": "INNERPRODUCT33_INNERPRODUCT34",
+              "coarse": 1,
+              "ctrl": false,
+              "split": false
+            }
+          ],
+          "type": "INNER_PRODUCT",
+          "weights_path": "backbone.1.3.weight",
+          "bias_path": "backbone.1.3.bias",
+          "parameters": {
+            "rows_in": 6,
+            "cols_in": 6,
+            "channels_in": 20,
+            "rows_out": 1,
+            "cols_out": 1,
+            "channels_out": 84,
+            "coarse_in": 1,
+            "coarse_out": 1,
+            "filters": 84,
+            "buffer_depth": 0,
+            "batch_size": 1
+          },
+          "node_in": [
+            "RELU31"
+          ],
+          "node_out": [
+            "INNERPRODUCT34"
+          ]
+        },
+        {
+          "name": "34",
+          "streams_in": [
+            {
+              "name": "INNERPRODUCT33_INNERPRODUCT34",
+              "coarse": 1,
+              "ctrl": false,
+              "split": false
+            }
+          ],
+          "streams_out": [
+            {
+              "name": "out",
+              "coarse": 1,
+              "ctrl": false,
+              "split": false
+            }
+          ],
+          "type": "INNER_PRODUCT",
+          "weights_path": "exits.1.0.weight",
+          "bias_path": "exits.1.0.bias",
+          "parameters": {
+            "rows_in": 1,
+            "cols_in": 1,
+            "channels_in": 84,
+            "rows_out": 1,
+            "cols_out": 1,
+            "channels_out": 10,
+            "coarse_in": 1,
+            "coarse_out": 1,
+            "filters": 10,
+            "buffer_depth": 0,
+            "batch_size": 1
+          },
+          "node_in": [
+            "INNERPRODUCT33"
+          ],
+          "node_out": [
+            "INNERPRODUCT34"
+          ]
+        }
+      ]
+    }
+  ]
+}

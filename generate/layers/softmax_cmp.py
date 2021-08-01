@@ -8,6 +8,7 @@ import generate.modules.softmax_sum
 import generate.modules.reducemax
 import generate.modules.compare
 
+#TODO: include when used #define {NAME}_COND_TYPE    {cond_type}
 softmax_cmp_layer_template_header = """#ifndef {NAME}_HPP_
 #define {NAME}_HPP_
 
@@ -36,9 +37,8 @@ softmax_cmp_layer_template_header = """#ifndef {NAME}_HPP_
 #define {NAME}_COLS_OUT     {cols_out}
 #define {NAME}_CHANNELS_OUT {channels_out}
 
-#define {NAME}_COND_TYPE    {cond_type}
-#define {NAME}_CTRL_EDGES   {ctrl_edges}
-#define {NAME}_CTRL         {ctrl}
+#define {NAME}_CTRLEDGES    {ctrledges}
+#define {NAME}_CTRLOUTSIZE  {ctrloutsize}
 #define {NAME}_THRESHOLD    {threshold}
 
 // EXPONEN
@@ -78,7 +78,7 @@ softmax_cmp_layer_template_header = """#ifndef {NAME}_HPP_
 #define {NAME}_FORK_O_ROWS         1
 #define {NAME}_FORK_O_COLS         1
 #define {NAME}_FORK_O_CHANNELS     1
-#define {NAME}_FORK_O_COARSE       {NAME}_CTRL
+#define {NAME}_FORK_O_COARSE       {NAME}_CTRLOUTSIZE
 #define {NAME}_FORK_O_KERNEL_SIZE  1
 
 /*
@@ -86,8 +86,9 @@ softmax_cmp_layer_template_header = """#ifndef {NAME}_HPP_
  */
 
 void {name}(
-    stream_t(data_t)    &in,
-    stream_t(data_t)    out[{NAME}_CTRL]
+    stream_t(data_t)    in[1], //NOTE temporary fix
+    stream_t(data_t)    out[{NAME}_CTRLOUTSIZE],
+    int mode
 );
 
 #undef name
@@ -97,8 +98,9 @@ void {name}(
 softmax_cmp_layer_template_src = """#include "{name}.hpp"
 
 void {name}(
-    stream_t(data_t)    &in,
-    stream_t(data_t)    out[{NAME}_CTRL]
+    stream_t(data_t)    in[1], //NOTE temporary fix
+    stream_t(data_t)    out[{NAME}_CTRLOUTSIZE],
+    int mode
 )
 {{
 
@@ -126,9 +128,6 @@ void {name}(
     float cmp_thr[1];
     cmp_thr[0] = {threshold};
 
-
-//TODO check if the ctrl out fork needs to be unrolled in a loop
-
 {exponen}
 {fork_i}
 {reducemax}
@@ -144,7 +143,7 @@ def gen_softmax_cmp_layer(name, param, src_path, header_path):
     # EXPONEN MODULE INIT
     exponen = generate.modules.exponen.gen_exponen_module(
         name+"_exponen",
-        "in",
+        "in[0]", #NOTE temporary fix
         "exponen_out",
         indent=8
     )
@@ -215,9 +214,9 @@ def gen_softmax_cmp_layer(name, param, src_path, header_path):
         rows_out            =param['rows_out'],
         cols_out            =param['cols_out'],
         channels_out        =param['channels_out'],
-        cond_type           =param['cond_type'],
-        ctrl_edges          =param['ctrl_edges'],
-        ctrl                =param['ctrl'],
+        #cond_type           =param['cond_type'],
+        ctrledges           =param['ctrledges'],
+        ctrloutsize         =param['ctrl_out_size'],
         threshold           =param['threshold']
     )
 

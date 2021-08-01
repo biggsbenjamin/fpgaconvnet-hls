@@ -20,9 +20,9 @@ class SplitLayerTB(Layer):
     def gen_stimulus(self):
         # Init Module
         layer = SplitLayer(
-            self.param['rows'],
-            self.param['cols'],
-            self.param['channels'],
+            self.param['rows_in'],
+            self.param['cols_in'],
+            self.param['channels_in'],
             self.param['coarse'],
             self.param['ports_out']
         )
@@ -30,9 +30,9 @@ class SplitLayerTB(Layer):
 
         # data in
         data_in = self.gen_data([
-            self.param['rows'],
-            self.param['cols'],
-            self.param['channels']
+            self.param['rows_in'],
+            self.param['cols_in'],
+            self.param['channels_in']
         ])
         # data out
         data_out = layer.functional_model(copy.copy(data_in))

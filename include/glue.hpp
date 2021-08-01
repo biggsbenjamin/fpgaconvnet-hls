@@ -58,7 +58,7 @@ void glue(
                         // write to output stream
                         if( in_index == (coarse_in-1) ) {
                             out[group_index*coarse_out+out_index].write( glue_data_t(acc[group_index*coarse_out+out_index]) ) ;
-                        }
+                            std::cout<<"glue out: "<< acc[out_index]<<" : "<<data_t(acc[out_index])<<std::endl;
                     }
                 }
             }

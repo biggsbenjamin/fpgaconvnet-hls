@@ -67,7 +67,7 @@ template<
     unsigned int CHANNELS,
     unsigned int PORTS,
     unsigned int STREAMS,
-    bool EE_MODE
+    bool EE_MODE,
     typename type_t
 >
 void mem_read(
@@ -105,7 +105,7 @@ void mem_read(
                 //if ( streams_in > port_index*dma_channels ) {
                     if(size_index == 0 && port_index == 0) { //should execute once per input sample
                         batch_id = uint16_t{ in_hw[port_index][size_index] }; //unlikely to work
-                        batch.write(batch_id)
+                        batch.write(batch_id);
                     }
                     port_cache[port_index] = in_hw[port_index][size_index+1];
 

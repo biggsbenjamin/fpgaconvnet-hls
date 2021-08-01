@@ -7,7 +7,8 @@
 
 void split_layer_top(
   stream_t(data_t) in[SPLIT_LAYER_COARSE],
-  stream_t(data_t) out[SPLIT_LAYER_COARSE][SPLIT_LAYER_PORTS_OUT]
+  stream_t(data_t) out[SPLIT_LAYER_PORTS_OUT][SPLIT_LAYER_COARSE],
+  int mode
 );
 
 #endif

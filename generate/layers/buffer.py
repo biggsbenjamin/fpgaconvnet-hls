@@ -50,7 +50,8 @@ buffer_layer_template_header = """#ifndef {NAME}_HPP_
 void {name}(
     stream_t({name}_input_t)  in[{NAME}_COARSE],
     stream_t({name}_input_t)  &ctrl_in,
-    stream_t({name}_output_t) out[{NAME}_COARSE]
+    stream_t({name}_output_t) out[{NAME}_COARSE],
+    int mode
 );
 
 #undef name
@@ -62,7 +63,8 @@ buffer_layer_template_src = """#include "{name}.hpp"
 void {name}(
     stream_t({name}_input_t)  in[{NAME}_COARSE],
     stream_t({name}_input_t)  &ctrl_in,
-    stream_t({name}_output_t) out[{NAME}_COARSE]
+    stream_t({name}_output_t) out[{NAME}_COARSE],
+    int mode
 )
 {{
 
@@ -129,11 +131,11 @@ def gen_buffer_layer(name,param,src_path,header_path):
         NAME                =name.upper(),
         id                  =0, # param['id'],
         batch_size          =param['batch_size'],
-        rows                =param['rows'],
-        cols                =param['cols'],
-        channels            =param['channels'],
-        channels_per_module =int(param['channels']/(param['coarse'])),
-        coarse              =param['coarse'],
+        rows                =param['rows_in'],
+        cols                =param['cols_in'],
+        channels            =param['channels_in'],
+        channels_per_module =int(param['channels_in']/(param['coarse_in'])),
+        coarse              =param['coarse_in'],
         rows_out            =param['rows_out'],
         cols_out            =param['cols_out'],
         channels_out        =param['channels_out'],

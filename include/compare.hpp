@@ -50,6 +50,8 @@ void compare(
         thr_mult = thr_in.read(); //this one will arrive later
         cmp_max = max_in.read();
         thr_res = thr_mult * threshold;
+        std::cout<<"threshold: "<<thr_res<<std::endl;
+        std::cout<<"max val: "<<cmp_max<<std::endl;
         if (cmp_max > thr_res) {
             //exit should occur
             ctrl_out.write(1.0);

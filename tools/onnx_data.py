@@ -205,6 +205,8 @@ class ONNXData:
         # normalise
         #featuremap = self.normalise(featuremap) # TODO: remove
         # transform featuremap
+        if featuremap.ndim == 1:
+            return featuremap
         return np.moveaxis(featuremap, 1, -1)
         # TODO: handle 1D and 2D featuremaps
 
@@ -241,9 +243,14 @@ class ONNXData:
         self.save_featuremap(input_data, os.path.join(output_path, onnx_helper._format_name(input_node)),
             parallel_streams=input_streams, to_yaml=False, to_bin=to_bin, to_csv=to_csv, to_dat=to_dat)
         # save output layer
+        prev_node = "18"
+        prev_data = np.array( self.sess.run([prev_node], { self.input_name : self.data } )[0], dtype=np.float64)
+        print(prev_data)
+
         output_node = self.partition.output_node
-        output_data = np.array( self.sess.run([output_node], { self.input_name : self.data } )[0] )
+        output_data = np.array( self.sess.run([output_node], { self.input_name : self.data } )[0], dtype=np.float64) #making sure data type works
         output_data = self.transform_featuremap(output_data)
+        print(output_data)
         output_streams = int(self.partition.layers[-1].parameters.coarse_out)
         self.save_featuremap(output_data, os.path.join(output_path, onnx_helper._format_name(output_node)),
             parallel_streams=output_streams, to_yaml=False, to_bin=to_bin, to_csv=to_csv, to_dat=to_dat)

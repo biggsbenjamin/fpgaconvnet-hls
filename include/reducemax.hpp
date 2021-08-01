@@ -39,13 +39,16 @@ void reducemax(
         pixel_loop: for (unsigned long px_index = 0; px_index < rows*cols*channels; px_index++) {
                 if (px_index == 0) {
                     cache = in.read();
+                    std::cout<<"rdmx,in cache: "<<cache<<std::endl;
                 }
                 else {
                     float tmp = in.read();
                     cache = (cache > tmp ) ? cache : tmp ;
+                    std::cout<<"rdmx,in cache: "<<cache<<std::endl;
                 }
             }
         out.write(cache);
+        std::cout<<"rdmx,out cache: "<<cache<<std::endl;
     }
 }
 

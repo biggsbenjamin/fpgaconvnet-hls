@@ -3,7 +3,8 @@
 
 void split_layer_top(
   stream_t(data_t) in[SPLIT_LAYER_COARSE],
-  stream_t(data_t) out[SPLIT_LAYER_COARSE][SPLIT_LAYER_PORTS_OUT]
+  stream_t(data_t) out[SPLIT_LAYER_PORTS_OUT][SPLIT_LAYER_COARSE],
+  int mode
 )
 {
 #pragma HLS DATAFLOW
@@ -14,6 +15,6 @@ void split_layer_top(
 #pragma HLS STREAM variable=in
 #pragma HLS STREAM variable=out
 
-    split_layer(in,out);
+    split_layer(in,out,mode);
 
 }

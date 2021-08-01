@@ -51,6 +51,7 @@ void pool(
             }
         }
         out.write(cache);
+        std::cout<<"pool cache:"<<cache<<std::endl;
     }
 }
 

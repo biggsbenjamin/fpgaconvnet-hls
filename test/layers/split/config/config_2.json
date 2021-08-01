@@ -4,7 +4,7 @@
     "rows_in": 4,
     "cols_in": 4,
     "channels_in": 4,
-    "ports_out": 2,
+    "ports_out": 3,
     "coarse": 2,
     "coarse_in": 2,
     "coarse_out": 2,

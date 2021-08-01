@@ -50,13 +50,16 @@ void exponen(
 
         //data_t tmp = in.read();
         float tmp = in.read().to_float();
+        std::cout<<"exponen tmp: "<<tmp<<std::endl;
         //bdata_t tmp = bdata_t{in.read()};
         //exponential function options: cordic, lookup table, something else?
         
         //out.write( data_t{ hls::exp(exp_t{tmp}) } );
         //out.write(data_t{ hls::exp(tmp.to_float()) });
         //out.write( hls::exp(tmp.to_float()) );
-        out.write( hls::exp(tmp) );
+        float tmp_out = hls::exp(tmp);
+        out.write( tmp_out);//hls::exp(tmp) );
+        std::cout<<"exponen out: "<<tmp_out<<std::endl;
     }
 }
 

@@ -34,8 +34,10 @@ void relu(
         relu_t tmp = in.read();
         if(tmp < 0.0)
             out.write(0.0);
-        else
+            std::cout<<"relu cache:"<<0.0<<std::endl;}
+        else{
             out.write(tmp);
+            std::cout<<"relu cache:"<<tmp<<std::endl;}
     }
 }
 

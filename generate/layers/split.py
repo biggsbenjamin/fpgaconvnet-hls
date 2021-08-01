@@ -2,12 +2,12 @@
 import os
 import shutil
 
-import generate.modules.fork
+#import generate.modules.fork
 
 split_layer_template_header = """#ifndef {NAME}_HPP_
 #define {NAME}_HPP_
 
-#include "fork.hpp"
+#include "split.hpp"
 
 #define name        {name}
 #define {NAME}_ID   {id}
@@ -19,6 +19,7 @@ split_layer_template_header = """#ifndef {NAME}_HPP_
 #define {NAME}_ROWS         {rows}
 #define {NAME}_COLS         {cols}
 #define {NAME}_CHANNELS     {channels}
+#define {NAME}_CHANNELS_PM  {channels_per_module}
 #define {NAME}_COARSE       {coarse}
 #define {NAME}_PORTS_OUT    {ports_out}
 
@@ -29,21 +30,14 @@ split_layer_template_header = """#ifndef {NAME}_HPP_
 #define {NAME}_COLS_OUT     {cols_out}
 #define {NAME}_CHANNELS_OUT {channels_out}
 
-// FORK
-#define {NAME}_FORK_BATCH_SIZE   {batch_size}
-#define {NAME}_FORK_ROWS         {rows_out}
-#define {NAME}_FORK_COLS         {cols_out}
-#define {NAME}_FORK_CHANNELS     {channels_per_module}
-#define {NAME}_FORK_COARSE       {NAME}_PORTS_OUT
-#define {NAME}_FORK_KERNEL_SIZE  1
-
 /**
  * FUNCTION DEFINITION
  */
 
 void {name}(
     stream_t({name}_input_t)  in[{NAME}_COARSE],
-    stream_t({name}_output_t) out[{NAME}_COARSE][{NAME}_PORTS_OUT]
+    stream_t({name}_output_t) out[{NAME}_PORTS_OUT][{NAME}_COARSE],
+    int mode
 );
 
 #undef name
@@ -54,7 +48,8 @@ split_layer_template_src = """#include "{name}.hpp"
 
 void {name}(
     stream_t({name}_input_t)  in[{NAME}_COARSE],
-    stream_t({name}_output_t) out[{NAME}_COARSE][{NAME}_PORTS_OUT]
+    stream_t({name}_output_t) out[{NAME}_PORTS_OUT][{NAME}_COARSE],
+    int mode
 )
 {{
 
@@ -67,32 +62,34 @@ void {name}(
 #pragma HLS ARRAY_PARTITION variable=in  complete dim=0
 #pragma HLS ARRAY_PARTITION variable=out complete dim=0
 
+split<
+    {NAME}_BATCH_SIZE,
+    {NAME}_ROWS,
+    {NAME}_COLS,
+    {NAME}_CHANNELS_PM,
+    {NAME}_COARSE,
+    {NAME}_PORTS_OUT
+>(in,out);
 
-    for(unsigned int coarseIndex=0;coarseIndex<{NAME}_COARSE;coarseIndex++)
-    {{
-#pragma HLS UNROLL
-{fork}
-    }}
 }}
-
 """
 
 def gen_split_layer(name,param,src_path,header_path):
 
-    # FORK MODULE INIT
-    fork = generate.modules.fork.gen_fork_module(
-        name+"_fork",
-        "in[coarseIndex]",
-        "out[coarseIndex]",
-        indent=8
-    )
+    ## FORK MODULE INIT
+    #fork = generate.modules.fork.gen_fork_module(
+    #    name+"_fork",
+    #    "in[coarseIndex]",
+    #    "out[coarseIndex]",
+    #    indent=8
+    #)
 
     # src
     split_layer_src = split_layer_template_src.format(
         name            =name,
         NAME            =name.upper(),
-        buffer_depth=max(param['buffer_depth'],2),
-        fork            =fork
+        buffer_depth=max(param['buffer_depth'],2)#,
+        #fork            =fork
     )
 
     # header
@@ -101,11 +98,11 @@ def gen_split_layer(name,param,src_path,header_path):
         NAME                =name.upper(),
         id                  =0, # param['id'],
         batch_size          =param['batch_size'],
-        rows                =param['rows'],
-        cols                =param['cols'],
-        channels            =param['channels'],
-        channels_per_module =int(param['channels']/(param['coarse'])),
-        coarse              =param['coarse'],
+        rows                =param['rows_in'],
+        cols                =param['cols_in'],
+        channels            =param['channels_in'],
+        channels_per_module =int(param['channels_in']/(param['coarse_in'])),
+        coarse              =param['coarse_in'],
         rows_out            =param['rows_out'],
         cols_out            =param['cols_out'],
         channels_out        =param['channels_out'],
