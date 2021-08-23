@@ -95,12 +95,12 @@ create_clock -period $clk_period -name default
 proc csim   {} { csim_design }
 proc csynth {} { csynth_design }
 proc cosim  {} { cosim_design -rtl verilog -trace_level all }
-#proc export {} { export_design -flow impl -rtl verilog -format ip_catalog }
-if { $fast_flag == 1 } {
-    proc export {} { export_design -rtl verilog -format ip_catalog }
-} else {
-    proc export {} { export_design -flow impl -rtl verilog -format ip_catalog }
-}
+proc export {} { export_design -flow impl -rtl verilog -format ip_catalog }
+#if { $fast_flag == 1 } {
+#    proc export {} { export_design -rtl verilog -format ip_catalog }
+#} else {
+#    proc export {} { export_design -flow impl -rtl verilog -format ip_catalog }
+#}
 # run hls tool
 if { $test_type == "sim" } {
 

@@ -52,7 +52,7 @@ if [ $TEST_NUM ]; then
   mkdir -p data/test_${TEST_NUM}
   python gen_layer.py -c config/config_${TEST_NUM}.json -o $FPGACONVNET_HLS/test/layers/$LAYER/data/test_${TEST_NUM} -s src/ -h include/ -t tb/
   # RUN TEST
-  vivado_hls -f $FPGACONVNET_HLS/scripts/run_hls.tcl "_  -num ${TEST_NUM} -type ${TEST_TYPE} -name ${LAYER} -layer_flag "
+  vivado_hls -f $FPGACONVNET_HLS/scripts/run_hls.tcl "_  -num ${TEST_NUM} -type ${TEST_TYPE} -name ${LAYER} -layer_flag -fpga xc7z045ffg900-2 -fast"
 
 else
 
@@ -66,7 +66,7 @@ else
       mkdir -p data/test_${i}
       python gen_layer.py -c config/config_${i}.json -o $FPGACONVNET_HLS/test/layers/$LAYER/data/test_${i} -s src/ -h include/ -t tb/
       # RUN TEST
-      vivado_hls -f $FPGACONVNET_HLS/scripts/run_hls.tcl "_  -num ${i} -type ${TEST_TYPE} -name ${LAYER} -layer_flag "
+      vivado_hls -f $FPGACONVNET_HLS/scripts/run_hls.tcl "_  -num ${i} -type ${TEST_TYPE} -name ${LAYER} -layer_flag -fpga xc7z045ffg900-2 -fast"
   done
 
 fi

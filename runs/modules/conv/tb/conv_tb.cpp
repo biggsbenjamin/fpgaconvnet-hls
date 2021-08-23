@@ -3,7 +3,7 @@
 
 int main() {
     // variable initialisation
-    stream_t(data_t) in[CONV_KERNEL_SIZE][CONV_KERNEL_SIZE];
+    stream_t(data_t) in[CONV_KERNEL_SIZE_X][CONV_KERNEL_SIZE_Y];
     stream_t(acc_t) out;
 
     // dimensions
@@ -11,8 +11,8 @@ int main() {
     const int size_out = CONV_BATCH_SIZE*CONV_ROWS*CONV_COLS*CONV_CHANNELS*CONV_FILTERS;
 
     // gen input
-    k1_loop: for(int k1=0;k1<CONV_KERNEL_SIZE;k1++) {
-        k2_loop: for(int k2=0;k1<CONV_KERNEL_SIZE;k2++) {
+    k1_loop: for(int k1=0;k1<CONV_KERNEL_SIZE_X;k1++) {
+        k2_loop: for(int k2=0;k1<CONV_KERNEL_SIZE_Y;k2++) {
             gen_stream<data_t,size_in>(in[k1][k2]);
         }
     }

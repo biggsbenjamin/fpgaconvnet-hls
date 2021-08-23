@@ -4,13 +4,31 @@ from modules.module_runner import ModuleRunner
 # create runner
 runner = ModuleRunner("sliding_window")
 
-while 1:
+for _ in range(runner.max_runners):
     # generate parameters
-    runner.gen_parameters()
-    runner.parameters['rows']        = runner.parameters['cols'] # fix the rows and cols the same
-    runner.parameters['kernel_size'] = random.randint(1,11)
-    runner.parameters['pad']         = random.randint(0,10)
-    runner.parameters['stride'] = random.choice(
-        runner.get_factors( int(runner.parameters['cols'] - runner.parameters['kernel_size'] +2*runner.parameters['pad']) ))
+    #runner.gen_parameters()
+
+    runner.parameters['freq'] = 200 
+
+    runner.parameters['channels'] = random.randint(1, 256)
+
+    runner.parameters['batch_size'] = 256
+    runner.parameters['rows']       = random.randint(1,min(224,int(224*256/runner.parameters['channels'])))
+    runner.parameters['cols']       = runner.parameters['rows']
+
+    runner.parameters['kernel_size_x'] = random.randint(1, min(11,runner.parameters['rows']))
+    runner.parameters['kernel_size_y'] = random.randint(1, min(11,runner.parameters['cols']))
+
+    runner.parameters['pad_top']  = random.randint(0,runner.parameters['kernel_size_x']-1)
+    runner.parameters['pad_left'] = random.randint(0,runner.parameters['kernel_size_y']-1)
+    runner.parameters['pad_bottom'] = runner.parameters['pad_top']
+    runner.parameters['pad_right']  = runner.parameters['pad_left']
+    runner.parameters['stride_x'] = random.choice(
+        runner.get_factors( max(1,int(runner.parameters['rows'] - runner.parameters['kernel_size_x'] +2*runner.parameters['pad_top'])) ))
+    runner.parameters['stride_y'] = random.choice(
+        runner.get_factors( max(1,int(runner.parameters['cols'] - runner.parameters['kernel_size_y'] +2*runner.parameters['pad_left'])) ))
+
+    runner.parameters['data_width'] = 16
+
     # run tests
     runner.run()

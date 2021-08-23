@@ -21,6 +21,7 @@ class Layer:
 
     # Data Generation
     def gen_data(self,dim,data_range=[0,1],data_type=float):
+        random.seed(0)
         # Initialise random data array
         data = np.ndarray(dim,dtype=data_type)
         # assign values

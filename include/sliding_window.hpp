@@ -12,41 +12,47 @@ template<
     unsigned int PAD_RIGHT,
     unsigned int PAD_BOTTOM,
     unsigned int PAD_LEFT,
-    unsigned int KERNEL_SIZE
+    unsigned int KERNEL_SIZE_X,
+    unsigned int KERNEL_SIZE_Y
 >
 void sliding_window_line_shift(
     stream_t(data_t) &in,
-    stream_t(data_t) frame_buffer[KERNEL_SIZE][KERNEL_SIZE]
+    stream_t(data_t) frame_buffer[KERNEL_SIZE_X][KERNEL_SIZE_Y]
 )
 {
 
 #pragma HLS INLINE OFF
 
-    const unsigned int batch_size   = BATCH_SIZE;
-    const unsigned int rows         = ROWS;
-    const unsigned int cols         = COLS;
-    const unsigned int channels     = CHANNELS;
-    const unsigned int pad_top      = PAD_TOP;
-    const unsigned int pad_right    = PAD_RIGHT;
-    const unsigned int pad_bottom   = PAD_BOTTOM;
-    const unsigned int pad_left     = PAD_LEFT;
-    const unsigned int kernel_size  = KERNEL_SIZE;
+    const unsigned int batch_size    = BATCH_SIZE;
+    const unsigned int rows          = ROWS;
+    const unsigned int cols          = COLS;
+    const unsigned int channels      = CHANNELS;
+    const unsigned int pad_top       = PAD_TOP;
+    const unsigned int pad_right     = PAD_RIGHT;
+    const unsigned int pad_bottom    = PAD_BOTTOM;
+    const unsigned int pad_left      = PAD_LEFT;
+    const unsigned int kernel_size_x = KERNEL_SIZE_X;
+    const unsigned int kernel_size_y = KERNEL_SIZE_Y;
 
     #pragma HLS STREAM variable=in
     #pragma HLS STREAM variable=frame_buffer
     #pragma HLS ARRAY_PARTITION variable=frame_buffer complete dim=0
- 
-    stream_t(data_t) line_buffer[kernel_size-1];
+
+#if NAME_SUB(NAME,_SLIDING_WINDOW_KERNEL_SIZE_X) != 1
+    stream_t(data_t) line_buffer[kernel_size_x-1];
     DO_PRAGMA( HLS STREAM variable=line_buffer depth=cols*channels+pad_left*channels+pad_right*channels+1 )
     #pragma HLS ARRAY_PARTITION variable=line_buffer complete dim=0
-    #pragma HLS resource variable=line_buffer core=FIFO_BRAM
+    //#pragma HLS resource variable=line_buffer core=FIFO_BRAM
+#endif
 
-    stream_t(data_t) window_buffer[kernel_size][kernel_size-1]; // pixel window cache
+#if NAME_SUB(NAME,_SLIDING_WINDOW_KERNEL_SIZE_Y) != 1
+    stream_t(data_t) window_buffer[kernel_size_x][kernel_size_y-1]; // pixel window cache
     DO_PRAGMA( HLS STREAM variable=window_buffer depth=channels+1 )
     #pragma HLS ARRAY_PARTITION variable=window_buffer complete dim=0
-    #pragma HLS resource variable=frame_buffer core=FIFO_BRAM
+    //#pragma HLS resource variable=window_buffer core=FIFO_BRAM
+#endif
 
-    data_t frame_cache[kernel_size][kernel_size];
+    data_t frame_cache[kernel_size_x][kernel_size_y];
     #pragma HLS ARRAY_PARTITION variable=frame_cache complete dim=0
 
     in_loop_batch: for(unsigned int batch_index=0;batch_index<batch_size;batch_index++) {
@@ -54,6 +60,166 @@ void sliding_window_line_shift(
             in_loop_cols: for(unsigned int col_index=0;col_index<cols+pad_left+pad_right;col_index++) {
                 in_loop_channels: for(unsigned int channel_index=0;channel_index<channels;channel_index++) {
                     
+#if NAME_SUB(NAME,_SLIDING_WINDOW_KERNEL_SIZE_X) == 1 && NAME_SUB(NAME,_SLIDING_WINDOW_KERNEL_SIZE_Y) == 1
+                    #pragma HLS loop_flatten
+                    #pragma HLS PIPELINE II=1 rewind
+                    #pragma HLS DEPENDENCE variable=frame_cache     WAR intra true
+                    data_t pixel;
+
+                    // read in pixel
+                    if( row_index < pad_bottom ) {
+                        pixel = 0;
+                    } 
+                    else if ( row_index > rows+pad_bottom-1 ) {
+                        pixel = 0;
+                    } 
+                    else if ( col_index < pad_left ) {
+                        pixel = 0;
+                    }
+                    else if (col_index > cols+pad_left-1 ) {
+                        pixel = 0;
+                    }
+                    else {
+                        pixel = in.read();
+                    }
+
+                    frame_buffer[0][0].write(pixel);
+#elif NAME_SUB(NAME,_SLIDING_WINDOW_KERNEL_SIZE_X) == 1
+                    #pragma HLS loop_flatten
+                    #pragma HLS PIPELINE II=1 rewind
+                    #pragma HLS DEPENDENCE variable=window_buffer   WAR intra true
+                    #pragma HLS DEPENDENCE variable=frame_cache     WAR intra true
+                    data_t pixel;
+
+                    // read in pixel
+                    if( row_index < pad_bottom ) {
+                        pixel = 0;
+                    } 
+                    else if ( row_index > rows+pad_bottom-1 ) {
+                        pixel = 0;
+                    } 
+                    else if ( col_index < pad_left ) {
+                        pixel = 0;
+                    }
+                    else if (col_index > cols+pad_left-1 ) {
+                        pixel = 0;
+                    }
+                    else {
+                        pixel = in.read();
+                    }
+
+                    // init first part of window cache
+                    if ( (row_index < kernel_size_x-1) ) {
+                        // fill window cache
+                        if( col_index < kernel_size_y-1 ) {
+                            window_buffer[row_index][col_index].write(pixel);
+                            frame_cache[row_index][col_index] = pixel;
+                        }
+                    }
+
+                    // fill top line of window buffer and line buffer
+                    else if ( (row_index == (kernel_size_x-1)) && (col_index < kernel_size_y-1) ) {
+                        window_buffer[row_index][col_index].write(pixel);
+                        frame_cache[row_index][col_index] = pixel;
+                    }
+
+                    // main loop
+                    else {
+                        
+                        // read window buffer into window cache
+                        for(unsigned char k1=0;k1<kernel_size_x;k1++) {
+                            for(unsigned char k2=0;k2<kernel_size_y-1;k2++) {
+                                frame_cache[k1][k2] = window_buffer[k1][k2].read();
+                            }
+                        }
+
+                        // read the top corner into window cache
+                        frame_cache[kernel_size_x-1][kernel_size_y-1] = pixel;
+
+                        // update window cache
+                        if ( !( (row_index == rows+pad_top+pad_bottom-1) && (col_index == cols+pad_left+pad_right-1) ) ) {
+                            for(unsigned char k1=0;k1<kernel_size_x;k1++) {
+                                for(unsigned char k2=0;k2<kernel_size_y-1;k2++) {
+                                    window_buffer[k1][k2].write(frame_cache[k1][k2+1]);
+                                }
+                            }
+                        }
+
+                        // send window cache to frame buffer
+                        for(unsigned char k1=0;k1<kernel_size_x;k1++) {
+                            for(unsigned char k2=0;k2<kernel_size_y;k2++) {
+                                frame_buffer[k1][k2].write(frame_cache[k1][k2]);
+                            }
+                        }
+                    }
+#elif NAME_SUB(NAME,_SLIDING_WINDOW_KERNEL_SIZE_Y) == 1
+                    #pragma HLS loop_flatten
+                    #pragma HLS PIPELINE II=1 rewind
+                    #pragma HLS DEPENDENCE variable=line_buffer     WAR intra true
+                    #pragma HLS DEPENDENCE variable=frame_cache     WAR intra true
+                    data_t pixel;
+
+                    // read in pixel
+                    if( row_index < pad_bottom ) {
+                        pixel = 0;
+                    } 
+                    else if ( row_index > rows+pad_bottom-1 ) {
+                        pixel = 0;
+                    } 
+                    else if ( col_index < pad_left ) {
+                        pixel = 0;
+                    }
+                    else if (col_index > cols+pad_left-1 ) {
+                        pixel = 0;
+                    }
+                    else {
+                        pixel = in.read();
+                    }
+
+                    // init first part of window cache
+                    if ( (row_index < kernel_size_x-1) ) {
+                        // fill window cache
+                        if( col_index < kernel_size_y-1 ) {
+                            frame_cache[row_index][col_index] = pixel;
+                            if ( row_index > 0 ) {
+                                line_buffer[row_index-1].write(pixel);
+                            }
+                        }
+                        else {
+                            line_buffer[row_index].write(pixel);
+                        }
+                    }
+
+                    // fill top line of window buffer and line buffer
+                    else if ( (row_index == (kernel_size_x-1)) && (col_index < kernel_size_y-1) ) {
+                        frame_cache[row_index][col_index] = pixel;
+                        line_buffer[kernel_size_x-2].write(pixel);
+                    }
+
+                    // main loop
+                    else {                  
+                        // read out line buffer to window cache
+                        for(unsigned char k1=0;k1<kernel_size_x-1;k1++) {
+                            frame_cache[k1][kernel_size_y-1] = line_buffer[k1].read();
+                        }
+
+                        // read the top corner into window cache
+                        frame_cache[kernel_size_x-1][kernel_size_y-1] = pixel;
+
+                        // update the line buffer
+                        if ( !(row_index == rows+pad_top+pad_bottom-1) ) {
+                            for(unsigned char k1=0;k1<kernel_size_x-1;k1++) {
+                                line_buffer[k1].write(frame_cache[k1+1][kernel_size_y-1]);
+                            }
+                        }
+                        // send window cache to frame buffer
+                        for(unsigned char k1=0;k1<kernel_size_x;k1++) {
+                            for(unsigned char k2=0;k2<kernel_size_y;k2++) {
+                                frame_buffer[k1][k2].write(frame_cache[k1][k2]);
+                            }
+                        }
+                    }
+#else
                     #pragma HLS loop_flatten
                     #pragma HLS PIPELINE II=1 rewind
                     #pragma HLS DEPENDENCE variable=line_buffer     WAR intra true
@@ -79,9 +245,9 @@ void sliding_window_line_shift(
                     }
 
                     // init first part of window cache
-                    if ( (row_index < kernel_size-1) ) {
+                    if ( (row_index < kernel_size_x-1) ) {
                         // fill window cache
-                        if( col_index < kernel_size-1 ) {
+                        if( col_index < kernel_size_y-1 ) {
                             window_buffer[row_index][col_index].write(pixel);
                             frame_cache[row_index][col_index] = pixel;
                             if ( row_index > 0 ) {
@@ -94,51 +260,52 @@ void sliding_window_line_shift(
                     }
 
                     // fill top line of window buffer and line buffer
-                    else if ( (row_index == (kernel_size-1)) && (col_index < kernel_size-1) ) {
+                    else if ( (row_index == (kernel_size_x-1)) && (col_index < kernel_size_y-1) ) {
                         window_buffer[row_index][col_index].write(pixel);
                         frame_cache[row_index][col_index] = pixel;
-                        line_buffer[kernel_size-2].write(pixel);
+                        line_buffer[kernel_size_x-2].write(pixel);
                     }
 
                     // main loop
                     else {
                         
                         // read window buffer into window cache
-                        for(unsigned char k1=0;k1<kernel_size;k1++) {
-                            for(unsigned char k2=0;k2<kernel_size-1;k2++) {
+                        for(unsigned char k1=0;k1<kernel_size_x;k1++) {
+                            for(unsigned char k2=0;k2<kernel_size_y-1;k2++) {
                                 frame_cache[k1][k2] = window_buffer[k1][k2].read();
                             }
                         }
 
                         // read out line buffer to window cache
-                        for(unsigned char k1=0;k1<kernel_size-1;k1++) {
-                            frame_cache[k1][kernel_size-1] = line_buffer[k1].read();
+                        for(unsigned char k1=0;k1<kernel_size_x-1;k1++) {
+                            frame_cache[k1][kernel_size_y-1] = line_buffer[k1].read();
                         }
 
                         // read the top corner into window cache
-                        frame_cache[kernel_size-1][kernel_size-1] = pixel;
+                        frame_cache[kernel_size_x-1][kernel_size_y-1] = pixel;
 
                         // update window cache
                         if ( !( (row_index == rows+pad_top+pad_bottom-1) && (col_index == cols+pad_left+pad_right-1) ) ) {
-                            for(unsigned char k1=0;k1<kernel_size;k1++) {
-                                for(unsigned char k2=0;k2<kernel_size-1;k2++) {
+                            for(unsigned char k1=0;k1<kernel_size_x;k1++) {
+                                for(unsigned char k2=0;k2<kernel_size_y-1;k2++) {
                                     window_buffer[k1][k2].write(frame_cache[k1][k2+1]);
                                 }
                             }
                         }
                         // update the line buffer
                         if ( !(row_index == rows+pad_top+pad_bottom-1) ) {
-                            for(unsigned char k1=0;k1<kernel_size-1;k1++) {
-                                line_buffer[k1].write(frame_cache[k1+1][kernel_size-1]);
+                            for(unsigned char k1=0;k1<kernel_size_x-1;k1++) {
+                                line_buffer[k1].write(frame_cache[k1+1][kernel_size_y-1]);
                             }
                         }
                         // send window cache to frame buffer
-                        for(unsigned char k1=0;k1<kernel_size;k1++) {
-                            for(unsigned char k2=0;k2<kernel_size;k2++) {
+                        for(unsigned char k1=0;k1<kernel_size_x;k1++) {
+                            for(unsigned char k2=0;k2<kernel_size_y;k2++) {
                                 frame_buffer[k1][k2].write(frame_cache[k1][k2]);
                             }
                         }
                     }
+#endif
                 }
             }
         }
@@ -156,11 +323,12 @@ template<
     unsigned int PAD_LEFT,
     unsigned int ROW_STRIDE,
     unsigned int COL_STRIDE,
-    unsigned int KERNEL_SIZE
+    unsigned int KERNEL_SIZE_X,
+    unsigned int KERNEL_SIZE_Y
 >
 void sliding_window_out(
-    stream_t(data_t) frame_buffer[KERNEL_SIZE][KERNEL_SIZE],
-    stream_t(data_t) out[KERNEL_SIZE][KERNEL_SIZE]
+    stream_t(data_t) frame_buffer[KERNEL_SIZE_X][KERNEL_SIZE_Y],
+    stream_t(data_t) out[KERNEL_SIZE_X][KERNEL_SIZE_Y]
 )
 {
 
@@ -172,17 +340,18 @@ void sliding_window_out(
     #pragma HLS STREAM variable=out
     #pragma HLS ARRAY_PARTITION variable=out complete dim=0
    
-    const unsigned int batch_size   = BATCH_SIZE;
-    const unsigned int rows         = ROWS;
-    const unsigned int cols         = COLS;
-    const unsigned int channels     = CHANNELS;
-    const unsigned int pad_top      = PAD_TOP;
-    const unsigned int pad_right    = PAD_RIGHT;
-    const unsigned int pad_bottom   = PAD_BOTTOM;
-    const unsigned int pad_left     = PAD_LEFT;
-    const unsigned int row_stride   = ROW_STRIDE;
-    const unsigned int col_stride   = COL_STRIDE;
-    const unsigned int kernel_size  = KERNEL_SIZE;
+    const unsigned int batch_size    = BATCH_SIZE;
+    const unsigned int rows          = ROWS;
+    const unsigned int cols          = COLS;
+    const unsigned int channels      = CHANNELS;
+    const unsigned int pad_top       = PAD_TOP;
+    const unsigned int pad_right     = PAD_RIGHT;
+    const unsigned int pad_bottom    = PAD_BOTTOM;
+    const unsigned int pad_left      = PAD_LEFT;
+    const unsigned int row_stride    = ROW_STRIDE;
+    const unsigned int col_stride    = COL_STRIDE;
+    const unsigned int kernel_size_x = KERNEL_SIZE_X;
+    const unsigned int kernel_size_y = KERNEL_SIZE_Y;
 
     // writing frames out
     out_loop_batch: for(unsigned int batch_index=0;batch_index<batch_size;batch_index++) {
@@ -191,15 +360,15 @@ void sliding_window_out(
                 out_loop_channels: for(unsigned int channel_index=0;channel_index<channels;channel_index++) {
                     #pragma HLS loop_flatten
                     #pragma HLS PIPELINE II=1 rewind
-                    if ( !( (row_index < (kernel_size-1)) || ( (row_index == (kernel_size-1)) && (col_index < kernel_size-1) ) ) ) {
-                        for(unsigned char k1=0;k1<kernel_size;k1++) {
-                            for(unsigned char k2=0;k2<kernel_size;k2++) {
+                    if ( !( (row_index < (kernel_size_x-1)) || ( (row_index == (kernel_size_x-1)) && (col_index < kernel_size_y-1) ) ) ) {
+                        for(unsigned char k1=0;k1<kernel_size_x;k1++) {
+                            for(unsigned char k2=0;k2<kernel_size_y;k2++) {
                                 data_t tmp = frame_buffer[k1][k2].read();
                                 if ( 
-                                        (row_index > (kernel_size-2)) && 
-                                        ((row_index-kernel_size+1)%row_stride == 0) && 
-                                        (col_index > (kernel_size-2)) && 
-                                        ((col_index-kernel_size+1)%col_stride == 0) 
+                                        (row_index >= (kernel_size_x-1)) && 
+                                        ((row_index-kernel_size_x+1)%row_stride == 0) && 
+                                        (col_index >= (kernel_size_y-1)) && 
+                                        ((col_index-kernel_size_y+1)%col_stride == 0) 
                                     ) {
                                     out[k1][k2].write(tmp);
                                 }
@@ -223,11 +392,12 @@ template<
     unsigned int PAD_LEFT,
     unsigned int ROW_STRIDE,
     unsigned int COL_STRIDE,
-    unsigned int KERNEL_SIZE
+    unsigned int KERNEL_SIZE_X,
+    unsigned int KERNEL_SIZE_Y
 >
 void sliding_window(
     stream_t(data_t) &in,
-    stream_t(data_t) out[KERNEL_SIZE][KERNEL_SIZE]
+    stream_t(data_t) out[KERNEL_SIZE_X][KERNEL_SIZE_Y]
 )
 {
 
@@ -238,9 +408,10 @@ void sliding_window(
     #pragma HLS STREAM variable=out
     #pragma HLS ARRAY_PARTITION variable=out complete dim=0
 
-    const unsigned int kernel_size = KERNEL_SIZE;
+    const unsigned int kernel_size_x = KERNEL_SIZE_X;
+    const unsigned int kernel_size_y = KERNEL_SIZE_Y;
 
-    stream_t(data_t) frame_buffer[kernel_size][kernel_size];
+    stream_t(data_t) frame_buffer[kernel_size_x][kernel_size_y];
     #pragma HLS STREAM variable=frame_buffer
     #pragma HLS ARRAY_PARTITION variable=frame_buffer complete dim=0
 
@@ -253,7 +424,8 @@ void sliding_window(
         PAD_RIGHT,
         PAD_BOTTOM,
         PAD_LEFT,
-        KERNEL_SIZE
+        KERNEL_SIZE_X,
+        KERNEL_SIZE_Y
     >(in,frame_buffer);
     
     sliding_window_out<
@@ -267,7 +439,8 @@ void sliding_window(
         PAD_LEFT,
         ROW_STRIDE,
         COL_STRIDE,
-        KERNEL_SIZE
+        KERNEL_SIZE_X,
+        KERNEL_SIZE_Y
     >(frame_buffer,out);
  
 }

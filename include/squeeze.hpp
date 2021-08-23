@@ -9,7 +9,8 @@ template<
     unsigned int COLS,
     unsigned int CHANNELS,
     unsigned int COARSE_IN,
-    unsigned int COARSE_OUT
+    unsigned int COARSE_OUT,
+    unsigned int COARSE_MAX
 >
 void squeeze(
     stream_t(data_t) in[COARSE_IN],
@@ -26,6 +27,7 @@ void squeeze(
     const unsigned int channels     = CHANNELS;
     const unsigned int coarse_in    = COARSE_IN;
     const unsigned int coarse_out   = COARSE_OUT;
+    const unsigned int coarse_max   = COARSE_MAX;
 
 #pragma HLS STREAM variable=in
 #pragma HLS STREAM variable=out
@@ -33,31 +35,35 @@ void squeeze(
 #pragma HLS ARRAY_PARTITION variable=in complete dim=0
 #pragma HLS ARRAY_PARTITION variable=out complete dim=0
 
-    stream_t(data_t)  channel_cache[channels];
+    stream_t(data_t)  channel_cache[DIVIDE(channels,coarse_max)][coarse_max];
 #pragma HLS STREAM variable=channel_cache
 #pragma HLS ARRAY_PARTITION variable=channel_cache complete dim=0
 
     dim_in_loop: for (unsigned int pixel_index = 0; pixel_index < batch_size*rows*cols; pixel_index++) {
         unsigned int cache_in_index = 0;
-        channel_in_loop: for (unsigned int channel_index = 0; channel_index < DIVIDE(channels,coarse_in);channel_index++) {
-            #pragma HLS loop_flatten
-            #pragma HLS pipeline II=1 rewind
-            #pragma HLS unroll region
-            in_loop: for (unsigned int in_index = 0; in_index < coarse_in; in_index++) {
-                channel_cache[cache_in_index+in_index].write(in[in_index].read());
+        channel_out_loop : for (unsigned int out_index = 0; out_index < DIVIDE(coarse_max,coarse_in); out_index++){
+            channel_in_group_loop: for (unsigned int channel_index = 0; channel_index < DIVIDE(channels,coarse_max);channel_index++) {
+                #pragma HLS loop_flatten
+                #pragma HLS pipeline II=1 rewind
+                #pragma HLS unroll region
+                in_loop: for (unsigned int in_index = 0; in_index < coarse_in; in_index++) {
+                    channel_cache[channel_index][cache_in_index+in_index].write(in[in_index].read());
+                } 
             }
             cache_in_index += coarse_in;
         }
     }
 
     dim_out_loop: for (unsigned int pixel_index = 0; pixel_index < batch_size*rows*cols; pixel_index++) {
-        unsigned int cache_out_index = 0;
-        channel_out_loop: for (unsigned int channel_index = 0; channel_index < DIVIDE(channels,coarse_out);channel_index++) {
-            #pragma HLS loop_flatten
-            #pragma HLS pipeline II=1 rewind
-            #pragma HLS unroll region
-            out_loop: for (unsigned int out_index = 0; out_index < coarse_out; out_index++) {
-                out[out_index].write(channel_cache[cache_out_index+out_index].read());
+        unsigned int cache_out_index = 0; 
+        channel_in_loop: for (unsigned int in_index = 0; in_index < DIVIDE(coarse_max,coarse_out); in_index++) { 
+            channel_out_group_loop: for (unsigned int channel_index = 0; channel_index < DIVIDE(channels,coarse_max);channel_index++) {
+                #pragma HLS loop_flatten
+                #pragma HLS pipeline II=1 rewind
+                #pragma HLS unroll region
+                out_loop: for (unsigned int out_index = 0; out_index < coarse_out; out_index++) {
+                    out[out_index].write(channel_cache[channel_index][cache_out_index+out_index].read());
+                }  
             }
             cache_out_index += coarse_out;
         }

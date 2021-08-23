@@ -5,7 +5,7 @@
 #include "conv_param.hpp"
 
 void conv_top(
-    stream_t(data_t) in[CONV_KERNEL_SIZE][CONV_KERNEL_SIZE],
+    stream_t(data_t) in[CONV_KERNEL_SIZE_X][CONV_KERNEL_SIZE_Y],
     stream_t(acc_t) &out
 );
 

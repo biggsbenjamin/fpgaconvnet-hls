@@ -131,6 +131,10 @@ class ModuleModel:
 
     def plot_error(self, max_rsc):
         
+        #print(self.coef)
+        #for p in self.points:
+        #    print(p["parameters"],p["resources"]["BRAM"],self.module(p["parameters"]).rsc(self.coef)["BRAM"])
+
         # create 4 subplots 
         fig, axs = plt.subplots(2,2)
 

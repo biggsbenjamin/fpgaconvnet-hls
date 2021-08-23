@@ -5,8 +5,9 @@ fork_template="""
 {indent}    {NAME}_COLS,
 {indent}    {NAME}_CHANNELS,
 {indent}    {NAME}_COARSE
-#if {NAME}_KERNEL_SIZE > 1
-{indent}    ,{NAME}_KERNEL_SIZE
+#if {NAME}_KERNEL_SIZE_X > 1 || {NAME}_KERNEL_SIZE_Y > 1
+{indent}    ,{NAME}_KERNEL_SIZE_X,
+{indent}    {NAME}_KERNEL_SIZE_Y
 #endif
 {indent}>({input_stream},{output_stream});
 

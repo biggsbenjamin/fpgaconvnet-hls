@@ -5,7 +5,7 @@ sys.path.append(os.environ.get("FPGACONVNET_OPTIMISER"))
 sys.path.append(os.environ.get("FPGACONVNET_HLS"))
 
 from modules.module_model import ModuleModel
-from fpgaconvnet_optimiser.models.modules import Conv 
+from fpgaconvnet_optimiser.models.modules import FIFO
 
 MAX_RSC = {
     "LUT"   : 53200,
@@ -16,25 +16,20 @@ MAX_RSC = {
 
 # define resource model
 def build_module(parameter):
-    return Conv([
-            parameter['channels'],
-            parameter['rows'],
-            parameter['cols']
-        ],
-        parameter['filters'],
-        parameter['fine'],
-        [parameter['kernel_size_x'],parameter['kernel_size_y']],
-        parameter['groups'],
-        parameter['data_width'],
-        parameter['weight_width'],
-        parameter['acc_width']
+    return FIFO([
+        1,
+        1,
+        1],
+        parameter['coarse'],
+        parameter['depth'],
+        parameter['data_width']
     )
 
-# load accum model
+# load fifo model
 model = ModuleModel(build_module)
-model.load_points("modules/conv/logs")
+model.load_points("modules/fifo/logs")
 
-# filter parameters 
+# filter parameters
 #filters = {
 #    "data_width" : [15,17]
 #}
@@ -44,9 +39,9 @@ model.load_points("modules/conv/logs")
 model.fit_model()
 
 # save coefficients
-#model.save_coefficients("coefficients/conv")
+model.save_coefficients("coefficients/fifo")
 
-# # plot error
+# plot error
 model.plot_error(MAX_RSC)
 
 # print out error

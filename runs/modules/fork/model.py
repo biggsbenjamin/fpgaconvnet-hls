@@ -1,3 +1,9 @@
+import os
+import sys
+
+sys.path.append(os.environ.get("FPGACONVNET_OPTIMISER"))
+sys.path.append(os.environ.get("FPGACONVNET_HLS"))
+
 from modules.module_model import ModuleModel
 from fpgaconvnet_optimiser.models.modules import Fork 
 
@@ -15,8 +21,9 @@ def build_module(parameter):
             parameter['rows'],
             parameter['cols']
         ],
-        parameter['kernel_size'],
-        parameter['coarse']
+        [parameter['kernel_size_x'],parameter['kernel_size_y']],
+        parameter['coarse'],
+        parameter['data_width']
     )
 
 # load accum model
@@ -24,10 +31,10 @@ model = ModuleModel(build_module)
 model.load_points("modules/fork/logs")
 
 # filter parameters 
-filters = {
-    "data_width" : [15,17]
-}
-model.filter_parameters(filters)
+#filters = {
+#    "data_width" : [15,17]
+#}
+#model.filter_parameters(filters)
 
 # fit model
 model.fit_model()
@@ -36,7 +43,7 @@ model.fit_model()
 model.save_coefficients("coefficients/fork")
 
 # # plot error
-# model.plot_error(MAX_RSC)
+model.plot_error(MAX_RSC)
 
 # print out error
 model.print_absolute_error()

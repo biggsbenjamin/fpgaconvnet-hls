@@ -8,9 +8,10 @@ sliding_window_template = """
 {indent}    {NAME}_PAD_RIGHT,
 {indent}    {NAME}_PAD_BOTTOM,
 {indent}    {NAME}_PAD_LEFT,
-{indent}    {NAME}_STRIDE,
-{indent}    {NAME}_STRIDE,
-{indent}    {NAME}_KERNEL_SIZE
+{indent}    {NAME}_STRIDE_X,
+{indent}    {NAME}_STRIDE_Y,
+{indent}    {NAME}_KERNEL_SIZE_X,
+{indent}    {NAME}_KERNEL_SIZE_Y
 {indent}>({input_stream},{output_stream});
 
 """
