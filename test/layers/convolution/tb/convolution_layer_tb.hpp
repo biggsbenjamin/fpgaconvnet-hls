@@ -6,8 +6,8 @@
 #include "convolution_layer_param.hpp"
 
 void convolution_layer_top(
-  stream_t(data_t) in[CONVOLUTION_LAYER_COARSE_IN],
-  stream_t(data_t) out[CONVOLUTION_LAYER_COARSE_OUT],
+  stream_t(data_t) in[CONVOLUTION_LAYER_COARSE_IN*CONVOLUTION_LAYER_COARSE_GROUP],
+  stream_t(data_t) out[CONVOLUTION_LAYER_COARSE_OUT*CONVOLUTION_LAYER_COARSE_GROUP],
   int mode
 );
 

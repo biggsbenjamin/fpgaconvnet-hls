@@ -7,9 +7,8 @@ squeeze_layer_template_header = """#ifndef {NAME}_HPP_
 #define {NAME}_HPP_
 
 #define name        {name}
+#define NAME        {NAME}
 #define {NAME}_ID   {id}
-
-#include "squeeze.hpp"
 
 #define {NAME}_BATCH_SIZE   {batch_size}
 #define {NAME}_ROWS         {rows_in}
@@ -30,6 +29,8 @@ squeeze_layer_template_header = """#ifndef {NAME}_HPP_
 #define {NAME}_SQUEEZE_COARSE_IN    {coarse_in}
 #define {NAME}_SQUEEZE_COARSE_OUT   {coarse_out}
 
+#include "squeeze.hpp"
+
 /**
  * FUNCTION DEFINITION
  */
@@ -41,6 +42,7 @@ void {name}(
 );
 
 #undef name
+#undef NAME
 #endif
 """
 

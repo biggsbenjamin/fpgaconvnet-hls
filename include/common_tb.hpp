@@ -96,10 +96,10 @@ void to_stream(
 }
 
 /* (CONV,POOL) */
-template<int SIZE, int KERNEL_SIZE, typename T>
+template<int SIZE, int KERNEL_SIZE_X, int KERNEL_SIZE_Y, typename T>
 void load_data(
     std::string filepath,
-    T data[SIZE][KERNEL_SIZE][KERNEL_SIZE]
+    T data[SIZE][KERNEL_SIZE_X][KERNEL_SIZE_Y]
 ) {
 
     // read in file
@@ -112,38 +112,38 @@ void load_data(
     }
      // save to array
     for(int i=0;i<SIZE;i++) {
-        for(int k1=0;k1<KERNEL_SIZE;k1++) {
-            for(int k2=0;k2<KERNEL_SIZE;k2++) {
+        for(int k1=0;k1<KERNEL_SIZE_X;k1++) {
+            for(int k2=0;k2<KERNEL_SIZE_Y;k2++) {
                 float val;
                 fscanf(fp,"%f\n", &val);
                 data[i][k1][k2] = T(val);
+	        }
 	    }
-	}
     }
 
     // close file
     fclose(fp);
 }
 
-template<int SIZE, int KERNEL_SIZE, typename T>
+template<int SIZE, int KERNEL_SIZE_X, int KERNEL_SIZE_Y, typename T>
 void to_stream(
-    T in[SIZE][KERNEL_SIZE][KERNEL_SIZE],
-    stream_t(T) out[KERNEL_SIZE][KERNEL_SIZE]
+    T in[SIZE][KERNEL_SIZE_X][KERNEL_SIZE_Y],
+    stream_t(T) out[KERNEL_SIZE_X][KERNEL_SIZE_Y]
 ) {
     for(int i=0;i<SIZE;i++) {
-        for(int k1=0;k1<KERNEL_SIZE;k1++) {
-	    for(int k2=0;k2<KERNEL_SIZE;k2++) {
-	        out[k1][k2].write(in[i][k1][k2]);
+        for(int k1=0;k1<KERNEL_SIZE_X;k1++) {
+            for(int k2=0;k2<KERNEL_SIZE_Y;k2++) {
+                out[k1][k2].write(in[i][k1][k2]);
             }
-	}
+	    }
     }
 }
 
 /* (FORK) */
-template<int SIZE, int COARSE, int KERNEL_SIZE, typename T>
+template<int SIZE, int COARSE, int KERNEL_SIZE_X, int KERNEL_SIZE_Y, typename T>
 void load_data(
     std::string filepath,
-    T data[SIZE][COARSE][KERNEL_SIZE][KERNEL_SIZE]
+    T data[SIZE][COARSE][KERNEL_SIZE_X][KERNEL_SIZE_Y]
 ) {
     // read in file
     const char *filepath_cstr = filepath.c_str();
@@ -157,8 +157,8 @@ void load_data(
     // save to array
     for(int i=0;i<SIZE;i++) {
         for(int c=0;c<COARSE;c++) {
-            for(int k1=0;k1<KERNEL_SIZE;k1++) {
-                for(int k2=0;k2<KERNEL_SIZE;k2++) {
+            for(int k1=0;k1<KERNEL_SIZE_X;k1++) {
+                for(int k2=0;k2<KERNEL_SIZE_Y;k2++) {
                     float val;
                     fscanf(fp,"%f\n", &val);
                     data[i][c][k1][k2] = T(val);
@@ -171,27 +171,27 @@ void load_data(
     fclose(fp);
 }
 
-template<int SIZE, int COARSE, int KERNEL_SIZE, typename T>
+template<int SIZE, int COARSE, int KERNEL_SIZE_X, int KERNEL_SIZE_Y, typename T>
 void to_stream(
-    T in[SIZE][COARSE][KERNEL_SIZE][KERNEL_SIZE],
-    stream_t(T) out[COARSE][KERNEL_SIZE][KERNEL_SIZE]
+    T in[SIZE][COARSE][KERNEL_SIZE_X][KERNEL_SIZE_Y],
+    stream_t(T) out[COARSE][KERNEL_SIZE_X][KERNEL_SIZE_Y]
 ) {
     for(int i=0;i<SIZE;i++) {
         for(int c=0;c<COARSE;c++) {
-            for(int k1=0;k1<KERNEL_SIZE;k1++) {
-	        for(int k2=0;k2<KERNEL_SIZE;k2++) {
-	            out[c][k1][k2].write(in[i][c][k1][k2]);
+            for(int k1=0;k1<KERNEL_SIZE_X;k1++) {
+	            for(int k2=0;k2<KERNEL_SIZE_Y;k2++) {
+	                out[c][k1][k2].write(in[i][c][k1][k2]);
                 }
-	    }
+	        }
         }
     }
 }
 
 /* (WEIGHTS_INTR) */
-template<int COARSE_IN, int COARSE_OUT, int CHANNELS, int FILTERS, int KERNEL_SIZE, typename T>
+template<int COARSE_IN, int COARSE_OUT, int CHANNELS, int FILTERS, int KERNEL_SIZE_X, int KERNEL_SIZE_Y, typename T>
 void load_data(
     std::string filepath,
-    T data[COARSE_IN][COARSE_OUT][DIVIDE(CHANNELS,COARSE_IN)*DIVIDE(FILTERS,COARSE_OUT)][KERNEL_SIZE][KERNEL_SIZE]
+    T data[COARSE_IN][COARSE_OUT][DIVIDE(CHANNELS,COARSE_IN)*DIVIDE(FILTERS,COARSE_OUT)][KERNEL_SIZE_X][KERNEL_SIZE_Y]
 ) {
     // read in file
     const char *filepath_cstr = filepath.c_str();
@@ -210,8 +210,8 @@ void load_data(
         for(int cin=0;cin<COARSE_IN;cin++) {
             for(int j=0;j<filters_per_coarse_out;j++) {
                 for(int cout=0;cout<COARSE_OUT;cout++) {
-                    for(int k1=0;k1<KERNEL_SIZE;k1++) {
-                        for(int k2=0;k2<KERNEL_SIZE;k2++) {
+                    for(int k1=0;k1<KERNEL_SIZE_X;k1++) {
+                        for(int k2=0;k2<KERNEL_SIZE_Y;k2++) {
                             float val;
                             fscanf(fp,"%f\n", &val);
                             //int index = (i*COARSE_IN+cin)*filters_per_coarse_out+j*COARSE_OUT+cout;
@@ -265,16 +265,16 @@ void load_data(
 }
 
 
-template<int SIZE, int COARSE_IN, int COARSE_OUT, int KERNEL_SIZE, typename T>
+template<int SIZE, int COARSE_IN, int COARSE_OUT, int KERNEL_SIZE_X, int KERNEL_SIZE_Y, typename T>
 void to_stream(
-    T in[COARSE_IN][COARSE_OUT][SIZE][KERNEL_SIZE][KERNEL_SIZE],
-    stream_t(T) out[COARSE_IN][COARSE_OUT][KERNEL_SIZE][KERNEL_SIZE]
+    T in[COARSE_IN][COARSE_OUT][SIZE][KERNEL_SIZE_X][KERNEL_SIZE_Y],
+    stream_t(T) out[COARSE_IN][COARSE_OUT][KERNEL_SIZE_X][KERNEL_SIZE_Y]
 ) {
     for(int cin=0;cin<COARSE_IN;cin++) {
         for(int cout=0;cout<COARSE_OUT;cout++) {
             for(int i=0;i<SIZE;i++) {
-                for(int k1=0;k1<KERNEL_SIZE;k1++) {
-                    for(int k2=0;k2<KERNEL_SIZE;k2++) {
+                for(int k1=0;k1<KERNEL_SIZE_X;k1++) {
+                    for(int k2=0;k2<KERNEL_SIZE_Y;k2++) {
                         out[cin][cout][k1][k2].write(in[cin][cout][i][k1][k2]);
                     }
                 }
@@ -377,7 +377,8 @@ void to_stream(
 
 
 /* (GLUE) */
-template<int SIZE, int COARSE_IN, int COARSE_OUT, typename T>
+/* same as CONV/POOL */
+/*template<int SIZE, int COARSE_IN, int COARSE_OUT, typename T>
 void load_data(
     std::string filepath,
     T data[SIZE][COARSE_IN][COARSE_OUT]
@@ -419,7 +420,7 @@ void to_stream(
 	    }
         }
     }
-}
+}*/
 
 
 ////////////////////////////////////////////////
@@ -434,7 +435,8 @@ int checkStreamEqual(
 		bool print_out=false
 )
 {
-	while(!valid.empty())
+    int err = 0;
+    while(!valid.empty())
 	{
 		if(test.empty())
 		{
@@ -452,17 +454,19 @@ int checkStreamEqual(
 		)
 		{
 			//printf("ERROR: wrong value\n");
-			printf("ERROR: wrong value %x, %x \n",tmp.range()&BIT_MASK, tmp_valid.range()&BIT_MASK);
-			return 1;
+			printf("ERROR: wrong value %f, %f, %f\n",tmp.to_float(), tmp_valid.to_float(), tmp.to_float()-tmp_valid.to_float());
+			/* return 1; */
+			err++;
 		}
 	}
 
 	if(!test.empty())
 	{
 		printf("ERROR: still data in stream\n");
-		return 1;
+		/* return 1; */
+		err++;
 	}
-	return 0;
+	return err;
 }
 
 template<int SIZE>

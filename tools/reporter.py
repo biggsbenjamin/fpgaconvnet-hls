@@ -25,8 +25,8 @@ class report:
         self.table_resources = """
 ## Resource Results
 
-| TEST | LUT | FF | DSP | BRAM || LUT (model) | FF (model) | DSP (model) | BRAM (model) |
-|:----:|:---:|:--:|:---:|:----:||:---:|:--:|:---:|:----:|
+| TEST | LUT (impl) | FF (impl) | DSP (impl) | BRAM (impl) || LUT (synth) | FF (synth) | DSP (synth) | BRAM (synth) || LUT (model) | FF (model) | DSP (model) | BRAM (model) |
+|:----:|:----------:|:---------:|:----------:|:-----------:||:-----------:|:----------:|:-----------:|:------------:||:-----------:|:----------:|:-----------:|:--------------------:|
 """
 
         self.table_clk_period = """
@@ -72,12 +72,16 @@ class report:
         with open(model_path,'r') as f:
             model = json.load(f)
         # append to table_latency
-        self.table_resources += "| {test_num} | {LUT} | {FF} | {DSP} | {BRAM} || {LUT_model} | {FF_model} | {DSP_model} | {BRAM_model} | \n".format(
+        self.table_resources += "| {test_num} | {LUT_impl} | {FF_impl} | {DSP_impl} | {BRAM_impl} || {LUT_synth} | {FF_synth} | {DSP_synth} | {BRAM_synth} || {LUT_model} | {FF_model} | {DSP_model} | {BRAM_model} | \n".format(
             test_num=test_num,
-            LUT =result['resources']['LUT'] ,
-            FF  =result['resources']['FF']  ,
-            DSP =result['resources']['DSP'] ,
-            BRAM=result['resources']['BRAM'],
+            LUT_impl =result['resources']["impl"]['LUT'] ,
+            FF_impl  =result['resources']["impl"]['FF']  ,
+            DSP_impl =result['resources']["impl"]['DSP'] ,
+            BRAM_impl =result['resources']["impl"]['BRAM'],
+            LUT_synth =result['resources']["synth"]['LUT'] ,
+            FF_synth  =result['resources']["synth"]['FF']  ,
+            DSP_synth =result['resources']["synth"]['DSP'] ,
+            BRAM_synth =result['resources']["synth"]['BRAM'],
             LUT_model =model['resources']['LUT'] ,
             FF_model  =model['resources']['FF']  ,
             DSP_model =model['resources']['DSP'] ,

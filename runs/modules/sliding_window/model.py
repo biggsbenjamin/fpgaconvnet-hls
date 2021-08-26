@@ -1,3 +1,9 @@
+import os
+import sys
+
+sys.path.append(os.environ.get("FPGACONVNET_OPTIMISER"))
+sys.path.append(os.environ.get("FPGACONVNET_HLS"))
+
 from modules.module_model import ModuleModel
 from fpgaconvnet_optimiser.models.modules import SlidingWindow 
 
@@ -15,12 +21,13 @@ def build_module(parameter):
             parameter['rows'],
             parameter['cols']
         ],
-        parameter['kernel_size'],
-        parameter['stride'],
-        parameter['pad'],
-        parameter['pad'],
-        parameter['pad'],
-        parameter['pad']
+        [parameter['kernel_size_x'],parameter['kernel_size_y']],
+        [parameter['stride_x'],parameter['stride_y']],
+        parameter['pad_top'],
+        parameter['pad_right'],
+        parameter['pad_bottom'],
+        parameter['pad_left'],
+        parameter['data_width']
     )
 
 # load accum model
@@ -28,10 +35,10 @@ model = ModuleModel(build_module)
 model.load_points("modules/sliding_window/logs")
 
 # filter parameters 
-filters = {
-    "data_width" : [15,17]
-}
-model.filter_parameters(filters)
+#filters = {
+#    "data_width" : [15,17]
+#}
+#model.filter_parameters(filters)
 
 # fit model
 model.fit_model()
@@ -40,7 +47,7 @@ model.fit_model()
 model.save_coefficients("coefficients/sliding_window")
 
 # # plot error
-# model.plot_error(MAX_RSC)
+model.plot_error(MAX_RSC)
 
 # print out error
 model.print_absolute_error()

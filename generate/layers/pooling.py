@@ -8,25 +8,25 @@ import generate.modules.pool
 pooling_layer_template_header = """#ifndef {NAME}_HPP_
 #define {NAME}_HPP_
 
-#include "sliding_window.hpp"
-#include "pool.hpp"
-
 #define name        {name}
+#define NAME        {NAME}
 #define {NAME}_ID   {id}
 
 #define {name}_input_t          data_t
 #define {name}_sliding_window_t data_t
 #define {name}_output_t         data_t
 
-#define {NAME}_BATCH_SIZE   {batch_size}
-#define {NAME}_ROWS         {rows}
-#define {NAME}_COLS         {cols}
-#define {NAME}_CHANNELS     {channels}
-#define {NAME}_COARSE       {coarse}
-#define {NAME}_KERNEL_SIZE  {kernel_size}
-#define {NAME}_STRIDE       {stride}
-#define {NAME}_PAD          {pad}
-#define {NAME}_FINE         {fine}
+#define {NAME}_BATCH_SIZE    {batch_size}
+#define {NAME}_ROWS          {rows}
+#define {NAME}_COLS          {cols}
+#define {NAME}_CHANNELS      {channels}
+#define {NAME}_COARSE        {coarse}
+#define {NAME}_KERNEL_SIZE_X {kernel_size_x}
+#define {NAME}_KERNEL_SIZE_Y {kernel_size_y}
+#define {NAME}_STRIDE_X      {stride_x}
+#define {NAME}_STRIDE_Y      {stride_y}
+#define {NAME}_PAD           {pad}
+#define {NAME}_FINE          {fine}
 
 #define {NAME}_COARSE_IN    {NAME}_COARSE
 #define {NAME}_COARSE_OUT   {NAME}_COARSE
@@ -36,24 +36,30 @@ pooling_layer_template_header = """#ifndef {NAME}_HPP_
 #define {NAME}_CHANNELS_OUT {channels_out} 
 
 // SLIDING WINDOW
-#define {NAME}_SLIDING_WINDOW_BATCH_SIZE   {batch_size}
-#define {NAME}_SLIDING_WINDOW_ROWS         {rows}
-#define {NAME}_SLIDING_WINDOW_COLS         {cols}
-#define {NAME}_SLIDING_WINDOW_CHANNELS     {channels_per_module}
-#define {NAME}_SLIDING_WINDOW_KERNEL_SIZE  {kernel_size}
-#define {NAME}_SLIDING_WINDOW_STRIDE       {stride}
-#define {NAME}_SLIDING_WINDOW_PAD_LEFT     {pad_left}
-#define {NAME}_SLIDING_WINDOW_PAD_RIGHT    {pad_right}
-#define {NAME}_SLIDING_WINDOW_PAD_TOP      {pad_top}
-#define {NAME}_SLIDING_WINDOW_PAD_BOTTOM   {pad_bottom}
+#define {NAME}_SLIDING_WINDOW_BATCH_SIZE    {batch_size}
+#define {NAME}_SLIDING_WINDOW_ROWS          {rows}
+#define {NAME}_SLIDING_WINDOW_COLS          {cols}
+#define {NAME}_SLIDING_WINDOW_CHANNELS      {channels_per_module}
+#define {NAME}_SLIDING_WINDOW_KERNEL_SIZE_X {kernel_size_x}
+#define {NAME}_SLIDING_WINDOW_KERNEL_SIZE_Y {kernel_size_y}
+#define {NAME}_SLIDING_WINDOW_STRIDE_X      {stride_x}
+#define {NAME}_SLIDING_WINDOW_STRIDE_Y      {stride_y}
+#define {NAME}_SLIDING_WINDOW_PAD_LEFT      {pad_left}
+#define {NAME}_SLIDING_WINDOW_PAD_RIGHT     {pad_right}
+#define {NAME}_SLIDING_WINDOW_PAD_TOP       {pad_top}
+#define {NAME}_SLIDING_WINDOW_PAD_BOTTOM    {pad_bottom}
 
 // POOL
 #define {NAME}_POOL_BATCH_SIZE   {batch_size}
 #define {NAME}_POOL_ROWS         {rows_out}
 #define {NAME}_POOL_COLS         {cols_out}
 #define {NAME}_POOL_CHANNELS     {channels_per_module}
-#define {NAME}_POOL_KERNEL_SIZE  {kernel_size}
+#define {NAME}_POOL_KERNEL_SIZE_X {kernel_size_x}
+#define {NAME}_POOL_KERNEL_SIZE_Y {kernel_size_y}
 #define {NAME}_POOL_FINE         {fine}
+
+#include "sliding_window.hpp"
+#include "pool.hpp"
 
 /**
  * FUNCTION DEFINITION
@@ -66,6 +72,7 @@ void {name}(
 );
 
 #undef name
+#undef NAME
 #endif
 """
 
@@ -87,7 +94,7 @@ void {name}(
 #pragma HLS ARRAY_PARTITION variable=in  complete dim=0
 #pragma HLS ARRAY_PARTITION variable=out complete dim=0
 
-    stream_t(data_t) sw_out[{NAME}_COARSE][{NAME}_KERNEL_SIZE][{NAME}_KERNEL_SIZE]; //sliding window output
+    stream_t(data_t) sw_out[{NAME}_COARSE][{NAME}_KERNEL_SIZE_X][{NAME}_KERNEL_SIZE_Y]; //sliding window output
 
 #pragma HLS STREAM variable=sw_out
 #pragma HLS ARRAY_PARTITION variable=sw_out complete dim=0
@@ -143,8 +150,10 @@ def gen_pooling_layer(name,param,src_path,header_path):
         channels            =param['channels_in'],
         channels_per_module =int(param['channels_in']/(param['coarse'])),
         coarse              =param['coarse'],
-        kernel_size         =param['kernel_size'],
-        stride              =param['stride'],
+        kernel_size_x       =param['kernel_size'][0],
+        kernel_size_y       =param['kernel_size'][1],
+        stride_x            =param['stride'][0],
+        stride_y            =param['stride'][1],
         pad                 =param['pad'],
         pad_left            =param['pad_left'],
         pad_right           =param['pad_right'],

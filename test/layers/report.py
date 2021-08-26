@@ -31,16 +31,25 @@ if __name__ == "__main__":
                 "sim"   : "N/A", #layer_test_log.get_sim_latency(),
             },
             "resources"  : {
-                "BRAM"  : "N/A",
-                "LUT"   : "N/A",
-                "FF"    : "N/A",
-                "DSP"   : "N/A",
+                "impl"  : {
+                    "BRAM"  : "N/A",
+                    "LUT"   : "N/A",
+                    "FF"    : "N/A",
+                    "DSP"   : "N/A",
+                },
+                "synth"  : {
+                    "BRAM"  : "N/A",
+                    "LUT"   : "N/A",
+                    "FF"    : "N/A",
+                    "DSP"   : "N/A",
+                },
             },
             "clk_period" : "N/A", #layer_test_log.get_clk_period()
         }
         # update latency
         try:
             results["latency"]["synth"] = layer_test_log.get_synth_latency()
+            results["resources"]["synth"] = layer_test_log.get_synth_resources()
         except AssertionError:
             pass
         try:
@@ -48,7 +57,7 @@ if __name__ == "__main__":
         except AssertionError:
             pass
         try:
-            results["resources"]  = layer_test_log.get_impl_resources()
+            results["resources"]["impl"]  = layer_test_log.get_impl_resources()
             results["clk_period"] = layer_test_log.get_clk_period()
         except AssertionError:
             pass

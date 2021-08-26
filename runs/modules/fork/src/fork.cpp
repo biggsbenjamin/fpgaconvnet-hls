@@ -1,19 +1,19 @@
 #include "fork_tb.hpp"
 #include "fork.hpp"
 
-void fork_top(
-#if FORK_KERNEL_SIZE == 1
+void fork_top( 
+#if FORK_KERNEL_SIZE_X == 1 && FORK_KERNEL_SIZE_Y == 1 
     stream_t(data_t) &in,
     stream_t(data_t) out[FORK_COARSE]
 #else
-    stream_t(data_t) in[FORK_KERNEL_SIZE][FORK_KERNEL_SIZE],
-    stream_t(data_t) out[FORK_COARSE][FORK_KERNEL_SIZE][FORK_KERNEL_SIZE]
+    stream_t(data_t) in[FORK_KERNEL_SIZE_X][FORK_KERNEL_SIZE_Y],
+    stream_t(data_t) out[FORK_COARSE][FORK_KERNEL_SIZE_X][FORK_KERNEL_SIZE_Y]
 #endif
 )
 {
 
     #pragma HLS DATAFLOW
-#if FORK_KERNEL_SIZE == 1
+#if FORK_KERNEL_SIZE_X == 1 && FORK_KERNEL_SIZE_Y == 1 
     fork<
         FORK_BATCH_SIZE,
         FORK_ROWS,
@@ -28,7 +28,8 @@ void fork_top(
         FORK_COLS,
         FORK_CHANNELS,
         FORK_COARSE,
-        FORK_KERNEL_SIZE
+        FORK_KERNEL_SIZE_X,
+        FORK_KERNEL_SIZE_Y
     >(in,out);
 #endif
 

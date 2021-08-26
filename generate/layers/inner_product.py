@@ -12,21 +12,19 @@ inner_product_layer_template_header = """#ifndef {NAME}_HPP_
 #define {NAME}_HPP_
 
 #define name        {name}
+#define NAME        {NAME}
 #define {NAME}_ID   {id}
 
-#include "fork.hpp"
-#include "conv.hpp"
-#include "accum.hpp"
-#include "glue.hpp"
-
-#define {NAME}_BATCH_SIZE   {batch_size}
-#define {NAME}_ROWS         {rows}
-#define {NAME}_COLS         {cols}
-#define {NAME}_CHANNELS     {channels}
-#define {NAME}_FILTERS      {filters}
-#define {NAME}_COARSE_IN    {coarse_in}
-#define {NAME}_COARSE_OUT   {coarse_out}
-#define {NAME}_KERNEL_SIZE  1
+#define {NAME}_BATCH_SIZE    {batch_size}
+#define {NAME}_ROWS          {rows}
+#define {NAME}_COLS          {cols}
+#define {NAME}_CHANNELS      {channels}
+#define {NAME}_FILTERS       {filters}
+#define {NAME}_COARSE_IN     {coarse_in}
+#define {NAME}_COARSE_OUT    {coarse_out}
+#define {NAME}_COARSE_GROUP  1
+#define {NAME}_KERNEL_SIZE_X 1
+#define {NAME}_KERNEL_SIZE_Y 1
 
 // coefficients
 #define {NAME}_WEIGHTS {NAME}_ROWS*{NAME}_COLS*{NAME}_CHANNELS*{NAME}_FILTERS
@@ -38,22 +36,24 @@ inner_product_layer_template_header = """#ifndef {NAME}_HPP_
 
 
 // FORK
-#define {NAME}_FORK_BATCH_SIZE  {batch_size}
-#define {NAME}_FORK_ROWS        1
-#define {NAME}_FORK_COLS        1
-#define {NAME}_FORK_CHANNELS    {channels_per_module}
-#define {NAME}_FORK_COARSE      {coarse_out}
-#define {NAME}_FORK_KERNEL_SIZE 1
+#define {NAME}_FORK_BATCH_SIZE   {batch_size}
+#define {NAME}_FORK_ROWS         1
+#define {NAME}_FORK_COLS         1
+#define {NAME}_FORK_CHANNELS     {channels_per_module}
+#define {NAME}_FORK_COARSE       {coarse_out}
+#define {NAME}_FORK_KERNEL_SIZE_X 1
+#define {NAME}_FORK_KERNEL_SIZE_Y 1
 
 // CONV
-#define {NAME}_CONV_BATCH_SIZE  {batch_size}
-#define {NAME}_CONV_ROWS        1
-#define {NAME}_CONV_COLS        1
-#define {NAME}_CONV_CHANNELS    {channels_per_module}
-#define {NAME}_CONV_FILTERS     {filters_per_module}
-#define {NAME}_CONV_KERNEL_SIZE 1
-#define {NAME}_CONV_FINE        1
-#define {NAME}_CONV_INTERVAL    1
+#define {NAME}_CONV_BATCH_SIZE   {batch_size}
+#define {NAME}_CONV_ROWS         1
+#define {NAME}_CONV_COLS         1
+#define {NAME}_CONV_CHANNELS     {channels_per_module}
+#define {NAME}_CONV_FILTERS      {filters_per_module}
+#define {NAME}_CONV_KERNEL_SIZE_X 1
+#define {NAME}_CONV_KERNEL_SIZE_Y 1
+#define {NAME}_CONV_FINE         1
+#define {NAME}_CONV_INTERVAL     1
 
 // ACCUM
 #define {NAME}_ACCUM_BATCH_SIZE         {batch_size}
@@ -66,13 +66,19 @@ inner_product_layer_template_header = """#ifndef {NAME}_HPP_
 #define {NAME}_ACCUM_FILTERS_PER_GROUP  {filters_per_module}
 
 // GLUE
-#define {NAME}_GLUE_BATCH_SIZE  {batch_size}
-#define {NAME}_GLUE_ROWS        1
-#define {NAME}_GLUE_COLS        1
-#define {NAME}_GLUE_FILTERS     {channels_out}
-#define {NAME}_GLUE_COARSE_IN   {coarse_in}
-#define {NAME}_GLUE_COARSE_OUT  {coarse_out}
-#define {NAME}_GLUE_ACC         {glue_acc}
+#define {NAME}_GLUE_BATCH_SIZE   {batch_size}
+#define {NAME}_GLUE_ROWS         1
+#define {NAME}_GLUE_COLS         1
+#define {NAME}_GLUE_FILTERS      {channels_out}
+#define {NAME}_GLUE_COARSE_IN    {coarse_in}
+#define {NAME}_GLUE_COARSE_OUT   {coarse_out}
+#define {NAME}_GLUE_COARSE_GROUP 1
+#define {NAME}_GLUE_ACC          {glue_acc}
+
+#include "fork.hpp"
+#include "conv.hpp"
+#include "accum.hpp"
+#include "glue.hpp"
 
 /**
  * FUNCTION DEFINITION
@@ -87,6 +93,7 @@ void {name}(
 
 #endif
 #undef name
+#undef NAME
 """
 
 inner_product_layer_template_src = """#include "{name}.hpp"

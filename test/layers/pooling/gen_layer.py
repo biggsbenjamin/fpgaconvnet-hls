@@ -2,7 +2,7 @@ import sys
 import os
 import numpy as np
 import csv
-import copy 
+import copy
 
 sys.path.append('..')
 sys.path.append(os.environ.get("FPGACONVNET_HLS"))
@@ -48,7 +48,16 @@ class PoolingLayerTB(Layer):
         # data out
         data_out = layer.functional_model(copy.copy(data_in))[0]
         data_out = np.moveaxis(data_out,0,-1)
-    
+
+        print(data_in.shape)
+        print(data_out.shape)
+
+        print(data_in[0,0])
+        print(data_in[0,1])
+        print(data_in[1,0])
+        print(data_in[1,1])
+        print(data_out[0,0])
+
         # add output dimensions
         self.param['rows_out']      = layer.rows_out()
         self.param['cols_out']      = layer.cols_out()
