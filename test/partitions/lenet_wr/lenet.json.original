@@ -3,7 +3,7 @@
     {
       "id": 0,
       "ports": 1,
-      "batch_size": 1,
+      "batch_size": 256,
       "input_node": "data",
       "output_node": "ip1",
       "weights_reloading_factor": 2,
@@ -46,10 +46,10 @@
             "kernel_size": 5,
             "fine": 5,
             "buffer_depth": 0,
-            "batch_size": 1
+            "batch_size": 256
           },
-          "node_in": ["conv1"],
-          "node_out":[ "pool1"]
+          "node_in": "conv1",
+          "node_out": "pool1"
         },
         {
           "name": "pool1",
@@ -83,11 +83,11 @@
             "stride": 2,
             "kernel_size": 2,
             "buffer_depth": 0,
-            "batch_size": 1,
+            "batch_size": 256,
             "coarse": 5
           },
-          "node_in": ["conv1"],
-          "node_out": ["pool1_squeeze_conv2"]
+          "node_in": "conv1",
+          "node_out": "pool1_squeeze_conv2"
         },
         {
           "name": "pool1_squeeze_conv2",
@@ -114,10 +114,10 @@
             "coarse_in": 5,
             "coarse_out": 2,
             "buffer_depth": 0,
-            "batch_size": 1
+            "batch_size": 256
           },
-          "node_in": ["pool1"],
-          "node_out": ["conv2"]
+          "node_in": "pool1",
+          "node_out": "conv2"
         },
         {
           "name": "conv2",
@@ -156,10 +156,10 @@
             "kernel_size": 5,
             "fine": 5,
             "buffer_depth": 0,
-            "batch_size": 1
+            "batch_size": 256
           },
-          "node_in": ["pool1_squeeze_conv2"],
-          "node_out": ["conv2_squeeze_pool2"]
+          "node_in": "pool1_squeeze_conv2",
+          "node_out": "conv2_squeeze_pool2"
         },
         {
           "name": "conv2_squeeze_pool2",
@@ -186,10 +186,10 @@
             "coarse_in": 5,
             "coarse_out": 50,
             "buffer_depth": 0,
-            "batch_size": 1
+            "batch_size": 256
           },
-          "node_in": ["conv2"],
-          "node_out": ["pool2"]
+          "node_in": "conv2",
+          "node_out": "pool2"
         },
         {
           "name": "pool2",
@@ -223,11 +223,11 @@
             "stride": 2,
             "kernel_size": 2,
             "buffer_depth": 0,
-            "batch_size": 1,
+            "batch_size": 256,
             "coarse": 50
           },
-          "node_in": ["conv2_squeeze_pool2"],
-          "node_out": ["ip1_6relu1"]
+          "node_in": "conv2_squeeze_pool2",
+          "node_out": "ip1_6relu1"
         },
         {
           "name": "ip1_6relu1",
@@ -257,10 +257,10 @@
             "coarse_out": 1,
             "filters": 250,
             "buffer_depth": 0,
-            "batch_size": 1
+            "batch_size": 256
           },
-          "node_in": ["pool2"],
-          "node_out": ["ip1_6relu1_squeeze_ip1"]
+          "node_in": "pool2",
+          "node_out": "ip1_6relu1_squeeze_ip1"
         },
         {
           "name": "ip1_6relu1_squeeze_ip1",
@@ -287,10 +287,10 @@
             "coarse_in": 1,
             "coarse_out": 10,
             "buffer_depth": 0,
-            "batch_size": 1
+            "batch_size": 256
           },
-          "node_in": ["ip1_6relu1"],
-          "node_out": ["ip1"]
+          "node_in": "ip1_6relu1",
+          "node_out": "ip1"
         },
         {
           "name": "ip1",
@@ -317,11 +317,11 @@
             "coarse_in": 10,
             "coarse_out": 10,
             "buffer_depth": 0,
-            "batch_size": 1,
+            "batch_size": 256,
             "coarse": 10
           },
-          "node_in": ["ip1_6relu1_squeeze_ip1"],
-          "node_out": ["squeeze_ip1"]
+          "node_in": "ip1_6relu1_squeeze_ip1",
+          "node_out": "squeeze_ip1"
         },
         {
           "name": "squeeze_ip1",
@@ -348,17 +348,17 @@
             "coarse_in": 10,
             "coarse_out": 4,
             "buffer_depth": 0,
-            "batch_size": 1
+            "batch_size": 256
           },
-          "node_in": ["ip1"],
-          "node_out": ["squeeze_ip1"]
+          "node_in": "ip1",
+          "node_out": "squeeze_ip1"
         }
       ]
     },
     {
       "id": 1,
       "ports": 1,
-      "batch_size": 1,
+      "batch_size": 256,
       "input_node": "ip1_7_flattened",
       "output_node": "ip2",
       "weights_reloading_factor": 1,
@@ -389,10 +389,10 @@
             "coarse_in": 4,
             "coarse_out": 10,
             "buffer_depth": 0,
-            "batch_size": 1
+            "batch_size": 256
           },
-          "node_in": ["ip2_squeeze"],
-          "node_out": ["ip2"]
+          "node_in": "ip2_squeeze",
+          "node_out": "ip2"
         },
         {
           "name": "ip2",
@@ -422,10 +422,10 @@
             "coarse_out": 1,
             "filters": 10,
             "buffer_depth": 0,
-            "batch_size": 1
+            "batch_size": 256
           },
-          "node_in": ["ip2_squeeze"],
-          "node_out": ["ip2"]
+          "node_in": "ip2_squeeze",
+          "node_out": "ip2"
         }
       ]
     }
