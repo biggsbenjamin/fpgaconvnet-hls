@@ -249,6 +249,7 @@ class ONNXData:
         output_node = self.partition.output_node
         output_data = np.array( self.sess.run([output_node], { self.input_name : self.data } )[0], dtype=np.float64) #making sure data type works
         output_data = self.transform_featuremap(output_data)
+        print(output_data)
         output_streams = int(self.partition.layers[-1].parameters.coarse_out)
         self.save_featuremap(output_data, os.path.join(output_path, onnx_helper._format_name(output_node)),
             parallel_streams=output_streams, to_yaml=False, to_bin=to_bin, to_csv=to_csv, to_dat=to_dat)
@@ -318,9 +319,11 @@ class ONNXData:
     def get_weights_inner_product(self, layer, wr_factor=1):
         # get weights
         weights_raw = onnx_helper.get_model_initializer(self.model, layer.weights_path)
+        #print("weights reshape: ",weights_raw.shape)
         if layer.parameters.matmul_flag:
             print("MatMul ONNX Operation used, transposing")
             weights_raw = np.matrix.transpose(weights_raw)
+            print("weights transpose: ",weights_raw.shape)
         # transform parameters
         coarse_in   = layer.parameters.coarse_in
         coarse_out  = layer.parameters.coarse_out
@@ -330,8 +333,11 @@ class ONNXData:
         cols        = layer.parameters.cols_in
         #reshape for transforming
         weights_raw = np.reshape(weights_raw,(filters*wr_factor,channels,rows,cols))
+        #print("weights reshape: ",weights_raw.shape)
         weights_raw = np.rollaxis(weights_raw,1,4) #input filters need to be FINAL axis
+        #print("weights rollaxis: ",weights_raw.shape)
         weights_raw = np.reshape(weights_raw,(filters*wr_factor,rows*cols*channels,1,1))
+        #print("weights reshape2: ",weights_raw.shape)
         # return transformed weights
         return self._transform_weights(weights_raw,wr_factor,coarse_in,coarse_out,1,1)
 
