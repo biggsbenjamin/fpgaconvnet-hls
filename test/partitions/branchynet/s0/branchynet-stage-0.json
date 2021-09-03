@@ -350,7 +350,8 @@
             "coarse_out": 1,
             "filters": 10,
             "buffer_depth": 0,
-            "batch_size": 1
+            "batch_size": 1,
+            "matmul_flag": false
           },
           "node_in": [
             "RELU16"

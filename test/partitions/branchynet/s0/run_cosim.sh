@@ -12,13 +12,17 @@
 NETWORK=branchynet
 #MODEL_PATH=$FPGACONVNET_OPTIMISER/examples/models/branchynet.onnx
 #MODEL_PATH=$FPGACONVNET_OPTIMISER/examples/models/ceil_false.onnx
-MODEL_PATH=$FPGACONVNET_OPTIMISER/examples/models/io_match.onnx
+#MODEL_PATH=$FPGACONVNET_OPTIMISER/examples/models/io_match.onnx
+#MODEL_PATH=$FPGACONVNET_OPTIMISER/examples/models/io_match_trained.onnx
+MODEL_PATH=$FPGACONVNET_OPTIMISER/examples/models/io_match_trained_norm.onnx
+#MODEL_PATH=$FPGACONVNET_OPTIMISER/examples/models/io_match_trained_norm_thr_high.onnx
 WEIGHTS_PATH=""
 PARTITION_INFO_PATH=branchynet-stage-0.json
 IMAGE_PATH=input_example.png
+#IMAGE_PATH=pt_ip_ex.png
 ZYNQ_PART=xc7z020clg484-1
 ZYNQ_BOARD=xilinx.com:zc702:part0:1.4
-TEST_TYPE=impl
+TEST_TYPE=sim
 
 # move into network folder
 #cd $NETWORK
@@ -70,7 +74,7 @@ for i in $( seq 1 ${NUM_PARTITIONS} ); do
 
     #run cosim
     cd partition_${PARTITION_INDEX}
-    #vivado_hls -f $FPGACONVNET_HLS/scripts/run_hls.tcl "_  -type sim -name ${NETWORK} -fpga ${ZYNQ_PART} -network_flag -reset -fast"
+    vivado_hls -f $FPGACONVNET_HLS/scripts/run_hls.tcl "_  -type ${TEST_TYPE} -name ${NETWORK} -fpga ${ZYNQ_PART} -network_flag -reset -fast"
     cd ..
 
 done
