@@ -1,7 +1,7 @@
 import yaml
 import sys, os, getopt
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageOps
 import copy
 from types import FunctionType
 import csv
@@ -13,6 +13,9 @@ import math
 import onnx
 import onnxruntime
 import onnx.numpy_helper
+
+import torch
+import torchvision.transforms.functional as TF
 
 import fpgaconvnet_optimiser.tools.graphs as graphs
 import fpgaconvnet_optimiser.tools.layer_enum as layer_enum
@@ -79,7 +82,7 @@ class ONNXData:
         data_max = np.amax(self.data)
         self.data = self.data / data_max
         if len(self.data.shape) == 2:
-           self.data = np.expand_dims(self.data,axis=0)
+            self.data = np.expand_dims(self.data,axis=0)
         self.data = np.stack([self.data for _ in range(self.partition.batch_size)], axis=0 )
 
     def get_layer(self,layer_name):
@@ -243,14 +246,9 @@ class ONNXData:
         self.save_featuremap(input_data, os.path.join(output_path, onnx_helper._format_name(input_node)),
             parallel_streams=input_streams, to_yaml=False, to_bin=to_bin, to_csv=to_csv, to_dat=to_dat)
         # save output layer
-        prev_node = "18"
-        prev_data = np.array( self.sess.run([prev_node], { self.input_name : self.data } )[0], dtype=np.float64)
-        print(prev_data)
-
         output_node = self.partition.output_node
         output_data = np.array( self.sess.run([output_node], { self.input_name : self.data } )[0], dtype=np.float64) #making sure data type works
         output_data = self.transform_featuremap(output_data)
-        print(output_data)
         output_streams = int(self.partition.layers[-1].parameters.coarse_out)
         self.save_featuremap(output_data, os.path.join(output_path, onnx_helper._format_name(output_node)),
             parallel_streams=output_streams, to_yaml=False, to_bin=to_bin, to_csv=to_csv, to_dat=to_dat)
@@ -320,6 +318,9 @@ class ONNXData:
     def get_weights_inner_product(self, layer, wr_factor=1):
         # get weights
         weights_raw = onnx_helper.get_model_initializer(self.model, layer.weights_path)
+        if layer.parameters.matmul_flag:
+            print("MatMul ONNX Operation used, transposing")
+            weights_raw = np.matrix.transpose(weights_raw)
         # transform parameters
         coarse_in   = layer.parameters.coarse_in
         coarse_out  = layer.parameters.coarse_out

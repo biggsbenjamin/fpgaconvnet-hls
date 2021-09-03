@@ -239,7 +239,6 @@ int main()
 
 #if {NAME}_WEIGHTS_RELOADING_FLAG
         static mem_int weights[{NAME}_PORTS_WR][{NAME}_SIZE_WR] = {{0}};
-#endif
 
         // load weights
         load_net_weights<
@@ -247,6 +246,7 @@ int main()
             {NAME}_SIZE_WR,
             {NAME}_WEIGHTS_RELOADING_FACTOR
         >("{weights_reloading_path}", weights, wr_index);
+>>>>>>> 448ba54... fixing test input scaling, fixing IP weights reshaping
 
         // load valid output
         load_net_data<

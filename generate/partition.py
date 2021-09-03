@@ -118,10 +118,10 @@ def gen_network(name,partition,output_path, ee_profiling=False):
 
     wr_layer = partition.weights_reloading_layer
 
-    layer_object = get_layer_from_partition(partition, wr_layer)
-    #wr_layer = gen_layer_name(layer_object)
-    wr_layer_identifier = gen_layer_name(layer_object)
-    #_fix_identifier(wr_layer).replace("/", "_")
+    if wr_layer != "None":
+        layer_object = get_layer_from_partition(partition, wr_layer)
+        #wr_layer = gen_layer_name(layer_object)
+        wr_layer_identifier = gen_layer_name(layer_object) #_fix_identifier(wr_layer).replace("/", "_")
 
     batch_size = partition.batch_size
 
@@ -310,7 +310,7 @@ def gen_network(name,partition,output_path, ee_profiling=False):
                 break # only want one argument for split_layer output
         fn_args.append("mode")
         fn_args = ", ".join(fn_args)
-        layers += f"    std::cout<<\"{layer_name}\"<<std::endl;;\n"
+        layers +=  f"   printf(\"LAYER: {layer_name} \\n\");"
         layers += f"    {layer_name}({fn_args});\n"
         #layers += f"    printf(\"{layer_name} done\\n\");\n"
 
