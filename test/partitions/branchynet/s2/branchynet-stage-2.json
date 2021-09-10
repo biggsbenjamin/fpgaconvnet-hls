@@ -4,7 +4,7 @@
       "id": 2,
       "ports": 1,
       "batch_size": 1,
-      "input_node": "NA",
+      "input_node": "10",
       "output_node": "34",
       "weights_reloading_factor": 1,
       "weights_reloading_layer": "34",
@@ -45,7 +45,7 @@
             "coarse_out": 1,
             "buffer_depth": 0,
             "batch_size": 1,
-            "ctrledge": "22",
+            "ctrledge": "2",
             "drop_mode": true
           },
           "node_in": [
@@ -344,8 +344,8 @@
             }
           ],
           "type": "INNER_PRODUCT",
-          "weights_path": "backbone.1.3.weight",
-          "bias_path": "backbone.1.3.bias",
+          "weights_path": "36",
+          "bias_path": "",
           "parameters": {
             "rows_in": 6,
             "cols_in": 6,
@@ -357,7 +357,8 @@
             "coarse_out": 1,
             "filters": 84,
             "buffer_depth": 0,
-            "batch_size": 1
+            "batch_size": 1,
+            "matmul_flag": true
           },
           "node_in": [
             "RELU31"
@@ -385,8 +386,8 @@
             }
           ],
           "type": "INNER_PRODUCT",
-          "weights_path": "exits.1.0.weight",
-          "bias_path": "exits.1.0.bias",
+          "weights_path": "37",
+          "bias_path": "",
           "parameters": {
             "rows_in": 1,
             "cols_in": 1,
@@ -398,7 +399,8 @@
             "coarse_out": 1,
             "filters": 10,
             "buffer_depth": 0,
-            "batch_size": 1
+            "batch_size": 1,
+            "matmul_flag": true
           },
           "node_in": [
             "INNERPRODUCT33"

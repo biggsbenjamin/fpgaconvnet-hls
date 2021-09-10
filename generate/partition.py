@@ -310,7 +310,7 @@ def gen_network(name,partition,output_path, ee_profiling=False):
                 break # only want one argument for split_layer output
         fn_args.append("mode")
         fn_args = ", ".join(fn_args)
-        layers +=  f"   printf(\"LAYER: {layer_name} \\n\");"
+        layers +=  f"   printf(\"LAYER: {layer_name} \\n\");\n"
         layers += f"    {layer_name}({fn_args});\n"
         #layers += f"    printf(\"{layer_name} done\\n\");\n"
 

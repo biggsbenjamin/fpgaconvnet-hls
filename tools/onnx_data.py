@@ -19,8 +19,9 @@ import torchvision.transforms.functional as TF
 
 import fpgaconvnet_optimiser.tools.graphs as graphs
 import fpgaconvnet_optimiser.tools.layer_enum as layer_enum
+from fpgaconvnet_optimiser.tools.layer_enum import LAYER_TYPE
 import fpgaconvnet_optimiser.tools.onnx_helper as onnx_helper
-import fpgaconvnet_optimiser.proto.fpgaconvnet_pb2 as fpgaconvnet_pb2 #REQUIRED EDIT
+import fpgaconvnet_optimiser.proto.fpgaconvnet_pb2 as fpgaconvnet_pb2
 
 from tools.array_init import array_init
 
@@ -53,18 +54,29 @@ class ONNXData:
             # model
             self.model = onnx_helper.load(model_path)
             self.model = onnx_helper.update_batch_size(self.model,self.partition.batch_size)
+
+            # merge subgraphs into main graph
+            self.merge_subgraphs()
             # add intermediate layers to outputs
+            new_outputs=[]
             for node in self.model.graph.node:
-                layer_info = onnx.helper.ValueInfoProto()
-                layer_info.name = node.output[0]
-                self.model.graph.output.append(layer_info)
+                og_VIP = onnx_helper.get_ValueInfoProto_from_node(self.model.graph,node)
+                VIP = onnx.ValueInfoProto()
+                VIP.CopyFrom(og_VIP)
+                new_outputs.append(VIP)
             # add input aswell to output
-            layer_info = onnx.helper.ValueInfoProto()
-            layer_info.name = self.model.graph.input[0].name
-            self.model.graph.output.append(layer_info)
+            input_VIP = onnx.ValueInfoProto()
+            input_VIP.CopyFrom(self.model.graph.input[0])
+            new_outputs.append(input_VIP)
+            # extending model with intermediate outputs
+            self.model.graph.output.extend(new_outputs)
+
             # remove bias
             self.remove_initializer_from_input()
             self.remove_bias()
+
+            # verify model is onnx compliant after changes
+            onnx.checker.check_model(self.model)
             # inference session
             self.sess = onnxruntime.InferenceSession(self.model.SerializeToString())
             # get input data
@@ -125,6 +137,41 @@ class ONNXData:
                 initializer_new = onnx.numpy_helper.from_array(zeroes,name=initializer.name)
                 self.model.graph.initializer.remove(initializer)
                 self.model.graph.initializer.extend([initializer_new])
+
+    def merge_subgraphs(self):
+        #try and merge the subgraph nodes into the main graph nodes
+        subnodes=[]
+        valinfs=[]
+        ifnode_idxs=[]
+        #outputs=[]
+        for idx,node in enumerate(self.model.graph.node):
+            #expand subgraphs
+            name = onnx_helper._name(node)
+            if layer_enum.from_onnx_op_type(node.op_type) == LAYER_TYPE.If:
+                for subgraph in node.attribute:
+                    for og_node in subgraph.g.node:
+                        # copy VIP information to new class
+                        og_VIP = onnx_helper.get_ValueInfoProto_from_node(subgraph.g,og_node)
+                        VIP = onnx.ValueInfoProto()
+                        VIP.CopyFrom(og_VIP)
+                        # copy node information
+                        new_node = onnx.NodeProto()
+                        new_node.CopyFrom(og_node)
+                        # build lists of fields from sub-graphs
+                        subnodes.append(new_node)
+                        valinfs.append(VIP)
+                # append ifnode index for removal
+                ifnode_idxs.append(idx)
+                #remove exit associated with the ifnode
+                for op in self.model.graph.output:
+                    if op.name == node.output[0]:
+                        self.model.graph.output.remove(op)
+        #extend main graph
+        self.model.graph.node.extend(subnodes)
+        self.model.graph.value_info.extend(valinfs)
+        #remove ifnodes
+        for idx in reversed(ifnode_idxs):
+            self.model.graph.node.pop(idx)
 
     """
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -249,7 +296,7 @@ class ONNXData:
         output_node = self.partition.output_node
         output_data = np.array( self.sess.run([output_node], { self.input_name : self.data } )[0], dtype=np.float64) #making sure data type works
         output_data = self.transform_featuremap(output_data)
-        print(output_data)
+        print("Output tensor:\n",output_data)
         output_streams = int(self.partition.layers[-1].parameters.coarse_out)
         self.save_featuremap(output_data, os.path.join(output_path, onnx_helper._format_name(output_node)),
             parallel_streams=output_streams, to_yaml=False, to_bin=to_bin, to_csv=to_csv, to_dat=to_dat)

@@ -10,7 +10,7 @@
       "weights_reloading_layer": "34",
       "layers": [
         {
-          "name": "11",
+          "name": "8",
           "streams_in": [
             {
               "name": "in",
@@ -21,7 +21,7 @@
           ],
           "streams_out": [
             {
-              "name": "CONVOLUTION11_POOLING12",
+              "name": "CONVOLUTION8_POOLING9",
               "coarse": 1,
               "ctrl": false,
               "split": false
@@ -53,17 +53,17 @@
             "batch_size": 1
           },
           "node_in": [
-            "CONVOLUTION11"
+            "CONVOLUTION8"
           ],
           "node_out": [
-            "POOLING12"
+            "POOLING9"
           ]
         },
         {
-          "name": "12",
+          "name": "9",
           "streams_in": [
             {
-              "name": "CONVOLUTION11_POOLING12",
+              "name": "CONVOLUTION8_POOLING9",
               "coarse": 1,
               "ctrl": false,
               "split": false
@@ -71,7 +71,7 @@
           ],
           "streams_out": [
             {
-              "name": "POOLING12_RELU13",
+              "name": "POOLING9_RELU1",
               "coarse": 1,
               "ctrl": false,
               "split": false
@@ -99,17 +99,17 @@
             "coarse": 1
           },
           "node_in": [
-            "CONVOLUTION11"
+            "CONVOLUTION8"
           ],
           "node_out": [
-            "RELU13"
+            "RELU1"
           ]
         },
         {
-          "name": "13",
+          "name": "1",
           "streams_in": [
             {
-              "name": "POOLING12_RELU13",
+              "name": "POOLING9_RELU1",
               "coarse": 1,
               "ctrl": false,
               "split": false
@@ -117,7 +117,7 @@
           ],
           "streams_out": [
             {
-              "name": "RELU13_split0",
+              "name": "RELU1_split0",
               "coarse": 1,
               "ctrl": false,
               "split": false
@@ -138,7 +138,7 @@
             "coarse": 1
           },
           "node_in": [
-            "POOLING12"
+            "POOLING9"
           ],
           "node_out": [
             "split0"
@@ -148,7 +148,7 @@
           "name": "split0",
           "streams_in": [
             {
-              "name": "RELU13_split0",
+              "name": "RELU1_split0",
               "coarse": 1,
               "ctrl": false,
               "split": false
@@ -183,10 +183,10 @@
             "ports_out": 2
           },
           "node_in": [
-            "RELU13"
+            "RELU1"
           ],
           "node_out": [
-            "CONVOLUTION14",
+            "CONVOLUTION11",
             "buffer1"
           ]
         },
@@ -200,7 +200,7 @@
               "split": true
             },
             {
-              "name": "GREATER22-ctrlout",
+              "name": "GREATER2-ctrlout",
               "coarse": 1,
               "ctrl": true,
               "split": false
@@ -226,7 +226,7 @@
             "coarse_out": 1,
             "buffer_depth": 0,
             "batch_size": 1,
-            "ctrledge": "22",
+            "ctrledge": "2",
             "drop_mode": true
           },
           "node_in": [
@@ -525,8 +525,8 @@
             }
           ],
           "type": "INNER_PRODUCT",
-          "weights_path": "backbone.1.3.weight",
-          "bias_path": "backbone.1.3.bias",
+          "weights_path": "36",
+          "bias_path": "",
           "parameters": {
             "rows_in": 6,
             "cols_in": 6,
@@ -538,7 +538,8 @@
             "coarse_out": 1,
             "filters": 84,
             "buffer_depth": 0,
-            "batch_size": 1
+            "batch_size": 1,
+            "matmul_flag": true
           },
           "node_in": [
             "RELU31"
@@ -566,8 +567,8 @@
             }
           ],
           "type": "INNER_PRODUCT",
-          "weights_path": "exits.1.0.weight",
-          "bias_path": "exits.1.0.bias",
+          "weights_path": "37",
+          "bias_path": "",
           "parameters": {
             "rows_in": 1,
             "cols_in": 1,
@@ -579,7 +580,8 @@
             "coarse_out": 1,
             "filters": 10,
             "buffer_depth": 0,
-            "batch_size": 1
+            "batch_size": 1,
+            "matmul_flag": true
           },
           "node_in": [
             "INNERPRODUCT33"
@@ -589,7 +591,7 @@
           ]
         },
         {
-          "name": "14",
+          "name": "11",
           "streams_in": [
             {
               "name": "split0_stream",
@@ -600,7 +602,7 @@
           ],
           "streams_out": [
             {
-              "name": "CONVOLUTION14_POOLING15",
+              "name": "CONVOLUTION11_POOLING12",
               "coarse": 1,
               "ctrl": false,
               "split": false
@@ -635,14 +637,14 @@
             "split0"
           ],
           "node_out": [
-            "POOLING15"
+            "POOLING12"
           ]
         },
         {
-          "name": "15",
+          "name": "12",
           "streams_in": [
             {
-              "name": "CONVOLUTION14_POOLING15",
+              "name": "CONVOLUTION11_POOLING12",
               "coarse": 1,
               "ctrl": false,
               "split": false
@@ -650,7 +652,7 @@
           ],
           "streams_out": [
             {
-              "name": "POOLING15_RELU16",
+              "name": "POOLING12_RELU13",
               "coarse": 1,
               "ctrl": false,
               "split": false
@@ -678,17 +680,17 @@
             "coarse": 1
           },
           "node_in": [
-            "CONVOLUTION14"
+            "CONVOLUTION11"
           ],
           "node_out": [
-            "RELU16"
+            "RELU13"
           ]
         },
         {
-          "name": "16",
+          "name": "13",
           "streams_in": [
             {
-              "name": "POOLING15_RELU16",
+              "name": "POOLING12_RELU13",
               "coarse": 1,
               "ctrl": false,
               "split": false
@@ -696,7 +698,7 @@
           ],
           "streams_out": [
             {
-              "name": "RELU16_INNERPRODUCT18",
+              "name": "RELU13_INNERPRODUCT16",
               "coarse": 1,
               "ctrl": false,
               "split": false
@@ -717,17 +719,17 @@
             "coarse": 1
           },
           "node_in": [
-            "POOLING15"
+            "POOLING12"
           ],
           "node_out": [
-            "INNERPRODUCT18"
+            "INNERPRODUCT16"
           ]
         },
         {
-          "name": "18",
+          "name": "16",
           "streams_in": [
             {
-              "name": "RELU16_INNERPRODUCT18",
+              "name": "RELU13_INNERPRODUCT16",
               "coarse": 1,
               "ctrl": false,
               "split": false
@@ -735,15 +737,15 @@
           ],
           "streams_out": [
             {
-              "name": "INNERPRODUCT18_split1",
+              "name": "INNERPRODUCT16_split1",
               "coarse": 1,
               "ctrl": false,
               "split": false
             }
           ],
           "type": "INNER_PRODUCT",
-          "weights_path": "exits.0.2.weight",
-          "bias_path": "exits.0.2.bias",
+          "weights_path": "35",
+          "bias_path": "",
           "parameters": {
             "rows_in": 8,
             "cols_in": 8,
@@ -755,10 +757,11 @@
             "coarse_out": 1,
             "filters": 10,
             "buffer_depth": 0,
-            "batch_size": 1
+            "batch_size": 1,
+            "matmul_flag": true
           },
           "node_in": [
-            "RELU16"
+            "RELU13"
           ],
           "node_out": [
             "split1"
@@ -768,7 +771,7 @@
           "name": "split1",
           "streams_in": [
             {
-              "name": "INNERPRODUCT18_split1",
+              "name": "INNERPRODUCT16_split1",
               "coarse": 1,
               "ctrl": false,
               "split": false
@@ -803,15 +806,15 @@
             "ports_out": 2
           },
           "node_in": [
-            "INNERPRODUCT18"
+            "INNERPRODUCT16"
           ],
           "node_out": [
             "buffer0",
-            "GREATER22"
+            "GREATER2"
           ]
         },
         {
-          "name": "22",
+          "name": "2",
           "streams_in": [
             {
               "name": "split1_stream",
@@ -822,7 +825,7 @@
           ],
           "streams_out": [
             {
-              "name": "GREATER22-ctrlout",
+              "name": "GREATER2-ctrlout",
               "coarse": 3,
               "ctrl": true,
               "split": false
@@ -841,7 +844,7 @@
             "buffer_depth": 0,
             "batch_size": 1,
             "coarse": 1,
-            "threshold": 0.8,
+            "threshold": 0.9,
             "ctrl_out_size": 3,
             "ctrledges": [
               "buffer0",
@@ -862,7 +865,7 @@
               "split": true
             },
             {
-              "name": "GREATER22-ctrlout",
+              "name": "GREATER2-ctrlout",
               "coarse": 1,
               "ctrl": true,
               "split": false
@@ -888,7 +891,7 @@
             "coarse_out": 1,
             "buffer_depth": 0,
             "batch_size": 1,
-            "ctrledge": "22",
+            "ctrledge": "2",
             "drop_mode": false
           },
           "node_in": [

@@ -45,7 +45,7 @@
             "coarse_out": 1,
             "buffer_depth": 0,
             "batch_size": 1,
-            "ctrledge": "22",
+            "ctrledge": "2",
             "drop_mode": false
           },
           "node_in": [
