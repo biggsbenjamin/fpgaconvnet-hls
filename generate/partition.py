@@ -170,6 +170,7 @@ def gen_network(name,partition,output_path):
             fn_args.append(stream_out.name)
         fn_args.append("mode")
         fn_args = ", ".join(fn_args)
+        layers +=  f"   printf(\"LAYER: {layer_name} \\n\");\n"
         layers += f"    {layer_name}({fn_args});\n"
 
     # include generation
@@ -209,12 +210,14 @@ def gen_network(name,partition,output_path):
         layers      =layers
     )
     # TB
+    print(os.path.abspath(os.path.join(output_path,'data/')))
     network_tb_src = network_tb_src_template.format(
         name        =name,
         NAME        =name.upper(),
         input_node  =input_node,
         wr_layer    =wr_layer,
-        output_node =output_node
+        output_node =output_node,
+        data_path   =os.path.abspath(os.path.join(output_path,'data'))
     )
 
     with open(os.path.join(output_path,f'include/{name}_top.hpp'),'w') as f:

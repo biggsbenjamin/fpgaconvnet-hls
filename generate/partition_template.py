@@ -218,8 +218,9 @@ network_tb_src_template = """#include "{name}_top.hpp"
 int main()
 {{
     int err = 0;
-    std::string data_path   = "data/data.yaml";
-    std::string weight_path = "data/weights.yaml";
+    std::string input_path  = "{data_path}/in.dat";
+    std::string output_path = "{data_path}/out.dat";
+    std::string {wr_layer}_path = "{data_path}/{wr_layer}.dat"; //FIXME for multiple wr layers
 
     static mem_int test_in[{NAME}_PORTS_IN][{NAME}_SIZE_IN]             = {{0}};
 
@@ -232,7 +233,7 @@ int main()
         {NAME}_COLS_IN,
         {NAME}_CHANNELS_IN,
         {NAME}_STREAMS_IN
-    >(data_path,"in",test_in);
+    >(input_path,test_in);
 
     for( int wr_index=0;wr_index<{NAME}_WEIGHTS_RELOADING_FACTOR;wr_index++) {{
 
@@ -248,7 +249,7 @@ int main()
             {NAME}_PORTS_WR,
             {NAME}_SIZE_WR,
             {NAME}_WEIGHTS_RELOADING_FACTOR
-        >(wr_index,weight_path,"{wr_layer}",weights);
+        >(wr_index,{wr_layer}_path,weights);
 
         // load valid output
         load_net_data<
@@ -259,7 +260,7 @@ int main()
             {NAME}_CHANNELS_OUT,
             {NAME}_STREAMS_OUT,
             {NAME}_WEIGHTS_RELOADING_FACTOR
-        >(data_path,"out",test_out_valid,wr_index);
+        >(output_path,test_out_valid,wr_index);
 
         // run network
         printf("RUNNING NETWORK \\n");
@@ -273,7 +274,7 @@ int main()
 #endif
         for(int i=0; i<{NAME}_PORTS_OUT;i++) {{
             printf("PORT %d\\n",i);
-            check_array_equal<{NAME}_SIZE_OUT>(test_out[i],test_out_valid[i]);
+            err+=check_array_equal<{NAME}_SIZE_OUT>(test_out[i],test_out_valid[i]);
         }}
 
     }}

@@ -225,16 +225,21 @@ class ONNXData:
         output_streams = int(self.partition.layers[-1].parameters.coarse_out)
         self.save_featuremap(output_data, os.path.join(output_path, onnx_helper._format_name(output_node)),
             parallel_streams=output_streams, to_yaml=False, to_bin=to_bin, to_csv=to_csv)
-        # save yaml data
+        # save data
         data = {
             "in"  : input_data.reshape(-1).tolist(),
             "out" : output_data.reshape(-1).tolist()
         }
-        # yaml format
         if output_path:
-            # save to yaml file
-            with open(os.path.join(output_path,'data.yaml'), 'w') as f:
-                yaml.dump(data, f)
+            # save data as .dat files
+            for filename in data:
+                with open(os.path.join(output_path,filename+".dat"), 'w') as f:
+                    f.write("\n".join([str(i) for i in data[filename]]))
+        ## yaml format
+        #if output_path:
+        #    # save to yaml file
+        #    with open(os.path.join(output_path,'data.yaml'), 'w') as f:
+        #        yaml.dump(data, f)
 
     """
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -346,13 +351,21 @@ class ONNXData:
                 # get layer info
                 weights[layer_name] = self.save_weights_layer(layer,wr_factor=wr_factor,
                         output_path=output_path_layer,to_bin=to_bin,to_csv=to_csv)
-        # yaml format
         if to_yaml:
-            tmp = {}
+            # save data as .dat files
+            print("YAML file usage deprecated, creating .dat files instead")
             for layer in weights:
-                tmp[layer] = weights[layer].reshape(-1).tolist()
-            # save to yaml file
-            with open(os.path.join(output_path,'weights.yaml'), 'w') as f:
-                yaml.dump(tmp, f)
+                weight_list = weights[layer].reshape(-1).tolist()
+                with open(os.path.join(output_path,layer+".dat"), 'w') as f:
+                    f.write("\n".join([str(i) for i in weight_list]))
+
+        ## yaml format
+        #if to_yaml:
+        #    tmp = {}
+        #    for layer in weights:
+        #        tmp[layer] = weights[layer].reshape(-1).tolist()
+        #    # save to yaml file
+        #    with open(os.path.join(output_path,'weights.yaml'), 'w') as f:
+        #        yaml.dump(tmp, f)
         # return weights
         return weights
