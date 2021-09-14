@@ -74,6 +74,9 @@ class ONNXData:
 
     def load_input(self,filepath):
         self.data = np.array(Image.open(filepath),dtype=np.float32)
+        #"normalising", more like scaling, input to prevent saturation of quant data types
+        data_max = np.amax(self.data)
+        self.data = self.data / data_max
         if len(self.data.shape) == 2:
            self.data = np.expand_dims(self.data,axis=0)
         self.data = np.stack([self.data for _ in range(self.partition.batch_size)], axis=0 )
@@ -298,7 +301,7 @@ class ONNXData:
         cols        = layer.parameters.cols_in
         #reshape for transforming
         weights_raw = np.reshape(weights_raw,(filters*wr_factor,channels,rows,cols))
-        weights_raw = np.rollaxis(weights_raw,1,3)
+        weights_raw = np.rollaxis(weights_raw,1,4) #input filters need to be FINAL axis
         weights_raw = np.reshape(weights_raw,(filters*wr_factor,rows*cols*channels,1,1))
         # return transformed weights
         return self._transform_weights(weights_raw,wr_factor,coarse_in,coarse_out)
