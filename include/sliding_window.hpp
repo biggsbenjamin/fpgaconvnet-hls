@@ -119,7 +119,7 @@ void sliding_window_line_shift(
                         // read the top corner into window cache
                         frame_cache[kernel_size-1][kernel_size-1] = pixel;
 
-                        // update window cache
+                        // update window buffer
                         if ( !( (row_index == rows+pad_top+pad_bottom-1) && (col_index == cols+pad_left+pad_right-1) ) ) {
                             for(unsigned char k1=0;k1<kernel_size;k1++) {
                                 for(unsigned char k2=0;k2<kernel_size-1;k2++) {

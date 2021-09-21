@@ -1,4 +1,4 @@
-from modules.module_model import ModuleModel
+from modules.module_model_linearmodel import ModuleModel
 from fpgaconvnet_optimiser.models.modules import Fork 
 
 MAX_RSC = {
@@ -35,7 +35,7 @@ model.filter_parameters(filters)
 model.fit_model()
 
 # save coefficients
-model.save_coefficients("coefficients","fork")
+model.save_coefficients("coefficients/fork")
 
 # # plot error
 model.plot_error(MAX_RSC)

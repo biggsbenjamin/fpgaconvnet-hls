@@ -1,11 +1,14 @@
 {
-    "batch_size": 1,
-    "rows": 100,
-    "cols": 100,
-    "channels": 1,
-    "filters": 1,
+    "rows": 16,
+    "cols": 16,
+    "channels":64,
+    "filters":32,
     "group": 1,
-    "fine": 1,
-    "kernel_size": 1,
-    "description": "single channel, single filter"
+    "fine": 9,
+    "kernel_size": 3,
+    "batch_size": 14,
+    "datawordlength": 10,
+    "weightwordlength": 32,
+    "accwordlength": 18,
+    "description": "single filter, 1x1"
 }

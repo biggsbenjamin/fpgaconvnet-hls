@@ -1,19 +1,23 @@
 #include "conv_tb.hpp"
 #include "conv.hpp"
 
-void conv_top(
-    stream_t(Conv_data) in[CONV_KERNEL_SIZE][CONV_KERNEL_SIZE],
 #if CONV_KERNEL_SIZE == 1
-    Conv_weight weights[CONV_CHANNELS*DIVIDE(CONV_FILTERS,CONV_GROUP)],
+const static conv_weight_t weights[CONV_CHANNELS*CONV_FILTERS] ={
+#include "weights.csv"
+};
 #else
-    Conv_weight weights[CONV_CHANNELS*DIVIDE(CONV_FILTERS,CONV_GROUP)][CONV_KERNEL_SIZE][CONV_KERNEL_SIZE],
+const static conv_weight_t weights[CONV_CHANNELS*CONV_FILTERS][CONV_KERNEL_SIZE][CONV_KERNEL_SIZE] = {
+#include "weights.csv"
+};
 #endif
-    stream_t(Conv_acc) &out
+void conv_top(
+    stream_t(conv_data_t) in[CONV_KERNEL_SIZE][CONV_KERNEL_SIZE],
+    stream_t(conv_acc_t) &out
 )
 {
 
-#pragma HLS RESOURCE variable=weights core=ROM_2P_BRAM
 #pragma HLS DATAFLOW
+#pragma HLS RESOURCE variable=weights core=ROM_2P_BRAM
 
 #if CONV_KERNEL_SIZE == 1
     conv<
@@ -22,9 +26,9 @@ void conv_top(
         CONV_COLS,
         CONV_CHANNELS,
         CONV_FILTERS,
-  		  Conv_data,
-		    Conv_weight,
-		    Conv_acc
+        conv_data_t,
+        conv_weight_t,
+        conv_acc_t
     >(in[0][0],weights,out);
 #else
     conv<
@@ -35,9 +39,9 @@ void conv_top(
         CONV_FILTERS,
         CONV_FINE,
         CONV_KERNEL_SIZE,
-		    Conv_data,
-		    Conv_weight,
-		    Conv_acc   
+        conv_data_t,
+        conv_weight_t,
+        conv_acc_t
     >(in,weights,out);
 #endif
 

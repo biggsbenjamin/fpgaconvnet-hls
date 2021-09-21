@@ -44,7 +44,7 @@ pooling_layer_template_header = """#ifndef {NAME}_HPP_
 #define {NAME}_SLIDING_WINDOW_PAD_RIGHT    {pad_right}
 #define {NAME}_SLIDING_WINDOW_PAD_TOP      {pad_top}
 #define {NAME}_SLIDING_WINDOW_PAD_BOTTOM   {pad_bottom}
-typedef {sliding_window_t}                 {NAME}_SLIDING_WINDOW_t;
+typedef ap_fixed<{sliding_window_t},{sliding_window_t}/2,AP_RND, AP_SAT>                 {NAME}_SLIDING_WINDOW_t;
 // POOL
 #define {NAME}_POOL_BATCH_SIZE   {batch_size}
 #define {NAME}_POOL_ROWS         {rows_out}
@@ -52,7 +52,7 @@ typedef {sliding_window_t}                 {NAME}_SLIDING_WINDOW_t;
 #define {NAME}_POOL_CHANNELS     {channels_per_module}
 #define {NAME}_POOL_KERNEL_SIZE  {kernel_size}
 #define {NAME}_POOL_FINE         {fine}
-typedef {pool_t}       {NAME}_POOL_t;
+typedef ap_fixed<{pool_t},{pool_t}/2,AP_RND, AP_SAT>       {NAME}_POOL_t;
 
 /**
  * FUNCTION DEFINITION
@@ -153,8 +153,8 @@ def gen_pooling_layer(name,param,src_path,header_path):
         rows_out            =param['rows_out'],
         cols_out            =param['cols_out'],
         channels_out        =param['channels_out'],
-        sliding_window_t    =param['sliding_window_t'],
-        pool_t              =param['pool_t']
+        sliding_window_t    =param['data_width'],
+        pool_t              =param['data_width']
     )   
 
     # write source file

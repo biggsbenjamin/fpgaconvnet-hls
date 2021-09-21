@@ -1,4 +1,4 @@
-from modules.module_model import ModuleModel
+from modules.module_model_linearmodel import ModuleModel
 from fpgaconvnet_optimiser.models.modules import SlidingWindow 
 
 MAX_RSC = {
@@ -39,7 +39,7 @@ model.fit_model()
 
 
 # save coefficients
-model.save_coefficients("coefficients","sliding_window")
+model.save_coefficients("coefficients/sliding_window")
 
  # plot error
 model.plot_error(MAX_RSC)

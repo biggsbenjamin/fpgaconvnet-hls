@@ -4,17 +4,34 @@ import scipy
 import math
 import numpy as np
 import sklearn.linear_model
+from keras import models,layers
+from keras.models import Sequential
+from keras.layers import Dense, Dropout, Activation,BatchNormalization 
+from keras.callbacks import EarlyStopping
+from keras.optimizers import SGD 
 from sklearn.neural_network import MLPRegressor
+from sklearn.neural_network import MLPClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_absolute_error
 from sklearn.metrics import mean_squared_error
+from sklearn.preprocessing import StandardScaler
 
 import joblib
 #import sklearn.metrics.mean_absolute_error
 import matplotlib.pyplot as plt
 
 RSC_TYPES=["LUT", "FF", "BRAM", "DSP"]
-
+estimatederror = {
+            "LUT"   : 1100000,
+            "FF"    : 1100000,
+            "DSP"   : 100,
+            "BRAM"  : 100
+        }
+def Get_Average(list):
+    sum = 0
+    for item in list:
+        sum += item
+    return sum/len(list)
 
 class ModuleModel:
 
@@ -22,16 +39,23 @@ class ModuleModel:
         
         # save module
         self.module = build_module
-        model1=MLPRegressor(solver='adam', activation='relu', alpha=1e-03, hidden_layer_sizes=[10,10], learning_rate_init=0.01,learning_rate='invscaling', tol=0.001,n_iter_no_change=100,max_iter=10000)
-        model2=MLPRegressor(solver='adam', activation='relu', alpha=1e-03, hidden_layer_sizes=[10,10], learning_rate_init=0.01,learning_rate='invscaling', tol=0.001,n_iter_no_change=100,max_iter=10000)
-        model3=MLPRegressor(solver='adam', hidden_layer_sizes=[4, 2], random_state=0)
-        model4=MLPRegressor(solver='adam', hidden_layer_sizes=[4, 2], random_state=0)
-        self.buildmodel = {
-            "LUT"   : model1,
-            "FF"    : model2,
-            "DSP"   : model3,
-            "BRAM"  : model4
-        }
+
+        #sgd = SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
+        #model1.compile(loss='mse', optimizer=sgd)
+        #model2.compile(loss='mse', optimizer=sgd)
+        #model3.compile(loss='mse', optimizer=sgd)
+        #model4.compile(loss='mse', optimizer=sgd)
+
+        scaler1 = StandardScaler() 
+        scaler2 = StandardScaler()
+        scaler3 = StandardScaler()
+        scaler4 = StandardScaler()     
+        self.scaler  = {
+            "LUT"   : scaler1,
+            "FF"    : scaler2,
+            "DSP"   : scaler3,
+            "BRAM"  : scaler4
+        }          
         # coeffcients for the model
         self.coef = {
             "LUT"   : np.array([]),
@@ -73,7 +97,6 @@ class ModuleModel:
 
     def get_nnls_coef(self, model, rsc):
         nnls = sklearn.linear_model.LinearRegression(positive=True, fit_intercept=False)
-        #nnls=MLPClassifier(solver='lbfgs', hidden_layer_sizes=[4, 2], random_state=0)
         return nnls.fit(model,rsc).coef_
 
     def get_absolute_error(self):
@@ -114,48 +137,75 @@ class ModuleModel:
         X_train  = []
         X_test  = []
         y_train  = []  
-        y_test  = []                    
-        # iterate over points
+        y_test  = []     
+        recordtimes=30
+        recentloss=[0 for x in range(0,recordtimes)] 
+        previosaverageloss=0              
+        # iterate over points       
         for point in self.points:
             # get utilisation model
-            for (key,value) in model.items():
-                value.append(self.module(point["parameters"]).utilisation_model()[key])
+            utilisation_model = self.module(point["parameters"]).utilisation_model()
+            for key in model:
+                model[key].append(utilisation_model[key])
             # get actual data
             actual["LUT"].append(point["resources"]["LUT"])
             actual["FF"].append(point["resources"]["FF"])
             actual["DSP"].append(point["resources"]["DSP"])
             actual["BRAM"].append(point["resources"]["BRAM"])
         # get model coefficients
+        def build_model():
+            neuralmodel = models.Sequential()
+            neuralmodel.add(layers.Dense(64,activation='relu',input_shape=(np.array(model["LUT"]).shape[1],)))
+            neuralmodel.add(Dropout(0.5))
+            neuralmodel.add(BatchNormalization())
+            neuralmodel.add(layers.Dense(64,activation='relu'))
+            neuralmodel.add(Dropout(0.5))
+            neuralmodel.add(BatchNormalization())
+            neuralmodel.add(layers.Dense(64,activation='relu'))
+            neuralmodel.add(Dropout(0.5))          
+            neuralmodel.add(layers.Dense(1))
+            sgd = SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
+            neuralmodel.compile(optimizer='adam',loss='mse',metrics=['mae'])
+            return neuralmodel
+        model1=build_model()
+        model2=build_model()
+        model3=build_model()
+        model4=build_model()   
+        self.buildmodel = {
+            "LUT"   : model1,
+            "FF"    : model2,
+            "DSP"   : model3,
+            "BRAM"  : model4
+        }              
+
         for rsc_type in RSC_TYPES:
-            X_train, X_test, y_train, y_test =(train_test_split(model[rsc_type], actual[rsc_type], test_size=0.2))
-            #y_true = y_test
+            X_train, X_test, y_train, y_test =train_test_split(model[rsc_type], actual[rsc_type], test_size=0.1)
             times=0
-            previousloss=0
             cycle=1
             repeat=0
-            self.buildmodel[rsc_type].fit(X_train, y_train)
-            while 1:            
-                self.buildmodel[rsc_type].partial_fit(X_train, y_train)
-            #print(self.buildmodel[rsc_type].score(X_train, y_train))
-                #y_pred = self.buildmodel[rsc_type].predict(X_test)
-                loss=mean_squared_error(self.buildmodel[rsc_type].predict(model[rsc_type]), actual[rsc_type])
-                print("the loss error of %s in the %dth iteration is %d" %(rsc_type,cycle,loss))
-                if loss>=previousloss:
-                    times+=1
-                    if times>19:
-                        break
-                else:
-                    times=0
-                if loss>previousloss-2 or loss<previousloss+2:
-                    repeat+=1
-                    if repeat>99:
-                        break                    
-                else:
-                    repeat=0                    
-                previousloss=loss
-                cycle+=1
-        #for rsc_type in RSC_TYPES:
-            #self.coef[rsc_type] = self.get_nnls_coef(np.array(model[rsc_type]), np.array(actual[rsc_type]))
+            self.scaler[rsc_type].fit(X_train)
+            X_train=self.scaler[rsc_type].transform(X_train)
+            model[rsc_type]=self.scaler[rsc_type].transform(model[rsc_type])
+            #early_stopping = EarlyStopping(monitor='val_loss', patience=50, verbose=2)            
+            #self.buildmodel[rsc_type].fit(X_train, np.array(y_train),epochs=100,batch_size=200,verbose=2,validation_split=0.2,callbacks=[early_stopping])
+            self.buildmodel[rsc_type].fit(X_train, np.array(y_train),epochs=100,batch_size=64,verbose=2,validation_split=0.2)
+            #while 1:           
+                #self.buildmodel[rsc_type].partial_fit(X_train1, y_train1)
+                #loss=mean_squared_error(self.buildmodel[rsc_type].predict(X_train), y_train)
+                #recentloss[cycle%recordtimes]=loss
+                #averageloss=Get_Average(recentloss)
+                #print("the loss error of %s in the %dth iteration is %d" %(rsc_type,cycle,loss))
+                #if cycle>recordtimes:                     
+                    #if averageloss>=previosaverageloss:
+                        #times+=1  
+                        #if times>19:
+                          #break  
+                    #else:
+                        #times=0     
+                #previosaverageloss=averageloss                                  
+                #cycle+=1
+            #print("the score of %s in the %dth iteration is %d" %(rsc_type,cycle,self.buildmodel[rsc_type].score(model[rsc_type],actual[rsc_type])))                 
+
             
             
 
@@ -163,6 +213,7 @@ class ModuleModel:
         
         
     def save_coefficients(self,filepath,modulename):
+    #def save_coefficients(self,filepath):
         # LUT
         #vecdict=str(dict(zip(utilisation_model_txt,self.coef["LUT"])))
         #vecdict = bytes(vecdict, encoding = "utf8")
@@ -197,7 +248,9 @@ class ModuleModel:
         for rsc_type in rsc_types:
             # get the difference in resource usage
             actual = np.array([ p["resources"][rsc_type] for p in self.points ])
-            predicted = np.array([ self.module(p["parameters"]).rsc(self.buildmodel[rsc_type])[rsc_type] for p in self.points ])
+            #predicted = np.array([ self.module(p["parameters"]).rsc(self.coef)[rsc_type] for p in self.points ])
+            #predicted = np.array([ self.module(p["parameters"]).rsc(self.buildmodel)[rsc_type] for p in self.points ])
+            predicted = np.array([ self.module(p["parameters"]).rsc(self.buildmodel,self.scaler)[rsc_type] for p in self.points ])
             # get the mean absolute error
             err = np.average(np.absolute(actual - predicted))
             var = math.sqrt(np.var(np.absolute(actual - predicted)))
@@ -210,7 +263,9 @@ class ModuleModel:
 
         # LUT
         ## get coordinates
-        x = np.array([ self.module(p["parameters"]).rsc(self.buildmodel["LUT"])["LUT"] for p in self.points ])
+        #x = np.array([ self.module(p["parameters"]).rsc(self.buildmodel)["LUT"] for p in self.points ])
+        x = np.array([ self.module(p["parameters"]).rsc(self.buildmodel,self.scaler)["LUT"] for p in self.points ])
+        #x = np.array([ self.module(p["parameters"]).rsc(self.coef)["LUT"] for p in self.points ])
         y = np.array([ p["resources"]["LUT"] for p in self.points ])
         ## create scatter plot
         axs[0,0].scatter(x, y, label="LUT", color="r", marker='x')
@@ -218,8 +273,9 @@ class ModuleModel:
 
         # FF
         ## get coordinates
-        x = np.array([ self.module(p["parameters"]).rsc(self.buildmodel["FF"])["FF"]
-                for p in self.points ])
+        #x = np.array([ self.module(p["parameters"]).rsc(self.buildmodel)["FF"] for p in self.points ])
+        x = np.array([ self.module(p["parameters"]).rsc(self.buildmodel,self.scaler)["FF"] for p in self.points ])
+        #x = np.array([ self.module(p["parameters"]).rsc(self.coef)["FF"] for p in self.points ])                
         y = np.array([ p["resources"]["FF"] for p in self.points ])
         ## create scatter plot
         axs[0,1].scatter(x, y, label="FF", color="g", marker='x')
@@ -227,8 +283,9 @@ class ModuleModel:
 
         # BRAM 
         ## get coordinates
-        x = np.array([ self.module(p["parameters"]).rsc(self.buildmodel["BRAM"])["BRAM"]
-                for p in self.points ])
+        #x = np.array([ self.module(p["parameters"]).rsc(self.buildmodel)["BRAM"] for p in self.points ])
+        x = np.array([ self.module(p["parameters"]).rsc(self.buildmodel,self.scaler)["BRAM"] for p in self.points ])
+        #x = np.array([ self.module(p["parameters"]).rsc(self.coef)["BRAM"] for p in self.points ])  
         y = np.array([ p["resources"]["BRAM"] for p in self.points ])
         ## create scatter plot
         axs[1,0].scatter(x, y, label="BRAM", color="b", marker='x')
@@ -236,8 +293,9 @@ class ModuleModel:
 
         # DSP 
         ## get coordinates
-        x = np.array([ self.module(p["parameters"]).rsc(self.buildmodel["DSP"])["DSP"]
-                for p in self.points ])
+        #x = np.array([ self.module(p["parameters"]).rsc(self.buildmodel)["DSP"] for p in self.points ])
+        x = np.array([ self.module(p["parameters"]).rsc(self.buildmodel,self.scaler)["DSP"] for p in self.points ])
+        #x = np.array([ self.module(p["parameters"]).rsc(self.coef)["DSP"] for p in self.points ])  
         y = np.array([ p["resources"]["DSP"] for p in self.points ])
         ## create scatter plot
         axs[1,1].scatter(x, y, label="DSP", color="y", marker='x')

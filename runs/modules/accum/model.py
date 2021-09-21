@@ -1,4 +1,5 @@
-from modules.module_model import ModuleModel
+#from modules.module_model_neuralnetwork import ModuleModel
+from modules.module_model_randomforest import ModuleModel
 from fpgaconvnet_optimiser.models.modules import Accum
 
 MAX_RSC = {

@@ -1,4 +1,6 @@
-from modules.module_model import ModuleModel
+from modules.module_model_neuralnetwork import ModuleModel
+#from modules.module_model_randomforest import ModuleModel
+#from modules.module_model_linearmodel import ModuleModel
 from fpgaconvnet_optimiser.models.modules import Conv 
 
 MAX_RSC = {
@@ -19,7 +21,9 @@ def build_module(parameter):
         parameter['fine'],
         parameter['kernel_size'],
         1,
-        parameter['data_wordlength']
+        parameter['data_wordlength'],
+        parameter['acc_wordlength'],
+        parameter['weight_wordlength']     
     )
 
 # load accum model
@@ -27,16 +31,18 @@ model = ModuleModel(build_module)
 model.load_points("modules/conv/logs")
 
 # filter parameters 
-filters = {
-    "data_wordlength" : [15.5,16.5]
-}
-model.filter_parameters(filters)
+#filters = {
+#   "fine" : [1,100],
+#    "weight_wordlength" : [0,16]
+#}
+#model.filter_parameters(filters)
 
 # fit model
 model.fit_model()
 
 # save coefficients
-model.save_coefficients("coefficients/conv")
+model.save_coefficients("coefficients","conv")
+#model.save_coefficients("coefficients/conv")
 
  # plot error
 model.plot_error(MAX_RSC)

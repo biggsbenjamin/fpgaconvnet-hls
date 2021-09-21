@@ -29,7 +29,8 @@ squeeze_layer_template_header = """#ifndef {NAME}_HPP_
 #define {NAME}_SQUEEZE_CHANNELS     {channels_in}
 #define {NAME}_SQUEEZE_COARSE_IN    {coarse_in}
 #define {NAME}_SQUEEZE_COARSE_OUT   {coarse_out}
-typedef {squeeze_t}                 {NAME}_SQUEEZE_t;
+typedef ap_fixed<{squeeze_t},{squeeze_t}/2,AP_RND, AP_SAT>                 {NAME}_SQUEEZE_t;
+
 /**
  * FUNCTION DEFINITION
  */
@@ -101,7 +102,7 @@ def gen_squeeze_layer(name,param,src_path,header_path):
         rows_out            =param['rows_out'],
         cols_out            =param['cols_out'],
         channels_out        =param['channels_out'],
-        squeeze_t           =param['squeeze_t']
+        squeeze_t           =param['data_width']
     )
 
     # write source file

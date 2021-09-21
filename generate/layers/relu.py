@@ -28,7 +28,7 @@ relu_layer_template_header = """#ifndef {NAME}_HPP_
 #define {NAME}_RELU_ROWS         {rows}
 #define {NAME}_RELU_COLS         {cols}
 #define {NAME}_RELU_CHANNELS     {channels_per_module}
-typedef {datatype}               {NAME}_RELU_t;
+typedef ap_fixed<{datatype},{datatype}/2,AP_RND, AP_SAT>   {NAME}_RELU_t;
 /**
  * FUNCTION DEFINITION
  */
@@ -96,6 +96,7 @@ def gen_relu_layer(name,param,src_path,header_path):
     )
 
     # header
+    print(param)
     relu_layer_header = relu_layer_template_header.format(
         name                =name,
         NAME                =name.upper(),
@@ -109,7 +110,7 @@ def gen_relu_layer(name,param,src_path,header_path):
         rows_out            =param['rows_out'],
         cols_out            =param['cols_out'],
         channels_out        =param['channels_out'],
-        datatype            =param['datatype']
+        datatype            =param['data_width']
     )
 
     # write source file

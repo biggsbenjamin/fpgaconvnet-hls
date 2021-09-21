@@ -1,4 +1,5 @@
-from modules.module_model import ModuleModel
+from modules.module_model_neuralnetwork import ModuleModel
+#from modules.module_model_randomforest import ModuleModel
 from fpgaconvnet_optimiser.models.modules import Glue 
 
 MAX_RSC = {
@@ -17,24 +18,26 @@ def build_module(parameter):
         ],
         parameter['filters'],
         parameter['coarse_in'],
-        parameter['coarse_out']
+        parameter['coarse_out'],
+        parameter['data_wordlength'],
+        parameter['acc_wordlength']
     )
 
 # load accum model
 model = ModuleModel(build_module)
 model.load_points("modules/glue/logs")
 
-# filter parameters 
-filters = {
-    "data_width" : [15.5,16.5]
-}
-model.filter_parameters(filters)
+## filter parameters 
+#filters = {
+#    "data_width" : [0,32]
+#}
+#model.filter_parameters(filters)
 
 # fit model
 model.fit_model()
 
 # save coefficients
-model.save_coefficients("coefficients/glue")
+model.save_coefficients("coefficients","glue")
 
 # # plot error
 model.plot_error(MAX_RSC)

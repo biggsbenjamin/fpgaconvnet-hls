@@ -32,7 +32,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # load partition information
-    partitions = fpgaconvnet_optimiser.proto.fpgaconvnet_pb2.partitions()
+    partitions = fpgaconvnet_optimiser.proto.fpgaconvnet_pb2.partitions() 
     with open(args.partition_path,'r') as f:
        json_format.Parse(f.read(), partitions)
 

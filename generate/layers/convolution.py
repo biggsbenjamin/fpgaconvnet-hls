@@ -16,7 +16,7 @@ convolution_layer_template_header = """#ifndef {NAME}_HPP_
 #include "conv.hpp"
 #include "accum.hpp"
 #include "glue.hpp"
-
+#include <ap_fixed.h>
 #define name        {name}
 #define {NAME}_ID   {id}
 
@@ -53,7 +53,7 @@ convolution_layer_template_header = """#ifndef {NAME}_HPP_
 #define {NAME}_SLIDING_WINDOW_PAD_RIGHT     {pad_right}
 #define {NAME}_SLIDING_WINDOW_PAD_TOP       {pad_top}
 #define {NAME}_SLIDING_WINDOW_PAD_BOTTOM    {pad_bottom}
-typedef {sliding_window_t}                  {NAME}_SLIDING_WINDOW_t;
+typedef ap_fixed<{sliding_window_t},{sliding_window_t}/2,AP_RND, AP_SAT>                   {NAME}_SLIDING_WINDOW_t;
 
 // FORK
 #define {NAME}_FORK_BATCH_SIZE  {batch_size}
@@ -62,7 +62,7 @@ typedef {sliding_window_t}                  {NAME}_SLIDING_WINDOW_t;
 #define {NAME}_FORK_CHANNELS    {channels_per_module}
 #define {NAME}_FORK_COARSE      {coarse_out}
 #define {NAME}_FORK_KERNEL_SIZE {kernel_size}
-typedef {fork_t}                {NAME}_FORK_t;
+typedef ap_fixed<{fork_t},{fork_t}/2,AP_RND, AP_SAT>                {NAME}_FORK_t;
 
 // CONV
 #define {NAME}_CONV_BATCH_SIZE  {batch_size}
@@ -73,9 +73,9 @@ typedef {fork_t}                {NAME}_FORK_t;
 #define {NAME}_CONV_KERNEL_SIZE {kernel_size}
 #define {NAME}_CONV_FINE        {fine}
 #define {NAME}_CONV_INTERVAL    {interval}
-typedef {conv_data_t}           {NAME}_CONV_data_t;
-typedef {conv_weight_t}         {NAME}_CONV_weight_t;
-typedef {conv_acc_t}            {NAME}_CONV_acc_t;
+typedef ap_fixed<{conv_data_t},{conv_data_t}/2,AP_RND, AP_SAT>          {NAME}_CONV_data_t;
+typedef ap_fixed<{conv_weight_t},{conv_weight_t}/2,AP_RND, AP_SAT>          {NAME}_CONV_weight_t;
+typedef ap_fixed<{conv_acc_t},{conv_acc_t}/2,AP_RND, AP_SAT>            {NAME}_CONV_acc_t;
 
 // ACCUM
 #define {NAME}_ACCUM_BATCH_SIZE         {batch_size}
@@ -86,7 +86,7 @@ typedef {conv_acc_t}            {NAME}_CONV_acc_t;
 #define {NAME}_ACCUM_FILTERS            {filters_per_module}
 #define {NAME}_ACCUM_CHANNELS_PER_GROUP {channels_per_module_per_group}
 #define {NAME}_ACCUM_FILTERS_PER_GROUP  {filters_per_module_per_group}
-typedef {accum_t}                       {NAME}_ACCUM_t;
+typedef ap_fixed<{accum_t},{accum_t}/2,AP_RND, AP_SAT>                       {NAME}_ACCUM_t;
 
 // GLUE
 #define {NAME}_GLUE_BATCH_SIZE  {batch_size}
@@ -95,8 +95,8 @@ typedef {accum_t}                       {NAME}_ACCUM_t;
 #define {NAME}_GLUE_FILTERS     {channels_out} 
 #define {NAME}_GLUE_COARSE_IN   {coarse_in}
 #define {NAME}_GLUE_COARSE_OUT  {coarse_out}
-typedef {glue_acc_t}            {NAME}_GLUE_acc_t;
-typedef {glue_data_t}           {NAME}_GLUE_data_t;
+typedef ap_fixed<{glue_acc_t},{glue_acc_t}/2,AP_RND, AP_SAT>            {NAME}_GLUE_acc_t;
+typedef ap_fixed<{glue_data_t},{glue_data_t}/2,AP_RND, AP_SAT>           {NAME}_GLUE_data_t;
 
 /**
  * FUNCTION DEFINITION
@@ -351,14 +351,14 @@ def gen_convolution_layer(name,param,src_path,header_path):
         rows_out                        =param['rows_out'],
         cols_out                        =param['cols_out'],
         channels_out                    =param['channels_out'],
-        sliding_window_t                =param['sliding_window_t'],
-        fork_t                          =param['fork_t'],
-        conv_data_t                     =param['conv_data_t'],
-        conv_weight_t                   =param['conv_weight_t'],
-        conv_acc_t                      =param['conv_acc_t'],
-        accum_t                         =param['accum_t'],
-        glue_acc_t                      =param['glue_acc_t'],
-        glue_data_t                     =param['glue_data_t']
+        sliding_window_t                =param['data_width'],
+        fork_t                          =param['data_width'],
+        conv_data_t                     =param['data_width'],
+        conv_weight_t                   =param['weight_width'],
+        conv_acc_t                      =param['acc_width'],
+        accum_t                         =param['acc_width'],
+        glue_acc_t                      =param['acc_width'],
+        glue_data_t                     =param['data_width']
     )
 
     # write source file
