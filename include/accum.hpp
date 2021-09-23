@@ -26,6 +26,8 @@ void accum(
     const unsigned int filters    = FILTERS;
     const unsigned int groups     = GROUPS;
 
+    assert(rows >= 1);
+
     const unsigned int channels_per_group = DIVIDE(channels,groups);
     const unsigned int filters_per_group  = DIVIDE(filters ,groups);
 

@@ -11,6 +11,7 @@
     "pad": 0,
     "coarse_in": 1,
     "coarse_out": 1,
+    "coarse_group": 1,
     "fine": 1,
     "size_in": 25088,
     "size_out": 37632,

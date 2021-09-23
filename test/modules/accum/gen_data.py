@@ -7,9 +7,9 @@ from fpgaconvnet_optimiser.models.modules.Accum import Accum
 from Data import Data
 
 class AccumTB(Data):
-    def __init__(self):     
+    def __init__(self):
         Data.__init__(self,'accum')
-    
+
     # update stimulus generation
     def gen_stimulus(self):
         # add parameters
@@ -17,11 +17,9 @@ class AccumTB(Data):
         self.param['filters_per_group']     = int(self.param['filters'] /self.param['groups'])
         # Init Module
         accum = Accum(
-            [
-                self.param['channels'],
-                self.param['rows'],
-                self.param['cols']
-            ],
+            self.param['rows'],
+            self.param['cols'],
+            self.param['channels'],
             self.param['filters'],
             self.param['groups']
         )
@@ -48,5 +46,5 @@ class AccumTB(Data):
 
 if __name__ == '__main__':
     accum_tb = AccumTB()
-    accum_tb.main(sys.argv[1:])    
- 
+    accum_tb.main(sys.argv[1:])
+

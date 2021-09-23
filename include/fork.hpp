@@ -19,7 +19,7 @@ void fork(
 )
 {
 
-#pragma HLS INLINE OFF 
+#pragma HLS INLINE OFF
 
     const unsigned int batch_size   = BATCH_SIZE;
     const unsigned int rows         = ROWS;
@@ -27,7 +27,10 @@ void fork(
     const unsigned int channels     = CHANNELS;
     const unsigned int coarse       = COARSE;
 
-#pragma HLS STREAM variable=in 
+    // assertions
+    assert(batch_size >= 1);
+
+#pragma HLS STREAM variable=in
 #pragma HLS STREAM variable=out
 
 #pragma HLS ARRAY_PARTITION variable=out complete dim=0
@@ -65,7 +68,7 @@ void fork(
 )
 {
 
-#pragma HLS INLINE OFF 
+#pragma HLS INLINE OFF
 
     const unsigned int batch_size    = BATCH_SIZE;
     const unsigned int rows          = ROWS;
@@ -75,7 +78,7 @@ void fork(
     const unsigned int kernel_size_x = KERNEL_SIZE_X;
     const unsigned int kernel_size_y = KERNEL_SIZE_Y;
 
-#pragma HLS STREAM variable=in 
+#pragma HLS STREAM variable=in
 #pragma HLS STREAM variable=out
 
 #pragma HLS ARRAY_PARTITION variable=in complete dim=0

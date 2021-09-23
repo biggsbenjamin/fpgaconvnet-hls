@@ -21,25 +21,37 @@ class ConvolutionLayerTB(Layer):
 
     # update stimulus generation
     def gen_stimulus(self):
+
+        if isinstance(self.param['pad'],int):
+            self.param['pad_left'] = self.param['pad']
+            self.param['pad_right'] = self.param['pad']
+            self.param['pad_top'] = self.param['pad']
+            self.param['pad_bottom'] = self.param['pad']
+            self.param['pad'] = [self.param['pad'], self.param['pad'], self.param['pad'], self.param['pad']]
+        else:
+            self.param['pad'] = [self.param['pad_top'], self.param['pad_left'], self.param['pad_bottom'], self.param['pad_right']]
+
+        if isinstance(self.param['kernel_size'],int):
+            self.param['kernel_size'] = [self.param['kernel_size'],self.param['kernel_size']]
+
+        if isinstance(self.param['stride'],int):
+            self.param['stride'] = [self.param['stride'],self.param['stride']]
+
         # Init Module
-        self.param['pad'] = [self.param['pad_top'], self.param['pad_left'], self.param['pad_bottom'], self.param['pad_right']]
         layer = ConvolutionLayer(
-            [
-                self.param['channels_in'],
-                self.param['rows_in'],
-                self.param['cols_in']
-            ],
             self.param['filters'],
-            self.param['kernel_size'],
-            self.param['stride'],
-            self.param['groups'],
-            self.param['pad'],
-            self.param['coarse_in'],
-            self.param['coarse_out'],
-            self.param['coarse_group'],
-            self.param['fine']
+            self.param['rows_in'],
+            self.param['cols_in'],
+            self.param['channels_in'],
+            kernel_size=self.param['kernel_size'],
+            stride=self.param['stride'],
+            groups=self.param['groups'],
+            pad=self.param['pad'],
+            coarse_in=self.param['coarse_in'],
+            coarse_out=self.param['coarse_out'],
+            coarse_group=self.param['coarse_group'],
+            fine=self.param['fine']
         )
-        layer.load_coef()
 
         # data in
         data_in = self.gen_data([
@@ -74,9 +86,9 @@ class ConvolutionLayerTB(Layer):
             f.write(array_init(weights[0]))
 
         # add output dimensions
-        self.param['rows_out']      = layer.rows_out()
-        self.param['cols_out']      = layer.cols_out()
-        self.param['channels_out']  = layer.channels_out()
+        self.param['rows_out']      = layer.rows_out
+        self.param['cols_out']      = layer.cols_out
+        self.param['channels_out']  = layer.channels_out
 
         data_in = data_in.reshape(
             self.param['rows_in'],

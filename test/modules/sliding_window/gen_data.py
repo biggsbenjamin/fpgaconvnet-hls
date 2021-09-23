@@ -7,18 +7,16 @@ from fpgaconvnet_optimiser.models.modules.SlidingWindow import SlidingWindow
 from Data import Data
 
 class SlidingWindowTB(Data):
-    def __init__(self):     
+    def __init__(self):
         Data.__init__(self,'sliding_window')
 
     # update stimulus generation
     def gen_stimulus(self):
         # Init Module
         sliding_window = SlidingWindow(
-            [
-                self.param['channels'],
-                self.param['rows'],
-                self.param['cols']
-            ],
+            self.param['rows'],
+            self.param['cols'],
+            self.param['channels'],
             self.param['kernel_size'],
             self.param['stride'],
             self.param['pad_top'],
@@ -26,6 +24,7 @@ class SlidingWindowTB(Data):
             self.param['pad_bottom'],
             self.param['pad_left']
         )
+
         # output dimensions
         self.param['rows_out'] = sliding_window.rows_out()
         self.param['cols_out'] = sliding_window.cols_out()
@@ -41,7 +40,7 @@ class SlidingWindowTB(Data):
         data_out = sliding_window.functional_model(data_in)
         # return data
         data = {
-            'input'     : data_in.reshape(-1).tolist(),            
+            'input'     : data_in.reshape(-1).tolist(),
             'output'    : data_out.reshape(-1).tolist()
         }
         # resource and latency model
@@ -50,8 +49,8 @@ class SlidingWindowTB(Data):
             'resources' : sliding_window.rsc()
         }
         return data, model
-    
+
 if __name__ == '__main__':
     sliding_window_tb = SlidingWindowTB()
-    sliding_window_tb.main(sys.argv[1:])    
- 
+    sliding_window_tb.main(sys.argv[1:])
+
