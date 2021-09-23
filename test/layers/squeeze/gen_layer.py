@@ -19,11 +19,9 @@ class SqueezeLayerTB(Layer):
     def gen_stimulus(self):
         # Init Module
         layer = SqueezeLayer(
-            [
-                self.param['channels_in'],
-                self.param['rows_in'],
-                self.param['cols_in']
-            ],
+            self.param['rows_in'],
+            self.param['cols_in'],
+            self.param['channels_in'],
             coarse_in=self.param['coarse_in'],
             coarse_out=self.param['coarse_out']
         )

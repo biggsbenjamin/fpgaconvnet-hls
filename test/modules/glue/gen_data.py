@@ -7,7 +7,7 @@ from fpgaconvnet_optimiser.models.modules.Glue import Glue
 from Data import Data
 
 class GlueTB(Data):
-    def __init__(self):     
+    def __init__(self):
         Data.__init__(self,'glue')
 
     # update stimulus generation
@@ -15,11 +15,9 @@ class GlueTB(Data):
         # Init Module
         self.param['acc'] = "+".join([ "in[{i}][out_index].read()".format(i=i) for i in range(self.param['coarse_in']) ])
         glue = Glue(
-            [
-                1,
-                self.param['rows'],
-                self.param['cols']
-            ],
+            self.param['rows'],
+            self.param['cols'],
+            1,
             self.param['filters'],
             self.param['coarse_in'],
             self.param['coarse_out']
@@ -36,7 +34,7 @@ class GlueTB(Data):
         data_out = glue.functional_model(data_in)
         # return data
         data = {
-            'input'     : data_in.reshape(-1).tolist(),            
+            'input'     : data_in.reshape(-1).tolist(),
             'output'    : data_out.reshape(-1).tolist()
         }
         # resource and latency model
@@ -48,5 +46,5 @@ class GlueTB(Data):
 
 if __name__ == '__main__':
     glue_tb = GlueTB()
-    glue_tb.main(sys.argv[1:])    
- 
+    glue_tb.main(sys.argv[1:])
+

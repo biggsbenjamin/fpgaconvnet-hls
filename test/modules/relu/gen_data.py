@@ -14,11 +14,9 @@ class ReLUTB(Data):
     def gen_stimulus(self):
         # Init Module
         relu = ReLU(
-            [
-                self.param['channels'],
-                self.param['rows'],
-                self.param['cols']
-            ]
+            self.param['rows'],
+            self.param['cols'],
+            self.param['channels']
         )
         # data in
         data_in = self.gen_data([

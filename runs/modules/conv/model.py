@@ -30,15 +30,6 @@ def build_module(parameter):
 model = ModuleModel(build_module)
 model.load_points("modules/conv/logs")
 
-# filter parameters
-#filters = {
-#    "data_width" : [15,17]
-#}
-#model.filter_parameters(filters)
-
-# fit model
-model.fit_model()
-
 # save coefficients
 #model.save_coefficients("coefficients/conv")
 

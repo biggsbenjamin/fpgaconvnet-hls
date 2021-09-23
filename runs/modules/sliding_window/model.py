@@ -5,7 +5,7 @@ sys.path.append(os.environ.get("FPGACONVNET_OPTIMISER"))
 sys.path.append(os.environ.get("FPGACONVNET_HLS"))
 
 from modules.module_model import ModuleModel
-from fpgaconvnet_optimiser.models.modules import SlidingWindow 
+from fpgaconvnet_optimiser.models.modules import SlidingWindow
 
 MAX_RSC = {
     "LUT"   : 53200,
@@ -16,11 +16,10 @@ MAX_RSC = {
 
 # define resource model
 def build_module(parameter):
-    return SlidingWindow([
-            parameter['channels'],
-            parameter['rows'],
-            parameter['cols']
-        ],
+    return SlidingWindow(
+        parameter['rows'],
+        parameter['cols'],
+        parameter['channels'],
         [parameter['kernel_size_x'],parameter['kernel_size_y']],
         [parameter['stride_x'],parameter['stride_y']],
         parameter['pad_top'],
@@ -33,12 +32,6 @@ def build_module(parameter):
 # load accum model
 model = ModuleModel(build_module)
 model.load_points("modules/sliding_window/logs")
-
-# filter parameters 
-#filters = {
-#    "data_width" : [15,17]
-#}
-#model.filter_parameters(filters)
 
 # fit model
 model.fit_model()

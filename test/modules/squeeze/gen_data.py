@@ -7,18 +7,16 @@ from fpgaconvnet_optimiser.models.modules.Squeeze import Squeeze
 from Data import Data
 
 class SqueezeTB(Data):
-    def __init__(self):     
+    def __init__(self):
         Data.__init__(self,'squeeze')
 
     # update stimulus generation
     def gen_stimulus(self):
         # Init Module
         squeeze = Squeeze(
-            [
-                self.param['channels'],
-                self.param['rows'],
-                self.param['cols']
-            ],
+            self.param['rows'],
+            self.param['cols'],
+            self.param['channels'],
             self.param['coarse_out'],
             self.param['coarse_in']
         )
@@ -45,5 +43,5 @@ class SqueezeTB(Data):
 
 if __name__ == '__main__':
     squeeze_tb = SqueezeTB()
-    squeeze_tb.main(sys.argv[1:])    
- 
+    squeeze_tb.main(sys.argv[1:])
+

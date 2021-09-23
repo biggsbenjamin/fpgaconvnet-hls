@@ -7,7 +7,7 @@ from fpgaconvnet_optimiser.models.modules.Pool import Pool
 from Data import Data
 
 class PoolTB(Data):
-    def __init__(self):     
+    def __init__(self):
         Data.__init__(self,'pool')
 
     # update stimulus generation
@@ -18,11 +18,9 @@ class PoolTB(Data):
         if self.param['pool_type'] == 1:
             pool_type = 'avg'
         pool = Pool(
-            [
-                self.param['channels'],
-                self.param['rows'],
-                self.param['cols']
-            ],
+            self.param['rows'],
+            self.param['cols'],
+            self.param['channels'],
             self.param['kernel_size'],
             pool_type
         )
@@ -38,7 +36,7 @@ class PoolTB(Data):
         data_out = pool.functional_model(data_in)
         # return data
         data = {
-            'input'     : data_in.reshape(-1).tolist(),            
+            'input'     : data_in.reshape(-1).tolist(),
             'output'    : data_out.reshape(-1).tolist()
         }
         # resource and latency model
@@ -50,5 +48,5 @@ class PoolTB(Data):
 
 if __name__ == '__main__':
     pool_tb = PoolTB()
-    pool_tb.main(sys.argv[1:])    
- 
+    pool_tb.main(sys.argv[1:])
+

@@ -23,15 +23,12 @@ class InnerProductLayerTB(Layer):
     def gen_stimulus(self):
         # Init Module
         layer = InnerProductLayer(
-            [
-                self.param['channels_in'],
-                self.param['rows_in'],
-                self.param['cols_in']
-            ],
             self.param['filters'],
-            self.param['coarse_in'],
-            self.param['coarse_out'],
-            self.param['fine']
+            self.param['rows_in'],
+            self.param['cols_in'],
+            self.param['channels_in'],
+            coarse_in=self.param['coarse_in'],
+            coarse_out=self.param['coarse_out']
         )
         layer.load_coef()
         # data in

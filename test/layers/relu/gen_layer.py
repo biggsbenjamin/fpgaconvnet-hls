@@ -19,13 +19,10 @@ class ReLULayerTB(Layer):
     def gen_stimulus(self):
         # Init Module
         layer = ReLULayer(
-            [
-                self.param['channels_in'],
-                self.param['rows_in'],
-                self.param['cols_in']
-            ],
-            self.param['coarse'],
-            self.param['coarse']
+            self.param['rows_in'],
+            self.param['cols_in'],
+            self.param['channels_in'],
+            coarse=self.param['coarse']
         )
         layer.load_coef()
         # data in
