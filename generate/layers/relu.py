@@ -6,9 +6,9 @@ import generate.modules.relu
 relu_layer_template_header = """#ifndef {NAME}_HPP_
 #define {NAME}_HPP_
 
-#include "relu.hpp"
 
 #define name        {name}
+#define NAME        {NAME}
 #define {NAME}_ID   {id}
 
 #define {NAME}_BATCH_SIZE   {batch_size}
@@ -29,6 +29,8 @@ relu_layer_template_header = """#ifndef {NAME}_HPP_
 #define {NAME}_RELU_COLS         {cols}
 #define {NAME}_RELU_CHANNELS     {channels_per_module}
 
+#include "relu.hpp"
+
 /**
  * FUNCTION DEFINITION
  */
@@ -40,6 +42,7 @@ void {name}(
 );
 
 #undef name
+#undef NAME
 #endif
 """
 

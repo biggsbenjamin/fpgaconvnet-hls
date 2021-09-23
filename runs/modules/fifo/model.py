@@ -5,7 +5,7 @@ sys.path.append(os.environ.get("FPGACONVNET_OPTIMISER"))
 sys.path.append(os.environ.get("FPGACONVNET_HLS"))
 
 from modules.module_model import ModuleModel
-from fpgaconvnet_optimiser.models.modules import Glue
+from fpgaconvnet_optimiser.models.modules import FIFO
 
 MAX_RSC = {
     "LUT"   : 53200,
@@ -16,28 +16,32 @@ MAX_RSC = {
 
 # define resource model
 def build_module(parameter):
-    return Glue(
-        parameter['rows'],
-        parameter['cols'],
-        parameter['channels'],
-        parameter['filters'],
-        parameter['coarse_in'],
-        parameter['coarse_out'],
-        parameter['coarse_group'],
+    return FIFO([
+        1,
+        1,
+        1],
+        parameter['coarse'],
+        parameter['depth'],
         parameter['data_width']
     )
 
-# load accum model
+# load fifo model
 model = ModuleModel(build_module)
-model.load_points("modules/glue/logs")
+model.load_points("modules/fifo/logs")
+
+# filter parameters
+#filters = {
+#    "data_width" : [15,17]
+#}
+#model.filter_parameters(filters)
 
 # fit model
 model.fit_model()
 
 # save coefficients
-model.save_coefficients("coefficients/glue")
+model.save_coefficients("coefficients/fifo")
 
-# # plot error
+# plot error
 model.plot_error(MAX_RSC)
 
 # print out error

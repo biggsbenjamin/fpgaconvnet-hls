@@ -5,7 +5,12 @@ squeeze_template = """
 {indent}    {NAME}_COLS,
 {indent}    {NAME}_CHANNELS,
 {indent}    {NAME}_COARSE_IN,
+{indent}    {NAME}_COARSE_OUT,
+#if {NAME}_COARSE_IN > {NAME}_COARSE_OUT
+{indent}    {NAME}_COARSE_IN
+#else
 {indent}    {NAME}_COARSE_OUT
+#endif
 {indent}>({input_stream},{output_stream});
 
 """

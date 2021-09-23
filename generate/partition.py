@@ -24,14 +24,14 @@ from google.protobuf.json_format import MessageToDict
 # class for weight definition
 class generate_weight_def:
     # initialise class
-    def __init__(self, name, kernel_size=1, wr=False):
+    def __init__(self, name, kernel_size_x=1, kernel_size_y=1, wr=False):
         self.name       = name
         self.type       = "static" if wr else "const static"
-        self.kernel_dim = " " if not kernel_size > 1 else "[{NAME}_KERNEL_SIZE][{NAME}_KERNEL_SIZE]".format(NAME=self.name.upper())
+        self.kernel_dim = "[{NAME}_KERNEL_SIZE_X][{NAME}_KERNEL_SIZE_Y]".format(NAME=self.name.upper())
 
     def __str__(self):
         return """
-{type} weight_t {name}_weights[{NAME}_COARSE_IN][{NAME}_COARSE_OUT][DIVIDE({NAME}_WEIGHTS,{NAME}_COARSE_IN*{NAME}_COARSE_OUT*{NAME}_KERNEL_SIZE*{NAME}_KERNEL_SIZE)]{kernel_dim} = {{
+{type} weight_t {name}_weights[{NAME}_COARSE_IN*{NAME}_COARSE_GROUP][{NAME}_COARSE_OUT][DIVIDE({NAME}_WEIGHTS,{NAME}_COARSE_IN*{NAME}_COARSE_GROUP*{NAME}_COARSE_OUT*{NAME}_KERNEL_SIZE_X*{NAME}_KERNEL_SIZE_Y)]{kernel_dim} = {{
 #include "{name}_weights_0.csv"
 }};
 """.format(
@@ -73,7 +73,25 @@ class generate_stream_init():
 
 def gen_network(name,partition,output_path):
 
-    wr_layer   = partition.weights_reloading_layer
+    def _fix_identifier(name):
+        if name[0].isdigit():
+            return "n" + name
+        else:
+            return name
+
+    partition.weights_reloading_layer = _fix_identifier(partition.weights_reloading_layer)
+    for layer in partition.layers:
+        for stream_in in layer.streams_in:
+            stream_in.name = _fix_identifier(stream_in.name)
+        for stream_out in layer.streams_out:
+            stream_out.name = _fix_identifier(stream_out.name)
+
+        layer.name = _fix_identifier(layer.name)
+
+
+    wr_layer = partition.weights_reloading_layer
+    wr_layer_identifier = _fix_identifier(wr_layer)
+
     batch_size = partition.batch_size
 
     input_node  = partition.input_node
@@ -127,7 +145,8 @@ def gen_network(name,partition,output_path):
             # create weights
             weights += str(generate_weight_def(
                 layer.name,
-                kernel_size=int(parameters["kernel_size"]),
+                kernel_size_x=int(parameters["kernel_size"][0]),
+                kernel_size_y=int(parameters["kernel_size"][1]),
                 wr=True if layer.name == wr_layer else False
             ))
             weights_init += str(generate_weight_init(
@@ -150,7 +169,8 @@ def gen_network(name,partition,output_path):
             # create weights
             weights += str(generate_weight_def(
                 layer.name,
-                kernel_size=1,
+                kernel_size_x=1,
+                kernel_size_y=1,
                 wr=True if layer.name == wr_layer else False
             ))
             weights_init += str(generate_weight_init(

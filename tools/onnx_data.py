@@ -29,34 +29,36 @@ def fixed_point(val,total_width=16,int_width=8):
 
 
 class ONNXData:
-    def __init__(self, partition, model_path):
+    def __init__(self, partition, model_path=None):
         # partitions
         self.partition = partition
-        # model
-        self.model = onnx_helper.load(model_path)
-        self.model = onnx_helper.update_batch_size(self.model,self.partition.batch_size)
-        # add intermediate layers to outputs
-        for node in self.model.graph.node:
+        self.model = None
+        if model_path:
+            # model
+            self.model = onnx_helper.load(model_path)
+            self.model = onnx_helper.update_batch_size(self.model,self.partition.batch_size)
+            # add intermediate layers to outputs
+            for node in self.model.graph.node:
+                layer_info = onnx.helper.ValueInfoProto()
+                layer_info.name = node.output[0]
+                self.model.graph.output.append(layer_info)
+            # add input aswell to output
             layer_info = onnx.helper.ValueInfoProto()
-            layer_info.name = node.output[0]
+            layer_info.name = self.model.graph.input[0].name
             self.model.graph.output.append(layer_info)
-        # add input aswell to output
-        layer_info = onnx.helper.ValueInfoProto()
-        layer_info.name = self.model.graph.input[0].name
-        self.model.graph.output.append(layer_info)
-        # remove bias
-        self.remove_initializer_from_input()
-        self.remove_bias()
-        # inference session
-        self.sess = onnxruntime.InferenceSession(self.model.SerializeToString())
-        # get input data
-        self.input_name  = self.sess.get_inputs()[0].name
-        self.input_shape = self.sess.get_inputs()[0].shape
-        # get output data
-        self.output_name  = self.sess.get_outputs()[0].name
-        self.output_shape = self.sess.get_outputs()[0].shape
-        # create random data input
-        self.data = np.random.uniform(0,1,self.input_shape).astype(np.float32)
+            # remove bias
+            self.remove_initializer_from_input()
+            self.remove_bias()
+            # inference session
+            self.sess = onnxruntime.InferenceSession(self.model.SerializeToString())
+            # get input data
+            self.input_name  = self.sess.get_inputs()[0].name
+            self.input_shape = self.sess.get_inputs()[0].shape
+            # get output data
+            self.output_name  = self.sess.get_outputs()[0].name
+            self.output_shape = self.sess.get_outputs()[0].shape
+            # create random data input
+            self.data = np.random.uniform(0,1,self.input_shape).astype(np.float32)
 
     def load_input(self,filepath):
         self.data = np.array(Image.open(filepath),dtype=np.float32)
@@ -229,43 +231,66 @@ class ONNXData:
     """
 
     @staticmethod
-    def _transform_weights(weights_raw,wr_factor=1,coarse_in=1,coarse_out=1):
+    def _transform_weights(weights_raw,wr_factor,coarse_in,coarse_out,coarse_group,groups):
         # parameters
-        num_filters  = int(weights_raw.shape[0]/(coarse_out*wr_factor))
+        num_filters  = int(weights_raw.shape[0]/(groups*coarse_out*wr_factor))
         num_channels = int(weights_raw.shape[1]/coarse_in)
-        k_size       = weights_raw.shape[2]
+        k_size_x       = weights_raw.shape[2]
+        k_size_y       = weights_raw.shape[3]
         # correct output shape for weights
         weights = np.ndarray(
             shape=(
                 wr_factor,
+                coarse_group,
                 coarse_in,
                 coarse_out,
+                int(groups/coarse_group),
                 num_channels,
                 num_filters,
-                k_size,k_size),dtype=float,order='C')
+                k_size_x,k_size_y),dtype=float,order='C')
+
+        #print(weights_raw)
         # transform weights raw shape
-        for index,_ in np.ndenumerate(weights):
+        for index,_ in np.ndenumerate(weights):  
+            #print(index)  
             weights[index] = weights_raw[
-                      index[4]*wr_factor*coarse_out+index[0]*coarse_out+index[2],
-                      index[3]*coarse_in+index[1],
-                      index[5],
-                      index[6]]
+                      index[4]*coarse_group*num_filters*wr_factor*coarse_out+index[1]*num_filters*wr_factor*coarse_out+index[6]*wr_factor*coarse_out+index[0]*coarse_out+index[3],
+                      index[5]*coarse_in+index[2],
+                      index[7],
+                      index[8]]
+            #print(index,weights[index]) 
         # merge channel and filter dimensions
-        weights = np.reshape(weights,[wr_factor,coarse_in,coarse_out,num_channels*num_filters,k_size,k_size])
+        weights = np.reshape(weights,[wr_factor,coarse_in*coarse_group,coarse_out,int(groups/coarse_group)*num_channels*num_filters,k_size_x,k_size_y])
+        #print(weights)
         # remove last two dimensions if kernel size is 1
-        if k_size == 1:
-            weights = weights[:,:,:,:,0,0]
+        #if k_size == 1:
+        #    weights = weights[:,:,:,:,0,0]
         # return transformed weights
         return weights
 
     def get_weights_convolution(self, layer, wr_factor=1):
         # get weights
-        weights_raw = onnx_helper.get_model_initializer(self.model, layer.weights_path)
+        if self.model:
+            weights_raw = onnx_helper.get_model_initializer(self.model, layer.weights_path)
+        else:
+            dim = [layer.parameters.filters*wr_factor,
+                int(layer.parameters.channels_in / layer.parameters.groups),
+                layer.parameters.kernel_size[0],
+                layer.parameters.kernel_size[1]]
+               
+            # Initialise random data array
+            weights_raw = np.ndarray(dim,dtype=float)
+            # assign values
+            for index,_ in np.ndenumerate(weights_raw):
+                weights_raw[index] = random.uniform(-8, 8) #todo: consistent with weight_t
+
         # transform parameters
         coarse_in   = layer.parameters.coarse_in
         coarse_out  = layer.parameters.coarse_out
+        coarse_group  = layer.parameters.coarse_group
+        groups = layer.parameters.groups
         # return transformed weights
-        return self._transform_weights(weights_raw,wr_factor,coarse_in,coarse_out)
+        return self._transform_weights(weights_raw,wr_factor,coarse_in,coarse_out,coarse_group,groups)
 
     def get_weights_inner_product(self, layer, wr_factor=1):
         # get weights
@@ -282,7 +307,7 @@ class ONNXData:
         weights_raw = np.rollaxis(weights_raw,1,3)
         weights_raw = np.reshape(weights_raw,(filters*wr_factor,rows*cols*channels,1,1))
         # return transformed weights
-        return self._transform_weights(weights_raw,wr_factor,coarse_in,coarse_out)
+        return self._transform_weights(weights_raw,wr_factor,coarse_in,coarse_out,1)
 
     def save_weights_layer(self,layer,wr_factor=1,output_path=None,to_yaml=False,to_bin=False,to_csv=False):
         # get transformed weights
@@ -307,12 +332,18 @@ class ONNXData:
             if to_bin:
                 # iterate over weights reloading factor
                 for weights_reloading_index in range(wr_factor):
-                    weights_stream =  self._convert_fixed_port_stream(transformed_weights[weights_reloading_index].reshape(-1), total_width=16, int_width=8)
+                    weights_stream =  self._convert_fixed_port_stream(transformed_weights[weights_reloading_index].reshape(-1), total_width=8, int_width=4)
                     self._fixed_point_stream_to_bin(weights_stream, output_path=f'{output_path}_{weights_reloading_index}', streams=1, port_width=64, ports=1)
         # return transformed weights
         return transformed_weights
 
     def save_weights_partition(self,output_path,to_yaml=False,to_bin=False,to_csv=False):
+
+        def _fix_identifier(name):
+            if name[0].isdigit():
+                return "n" + name
+            else:
+                return name
         weights = {}
         # iterate over layers in network
         for layer in self.partition.layers:
@@ -326,7 +357,8 @@ class ONNXData:
                 # get output path
                 output_path_layer = None
                 if output_path:
-                    output_path_layer = os.path.join(output_path,f"{layer.name}_weights")
+                    layer_identifier = _fix_identifier(layer.name)
+                    output_path_layer = os.path.join(output_path,f"{layer_identifier}_weights")
                 # get layer info
                 weights[layer.name] = self.save_weights_layer(layer,wr_factor=wr_factor,
                         output_path=output_path_layer,to_bin=to_bin,to_csv=to_csv)

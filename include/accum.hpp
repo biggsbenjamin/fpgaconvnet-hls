@@ -35,7 +35,7 @@ void accum(
 
     acc_t acc[filters_per_group];
     #pragma HLS dependence variable=acc intra WAR true
-    #pragma HLS resource variable=acc core=RAM_2P_BRAM
+    //#pragma HLS resource variable=acc core=RAM_2P_BRAM
 
     stream_pixel_loop: for(unsigned long pixel_index=0;pixel_index<batch_size*rows*cols*groups;pixel_index++) {
         stream_channel_loop: for(unsigned int channel_index=0;channel_index<channels_per_group;channel_index++) {

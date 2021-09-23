@@ -11,7 +11,7 @@ int main() {
     const int size_out = GLUE_BATCH_SIZE*GLUE_ROWS*GLUE_COLS*DIVIDE(GLUE_FILTERS,GLUE_COARSE_OUT);
 
     // gen input
-    coarse_in_loop: for(int i=0;i<GLUECOARSE_IN;i++) {
+    coarse_in_loop: for(int i=0;i<GLUE_COARSE_IN;i++) {
         coarse_out_loop: for(int j=0;j<GLUE_COARSE_OUT;j++) {
             gen_stream<acc_t,size_in>(in[i][j]);
         }
