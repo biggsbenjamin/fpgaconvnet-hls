@@ -8,27 +8,28 @@ int main()
     std::string input_path      = std::string(DATA_DIR)+"/input.dat";
     std::string output_path     = std::string(DATA_DIR)+"/output.dat";
     std::string weights_path    = std::string(DATA_DIR)+"/weights.dat";
-    
+
     // weights
 #if CONV_KERNEL_SIZE == 1
-    data_t weights[CONV_CHANNELS*DIVIDE(CONV_FILTERS,CONV_GROUP)];
+    weight_t weights[CONV_CHANNELS*DIVIDE(CONV_FILTERS,CONV_GROUP)];
 #else
-    data_t weights[CONV_CHANNELS*DIVIDE(CONV_FILTERS,CONV_GROUP)][CONV_KERNEL_SIZE][CONV_KERNEL_SIZE];
+    weight_t weights[CONV_CHANNELS*DIVIDE(CONV_FILTERS,CONV_GROUP)][CONV_KERNEL_SIZE_0][CONV_KERNEL_SIZE_1];
 #endif
 
-    stream_t(data_t) in[CONV_KERNEL_SIZE][CONV_KERNEL_SIZE];
+    stream_t(data_t) in[CONV_KERNEL_SIZE_0][CONV_KERNEL_SIZE_1];
     stream_t(acc_t) out("out");
     stream_t(acc_t) out_valid("out_valid");
 
     // test inputs data
-    static data_t test_in[CONV_ROWS*CONV_COLS*CONV_CHANNELS][CONV_KERNEL_SIZE][CONV_KERNEL_SIZE];
+    static data_t test_in[CONV_ROWS*CONV_COLS*CONV_CHANNELS][CONV_KERNEL_SIZE_0][CONV_KERNEL_SIZE_1];
     static acc_t test_out[CONV_ROWS*CONV_COLS*CONV_CHANNELS*FILTERS_PER_UNIT(CONV_FILTERS,CONV_GROUP)];
 
     // load weights
     load_data<
         CONV_CHANNELS*FILTERS_PER_UNIT(CONV_FILTERS,CONV_GROUP),
 #if CONV_KERNEL_SIZE != 1
-        CONV_KERNEL_SIZE,
+        CONV_KERNEL_SIZE_0,
+        CONV_KERNEL_SIZE_1,
 #endif
         weight_t
     >(weights_path,weights);
@@ -36,7 +37,8 @@ int main()
     // load data_in
     load_data<
         CONV_ROWS*CONV_COLS*CONV_CHANNELS,
-        CONV_KERNEL_SIZE,
+        CONV_KERNEL_SIZE_0,
+        CONV_KERNEL_SIZE_1,
         data_t
     >(input_path,test_in);
 
@@ -49,7 +51,8 @@ int main()
     // convert input stream
     to_stream<
         CONV_ROWS*CONV_COLS*CONV_CHANNELS,
-        CONV_KERNEL_SIZE,
+        CONV_KERNEL_SIZE_0,
+        CONV_KERNEL_SIZE_1,
         data_t
     >(test_in,in);
 

@@ -8,7 +8,7 @@
 /////////////////////////////////
 
 void pool_top(
-	stream_t(data_t) in[POOL_KERNEL_SIZE][POOL_KERNEL_SIZE],
+	stream_t(data_t) in[POOL_KERNEL_SIZE_0][POOL_KERNEL_SIZE_1],
 	stream_t(data_t) &out
 );
 

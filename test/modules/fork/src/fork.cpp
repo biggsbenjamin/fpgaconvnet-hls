@@ -7,8 +7,8 @@ void fork_top(
     stream_t(data_t) &in,
     stream_t(data_t) out[FORK_COARSE]
 #else
-    stream_t(data_t) in[FORK_KERNEL_SIZE][FORK_KERNEL_SIZE],
-    stream_t(data_t) out[FORK_COARSE][FORK_KERNEL_SIZE][FORK_KERNEL_SIZE]
+    stream_t(data_t) in[FORK_KERNEL_SIZE_0][FORK_KERNEL_SIZE_1],
+    stream_t(data_t) out[FORK_COARSE][FORK_KERNEL_SIZE_0][FORK_KERNEL_SIZE_1]
 #endif
 )
 {
@@ -29,7 +29,8 @@ void fork_top(
         FORK_COLS,
         FORK_CHANNELS,
         FORK_COARSE,
-        FORK_KERNEL_SIZE
+        FORK_KERNEL_SIZE_0,
+        FORK_KERNEL_SIZE_1
     >(in,out);
 #endif
 

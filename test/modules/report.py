@@ -31,24 +31,33 @@ if __name__ == "__main__":
                 "sim"   : "N/A", #module_test_log.get_sim_latency(),
             },
             "resources"  : {
-                "BRAM"  : "N/A",
-                "LUT"   : "N/A",
-                "FF"    : "N/A",
-                "DSP"   : "N/A",
+                "impl"  : {
+                    "BRAM"  : "N/A",
+                    "LUT"   : "N/A",
+                    "FF"    : "N/A",
+                    "DSP"   : "N/A",
+                },
+                "synth"  : {
+                    "BRAM"  : "N/A",
+                    "LUT"   : "N/A",
+                    "FF"    : "N/A",
+                    "DSP"   : "N/A",
+                },
             },
             "clk_period" : "N/A", #module_test_log.get_clk_period()
         }
         # update latency
-        #try:
-        #    results["latency"]["synth"] = module_test_log.get_synth_latency()
-        #except AssertionError:
-        #    pass
         try:
-            results["latency"]["sim"]   = module_test_log.get_sim_latency()
+            results["latency"]["synth"] = module_test_log.get_synth_latency()
+            results["resources"]["synth"] = module_test_log.get_synth_resources()
         except AssertionError:
             pass
         try:
-            results["resources"]  = module_test_log.get_impl_resources()
+            results["latency"]["sim"] = module_test_log.get_sim_latency()
+        except AssertionError:
+            pass
+        try:
+            results["resources"]["impl"] = module_test_log.get_impl_resources()
             results["clk_period"] = module_test_log.get_clk_period()
         except AssertionError:
             pass
@@ -63,7 +72,7 @@ if __name__ == "__main__":
             module_report.append_table_latency(test_num, model_path, result_path)
             module_report.append_table_resources(test_num, model_path, result_path)
             module_report.append_table_clk_period(test_num, result_path)
-    
+
     # save report
     with open("REPORT.md","w") as f:
         f.write(module_report.print_report())

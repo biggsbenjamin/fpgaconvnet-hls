@@ -15,7 +15,8 @@ void glue_top(
         GLUE_COLS,
         GLUE_FILTERS,
         GLUE_COARSE_IN,
-        GLUE_COARSE_OUT
+        GLUE_COARSE_OUT,
+        1
     >(in,out);
 
 }

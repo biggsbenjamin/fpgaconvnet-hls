@@ -8,11 +8,11 @@
 /////////////////////////////////
 
 void conv_top(
-    stream_t(data_t) in[CONV_KERNEL_SIZE][CONV_KERNEL_SIZE],
+    stream_t(data_t) in[CONV_KERNEL_SIZE_0][CONV_KERNEL_SIZE_1],
 #if CONV_KERNEL_SIZE == 1
-    data_t weights[CONV_CHANNELS*DIVIDE(CONV_FILTERS,CONV_GROUP)],
+    weight_t weights[CONV_CHANNELS*DIVIDE(CONV_FILTERS,CONV_GROUP)],
 #else
-    data_t weights[CONV_CHANNELS*DIVIDE(CONV_FILTERS,CONV_GROUP)][CONV_KERNEL_SIZE][CONV_KERNEL_SIZE],
+    weight_t weights[CONV_CHANNELS*DIVIDE(CONV_FILTERS,CONV_GROUP)][CONV_KERNEL_SIZE_0][CONV_KERNEL_SIZE_1],
 #endif
     stream_t(acc_t) &out
 );

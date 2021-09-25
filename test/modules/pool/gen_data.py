@@ -29,8 +29,8 @@ class PoolTB(Data):
             self.param['rows'],
             self.param['cols'],
             self.param['channels'],
-            self.param['kernel_size'],
-            self.param['kernel_size']
+            self.param['kernel_size'][0],
+            self.param['kernel_size'][1]
         ])
         # data out
         data_out = pool.functional_model(data_in)

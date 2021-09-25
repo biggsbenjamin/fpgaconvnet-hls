@@ -44,7 +44,6 @@ int main()
     // run relu
     relu_top(in,out);
 
-    printf("\r\n\t RELU #1\r\n");
     err += checkStreamEqual<data_t>(out,out_valid,false);
 
     return err;

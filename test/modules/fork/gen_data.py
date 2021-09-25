@@ -2,24 +2,21 @@ import os
 import sys
 
 sys.path.append('..')
-sys.path.append(os.environ.get("FPGACONVNET_OPTIMISER"))
 
 from fpgaconvnet_optimiser.models.modules.Fork import Fork
 from Data import Data
 
 class ForkTB(Data):
-    def __init__(self):     
+    def __init__(self):
         Data.__init__(self,'fork')
 
     # update stimulus generation
     def gen_stimulus(self):
         # Init Module
         fork = Fork(
-            [
-                self.param['channels'],
-                self.param['rows'],
-                self.param['cols']
-            ],
+            self.param['rows'],
+            self.param['cols'],
+            self.param['channels'],
             self.param['kernel_size'],
             self.param['coarse']
         )
@@ -28,14 +25,14 @@ class ForkTB(Data):
             self.param['rows'],
             self.param['cols'],
             self.param['channels'],
-            self.param['kernel_size'],
-            self.param['kernel_size']
+            self.param['kernel_size'][0],
+            self.param['kernel_size'][1]
         ])
         # data out
         data_out = fork.functional_model(data_in)
         # return data
         data = {
-            'input'     : data_in.reshape(-1).tolist(),            
+            'input'     : data_in.reshape(-1).tolist(),
             'output'    : data_out.reshape(-1).tolist()
         }
         # resource and latency model
@@ -47,5 +44,5 @@ class ForkTB(Data):
 
 if __name__ == '__main__':
     fork_tb = ForkTB()
-    fork_tb.main(sys.argv[1:])    
- 
+    fork_tb.main(sys.argv[1:])
+

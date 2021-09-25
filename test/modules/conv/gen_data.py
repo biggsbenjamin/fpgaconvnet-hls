@@ -12,8 +12,10 @@ class ConvTB(Data):
 
     # update stimulus generation
     def gen_stimulus(self):
+        # add kernel size x and y
+        self.param["kernel_size_x"] = self.param['kernel_size'][0]
+        self.param["kernel_size_y"] = self.param['kernel_size'][1]
         # Init Module
-        self.param['interval'] = int((self.param['kernel_size']*self.param['kernel_size'])/self.param['fine'])
         conv = Conv(
             self.param['rows'],
             self.param['cols'],
@@ -28,15 +30,15 @@ class ConvTB(Data):
             self.param['rows'],
             self.param['cols'],
             self.param['channels'],
-            self.param['kernel_size'],
-            self.param['kernel_size']
+            self.param['kernel_size'][0],
+            self.param['kernel_size'][1]
         ])
         # weights
         weights = self.gen_data([
             self.param['channels'],
             int(self.param['filters']/self.param['group']),
-            self.param['kernel_size'],
-            self.param['kernel_size']
+            self.param['kernel_size'][0],
+            self.param['kernel_size'][1]
         ])
         # data out
         data_out = conv.functional_model(data_in, weights)

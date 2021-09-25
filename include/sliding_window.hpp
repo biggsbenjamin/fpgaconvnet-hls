@@ -116,7 +116,7 @@ template<
     unsigned int PAD_RIGHT,
     unsigned int PAD_BOTTOM,
     unsigned int PAD_LEFT,
-    unsigned int KERNEL_SIZE,
+    unsigned int KERNEL_SIZE
 >
 void sliding_window_line_shift_1d_vertical(
     stream_t(data_t) &in,
@@ -134,7 +134,7 @@ void sliding_window_line_shift_1d_vertical(
     const unsigned int pad_right     = PAD_RIGHT;
     const unsigned int pad_bottom    = PAD_BOTTOM;
     const unsigned int pad_left      = PAD_LEFT;
-    const unsigned int kernel_size_x = KERNEL_SIZE_X;
+    const unsigned int kernel_size   = KERNEL_SIZE;
 
     #pragma HLS STREAM variable=in
     #pragma HLS STREAM variable=frame_buffer
@@ -244,19 +244,15 @@ void sliding_window_line_shift(
     #pragma HLS STREAM variable=frame_buffer
     #pragma HLS ARRAY_PARTITION variable=frame_buffer complete dim=0
 
-#if NAME_SUB(NAME,_SLIDING_WINDOW_KERNEL_SIZE_X) != 1
     stream_t(data_t) line_buffer[kernel_size_x-1];
     DO_PRAGMA( HLS STREAM variable=line_buffer depth=cols*channels+pad_left*channels+pad_right*channels+1 )
     #pragma HLS ARRAY_PARTITION variable=line_buffer complete dim=0
-    //#pragma HLS resource variable=line_buffer core=FIFO_BRAM
-#endif
+    #pragma HLS resource variable=line_buffer core=FIFO_BRAM
 
-#if NAME_SUB(NAME,_SLIDING_WINDOW_KERNEL_SIZE_Y) != 1
     stream_t(data_t) window_buffer[kernel_size_x][kernel_size_y-1]; // pixel window cache
     DO_PRAGMA( HLS STREAM variable=window_buffer depth=channels+1 )
     #pragma HLS ARRAY_PARTITION variable=window_buffer complete dim=0
-    //#pragma HLS resource variable=window_buffer core=FIFO_BRAM
-#endif
+    #pragma HLS resource variable=window_buffer core=FIFO_BRAM
 
     data_t frame_cache[kernel_size_x][kernel_size_y];
     #pragma HLS ARRAY_PARTITION variable=frame_cache complete dim=0
@@ -437,12 +433,11 @@ template<
     unsigned int PAD_LEFT,
     unsigned int ROW_STRIDE,
     unsigned int COL_STRIDE,
-    unsigned int KERNEL_SIZE_X,
-    unsigned int KERNEL_SIZE_Y
+    unsigned int KERNEL_SIZE
 >
-void sliding_window(
+void sliding_window_1d_horizontal(
     stream_t(data_t) &in,
-    stream_t(data_t) out[KERNEL_SIZE_X][KERNEL_SIZE_Y]
+    stream_t(data_t) out[1][KERNEL_SIZE]
 )
 {
 
@@ -453,14 +448,13 @@ void sliding_window(
     #pragma HLS STREAM variable=out
     #pragma HLS ARRAY_PARTITION variable=out complete dim=0
 
-    const unsigned int kernel_size_x = KERNEL_SIZE_X;
-    const unsigned int kernel_size_y = KERNEL_SIZE_Y;
+    const unsigned int kernel_size = KERNEL_SIZE;
 
-    stream_t(data_t) frame_buffer[kernel_size_x][kernel_size_y];
+    stream_t(data_t) frame_buffer[1][kernel_size];
     #pragma HLS STREAM variable=frame_buffer
     #pragma HLS ARRAY_PARTITION variable=frame_buffer complete dim=0
 
-    sliding_window_line_shift<
+    sliding_window_line_shift_1d_horizontal<
         BATCH_SIZE,
         ROWS,
         COLS,
@@ -469,8 +463,7 @@ void sliding_window(
         PAD_RIGHT,
         PAD_BOTTOM,
         PAD_LEFT,
-        KERNEL_SIZE_X,
-        KERNEL_SIZE_Y
+        KERNEL_SIZE
     >(in,frame_buffer);
 
     sliding_window_out<
@@ -484,8 +477,69 @@ void sliding_window(
         PAD_LEFT,
         ROW_STRIDE,
         COL_STRIDE,
-        KERNEL_SIZE_X,
-        KERNEL_SIZE_Y
+        1,
+        KERNEL_SIZE
+    >(frame_buffer,out);
+
+}
+
+template<
+    unsigned int BATCH_SIZE,
+    unsigned int ROWS,
+    unsigned int COLS,
+    unsigned int CHANNELS,
+    unsigned int PAD_TOP,
+    unsigned int PAD_RIGHT,
+    unsigned int PAD_BOTTOM,
+    unsigned int PAD_LEFT,
+    unsigned int ROW_STRIDE,
+    unsigned int COL_STRIDE,
+    unsigned int KERNEL_SIZE
+>
+void sliding_window_1d_vertical(
+    stream_t(data_t) &in,
+    stream_t(data_t) out[KERNEL_SIZE][1]
+)
+{
+
+#pragma HLS INLINE OFF
+#pragma HLS DATAFLOW
+
+    #pragma HLS STREAM variable=in
+    #pragma HLS STREAM variable=out
+    #pragma HLS ARRAY_PARTITION variable=out complete dim=0
+
+    const unsigned int kernel_size = KERNEL_SIZE;
+
+    stream_t(data_t) frame_buffer[kernel_size][1];
+    #pragma HLS STREAM variable=frame_buffer
+    #pragma HLS ARRAY_PARTITION variable=frame_buffer complete dim=0
+
+    sliding_window_line_shift_1d_vertical<
+        BATCH_SIZE,
+        ROWS,
+        COLS,
+        CHANNELS,
+        PAD_TOP,
+        PAD_RIGHT,
+        PAD_BOTTOM,
+        PAD_LEFT,
+        KERNEL_SIZE
+    >(in,frame_buffer);
+
+    sliding_window_out<
+        BATCH_SIZE,
+        ROWS,
+        COLS,
+        CHANNELS,
+        PAD_TOP,
+        PAD_RIGHT,
+        PAD_BOTTOM,
+        PAD_LEFT,
+        ROW_STRIDE,
+        COL_STRIDE,
+        KERNEL_SIZE,
+        1
     >(frame_buffer,out);
 
 }
@@ -552,4 +606,69 @@ void sliding_window(
     >(frame_buffer,out);
 
 }
+
+/* template< */
+/*     unsigned int BATCH_SIZE, */
+/*     unsigned int ROWS, */
+/*     unsigned int COLS, */
+/*     unsigned int CHANNELS, */
+/*     unsigned int PAD_TOP, */
+/*     unsigned int PAD_RIGHT, */
+/*     unsigned int PAD_BOTTOM, */
+/*     unsigned int PAD_LEFT, */
+/*     unsigned int ROW_STRIDE, */
+/*     unsigned int COL_STRIDE, */
+/*     unsigned int KERNEL_SIZE_X, */
+/*     unsigned int KERNEL_SIZE_Y */
+/* > */
+/* void sliding_window( */
+/*     stream_t(data_t) &in, */
+/*     stream_t(data_t) out[KERNEL_SIZE_X][KERNEL_SIZE_Y] */
+/* ) */
+/* { */
+
+/* #pragma HLS INLINE OFF */
+/* #pragma HLS DATAFLOW */
+
+/*     #pragma HLS STREAM variable=in */
+/*     #pragma HLS STREAM variable=out */
+/*     #pragma HLS ARRAY_PARTITION variable=out complete dim=0 */
+
+/*     const unsigned int kernel_size_x = KERNEL_SIZE_X; */
+/*     const unsigned int kernel_size_y = KERNEL_SIZE_Y; */
+
+/*     stream_t(data_t) frame_buffer[kernel_size_x][kernel_size_y]; */
+/*     #pragma HLS STREAM variable=frame_buffer */
+/*     #pragma HLS ARRAY_PARTITION variable=frame_buffer complete dim=0 */
+
+/*     sliding_window_line_shift< */
+/*         BATCH_SIZE, */
+/*         ROWS, */
+/*         COLS, */
+/*         CHANNELS, */
+/*         PAD_TOP, */
+/*         PAD_RIGHT, */
+/*         PAD_BOTTOM, */
+/*         PAD_LEFT, */
+/*         KERNEL_SIZE_X, */
+/*         KERNEL_SIZE_Y */
+/*     >(in,frame_buffer); */
+
+/*     sliding_window_out< */
+/*         BATCH_SIZE, */
+/*         ROWS, */
+/*         COLS, */
+/*         CHANNELS, */
+/*         PAD_TOP, */
+/*         PAD_RIGHT, */
+/*         PAD_BOTTOM, */
+/*         PAD_LEFT, */
+/*         ROW_STRIDE, */
+/*         COL_STRIDE, */
+/*         KERNEL_SIZE_X, */
+/*         KERNEL_SIZE_Y */
+/*     >(frame_buffer,out); */
+
+/* } */
+
 #endif

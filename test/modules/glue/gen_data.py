@@ -13,7 +13,6 @@ class GlueTB(Data):
     # update stimulus generation
     def gen_stimulus(self):
         # Init Module
-        self.param['acc'] = "+".join([ "in[{i}][out_index].read()".format(i=i) for i in range(self.param['coarse_in']) ])
         glue = Glue(
             self.param['rows'],
             self.param['cols'],

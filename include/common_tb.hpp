@@ -283,35 +283,35 @@ void to_stream(
     }
 }
 
-/* (WEIGHTS_INTR) */
-template<int SIZE, int COARSE_IN, int COARSE_OUT, typename T>
-void load_data(
-    std::string filepath,
-    T data[COARSE_IN][COARSE_OUT][SIZE]
-) {
-    // read in file
-    const char *filepath_cstr = filepath.c_str();
-    FILE * fp = fopen(filepath_cstr,"r");
+/* /1* (WEIGHTS_INTR) *1/ */
+/* template<int SIZE, int COARSE_IN, int COARSE_OUT, typename T> */
+/* void load_data( */
+/*     std::string filepath, */
+/*     T data[COARSE_IN][COARSE_OUT][SIZE] */
+/* ) { */
+/*     // read in file */
+/*     const char *filepath_cstr = filepath.c_str(); */
+/*     FILE * fp = fopen(filepath_cstr,"r"); */
 
-    // check file opened
-    if (fp == NULL) {
-        perror("Failed: ");
-    }
+/*     // check file opened */
+/*     if (fp == NULL) { */
+/*         perror("Failed: "); */
+/*     } */
 
-    // save to array
-    for(int cin=0;cin<COARSE_IN;cin++) {
-        for(int cout=0;cout<COARSE_OUT;cout++) {
-            for(int i=0;i<SIZE;i++) {
-                float val;
-                fscanf(fp,"%f\n", &val);
-                data[cin][cout][i] = T(val);
-            }
-        }
-    }
+/*     // save to array */
+/*     for(int cin=0;cin<COARSE_IN;cin++) { */
+/*         for(int cout=0;cout<COARSE_OUT;cout++) { */
+/*             for(int i=0;i<SIZE;i++) { */
+/*                 float val; */
+/*                 fscanf(fp,"%f\n", &val); */
+/*                 data[cin][cout][i] = T(val); */
+/*             } */
+/*         } */
+/*     } */
 
-    // close file
-    fclose(fp);
-}
+/*     // close file */
+/*     fclose(fp); */
+/* } */
 
 template<int SIZE, int COARSE_IN, int COARSE_OUT, typename T>
 void to_stream(
