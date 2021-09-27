@@ -14,8 +14,7 @@ void squeeze_top(
         SQUEEZE_COLS,
         SQUEEZE_CHANNELS,
         SQUEEZE_COARSE_IN,
-        SQUEEZE_COARSE_OUT,
-        1
+        SQUEEZE_COARSE_OUT
     >(in,out);
 
 }

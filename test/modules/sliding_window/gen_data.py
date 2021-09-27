@@ -45,7 +45,7 @@ class SlidingWindowTB(Data):
         }
         # resource and latency model
         model = {
-            'latency'   : sliding_window.get_latency(),
+            'latency'   : sliding_window.latency(),
             'resources' : sliding_window.rsc()
         }
         return data, model

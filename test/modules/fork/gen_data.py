@@ -37,7 +37,7 @@ class ForkTB(Data):
         }
         # resource and latency model
         model = {
-            'latency'   : fork.get_latency(),
+            'latency'   : fork.latency(),
             'resources' : fork.rsc()
         }
         return data, model

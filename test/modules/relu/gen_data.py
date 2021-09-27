@@ -33,7 +33,7 @@ class ReLUTB(Data):
         }
         # resource and latency model
         model = {
-            'latency'   : relu.get_latency(),
+            'latency'   : relu.latency(),
             'resources' : relu.rsc()
         }
         return data, model

@@ -41,7 +41,7 @@ class PoolTB(Data):
         }
         # resource and latency model
         model = {
-            'latency'   : pool.get_latency(),
+            'latency'   : pool.latency(),
             'resources' : pool.rsc()
         }
         return data, model

@@ -46,7 +46,7 @@
 #define SWITCHING_ACTIVITY_DEBUG 0
 
 // DATA TYPE PARAMETERS
-#define DATA_WIDTH   16 
+#define DATA_WIDTH   16
 #define INTEGER_BITS 8
 #define BIT_MASK    ( (1 << DATA_WIDTH) - 1 )
 

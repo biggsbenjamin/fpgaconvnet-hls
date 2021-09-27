@@ -50,7 +50,7 @@ class ConvTB(Data):
         }
         # resource and latency model
         model = {
-            'latency'   : conv.get_latency(),
+            'latency'   : conv.latency(),
             'resources' : conv.rsc()
         }
         return data, model

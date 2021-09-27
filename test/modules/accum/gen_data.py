@@ -39,7 +39,7 @@ class AccumTB(Data):
         }
         # resource and latency model
         model = {
-            'latency'   : accum.get_latency(),
+            'latency'   : accum.latency(),
             'resources' : accum.rsc()
         }
         return data, model

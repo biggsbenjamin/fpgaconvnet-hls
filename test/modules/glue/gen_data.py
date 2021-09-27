@@ -38,7 +38,7 @@ class GlueTB(Data):
         }
         # resource and latency model
         model = {
-            'latency'   : glue.get_latency(),
+            'latency'   : glue.latency(),
             'resources' : glue.rsc()
         }
         return data, model
