@@ -53,11 +53,11 @@ if __name__ == "__main__":
         except AssertionError:
             pass
         try:
-            results["latency"]["sim"]   = layer_test_log.get_sim_latency()
+            results["latency"]["sim"] = layer_test_log.get_sim_latency()
         except AssertionError:
             pass
         try:
-            results["resources"]["impl"]  = layer_test_log.get_impl_resources()
+            results["resources"]["impl"] = layer_test_log.get_impl_resources()
             results["clk_period"] = layer_test_log.get_clk_period()
         except AssertionError:
             pass
@@ -72,7 +72,7 @@ if __name__ == "__main__":
             layer_report.append_table_latency(test_num, model_path, result_path)
             layer_report.append_table_resources(test_num, model_path, result_path)
             layer_report.append_table_clk_period(test_num, result_path)
-    
+
     # save report
     with open("REPORT.md","w") as f:
         f.write(layer_report.print_report())

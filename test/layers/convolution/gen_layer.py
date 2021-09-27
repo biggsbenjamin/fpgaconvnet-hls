@@ -22,21 +22,6 @@ class ConvolutionLayerTB(Layer):
     # update stimulus generation
     def gen_stimulus(self):
 
-        if isinstance(self.param['pad'],int):
-            self.param['pad_left'] = self.param['pad']
-            self.param['pad_right'] = self.param['pad']
-            self.param['pad_top'] = self.param['pad']
-            self.param['pad_bottom'] = self.param['pad']
-            self.param['pad'] = [self.param['pad'], self.param['pad'], self.param['pad'], self.param['pad']]
-        else:
-            self.param['pad'] = [self.param['pad_top'], self.param['pad_left'], self.param['pad_bottom'], self.param['pad_right']]
-
-        if isinstance(self.param['kernel_size'],int):
-            self.param['kernel_size'] = [self.param['kernel_size'],self.param['kernel_size']]
-
-        if isinstance(self.param['stride'],int):
-            self.param['stride'] = [self.param['stride'],self.param['stride']]
-
         # Init Module
         layer = ConvolutionLayer(
             self.param['filters'],
@@ -53,6 +38,14 @@ class ConvolutionLayerTB(Layer):
             fine=self.param['fine']
         )
 
+        # update parameters
+        self.param["kernel_size"] = layer.kernel_size
+        self.param["stride"] = layer.stride
+        self.param["pad_top"] = layer.pad_top
+        self.param["pad_right"] = layer.pad_right
+        self.param["pad_bottom"] = layer.pad_bottom
+        self.param["pad_left"] = layer.pad_left
+
         # data in
         data_in = self.gen_data([
             self.param['rows_in'],
@@ -62,7 +55,7 @@ class ConvolutionLayerTB(Layer):
         # weights
         weights = self.gen_data([
             self.param['filters'],
-            int(self.param['channels_in']/self.param['groups']),
+            self.param['channels_in']//self.param['groups'],
             self.param['kernel_size'][0],
             self.param['kernel_size'][1]
         ],[-8,8]) #todo: consistent with weight_t
@@ -86,9 +79,9 @@ class ConvolutionLayerTB(Layer):
             f.write(array_init(weights[0]))
 
         # add output dimensions
-        self.param['rows_out']      = layer.rows_out
-        self.param['cols_out']      = layer.cols_out
-        self.param['channels_out']  = layer.channels_out
+        self.param['rows_out']      = layer.rows_out()
+        self.param['cols_out']      = layer.cols_out()
+        self.param['channels_out']  = layer.channels_out()
 
         data_in = data_in.reshape(
             self.param['rows_in'],
@@ -118,7 +111,7 @@ class ConvolutionLayerTB(Layer):
         }
         # resource and latency model
         model = {
-            'latency'   : layer.get_latency(),
+            'latency'   : layer.latency(),
             'resources' : layer.resource()
         }
         return data, model

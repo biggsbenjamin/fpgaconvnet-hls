@@ -18,23 +18,26 @@ class PoolingLayerTB(Layer):
 
     # update stimulus generation
     def gen_stimulus(self):
-        # Init Module
+
+        # Init Layer
         layer = PoolingLayer(
             self.param['rows_in'],
             self.param['cols_in'],
             self.param['channels_in'],
             pool_type=self.param['pool_type'],
-            k_size=self.param['kernel_size'],
+            kernel_size=self.param['kernel_size'],
             stride=self.param['stride'],
             pad=self.param['pad'],
             coarse=self.param['coarse']
         )
-        layer.load_coef()
 
-        self.param['pad_top']       = layer.pad_top
-        self.param['pad_right']     = layer.pad_right
-        self.param['pad_bottom']    = layer.pad_bottom
-        self.param['pad_left']      = layer.pad_left
+        # update parameters
+        self.param["kernel_size"] = layer.kernel_size
+        self.param["stride"] = layer.stride
+        self.param["pad_top"] = layer.pad_top
+        self.param["pad_right"] = layer.pad_right
+        self.param["pad_bottom"] = layer.pad_bottom
+        self.param["pad_left"] = layer.pad_left
 
         # data in
         data_in = self.gen_data([
@@ -42,18 +45,10 @@ class PoolingLayerTB(Layer):
             self.param['cols_in'],
             self.param['channels_in']
         ])
+
         # data out
         data_out = layer.functional_model(copy.copy(data_in))[0]
         data_out = np.moveaxis(data_out,0,-1)
-
-        print(data_in.shape)
-        print(data_out.shape)
-
-        print(data_in[0,0])
-        print(data_in[0,1])
-        print(data_in[1,0])
-        print(data_in[1,1])
-        print(data_out[0,0])
 
         # add output dimensions
         self.param['rows_out']      = layer.rows_out()
@@ -67,7 +62,7 @@ class PoolingLayerTB(Layer):
         }
         # resource and latency model
         model = {
-            'latency'   : layer.get_latency(),
+            'latency'   : layer.latency(),
             'resources' : layer.resource()
         }
         return data, model

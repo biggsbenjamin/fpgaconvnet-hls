@@ -5,7 +5,6 @@ import csv
 import copy
 
 sys.path.append('..')
-sys.path.append(os.environ.get("FPGACONVNET_OPTIMISER"))
 sys.path.append(os.environ.get("FPGACONVNET_HLS"))
 
 from fpgaconvnet_optimiser.models.layers.InnerProductLayer import InnerProductLayer
@@ -30,7 +29,7 @@ class InnerProductLayerTB(Layer):
             coarse_in=self.param['coarse_in'],
             coarse_out=self.param['coarse_out']
         )
-        layer.load_coef()
+
         # data in
         data_in = self.gen_data([
             self.param['rows_in'],
@@ -58,7 +57,9 @@ class InnerProductLayerTB(Layer):
             weights,
             1,
             self.param['coarse_in'],
-            self.param['coarse_out']
+            self.param['coarse_out'],
+            1,
+            1
         )
         with open('data/weights.csv', 'w') as f:
             f.write(array_init(weights[0]))
@@ -75,7 +76,7 @@ class InnerProductLayerTB(Layer):
         }
         # resource and latency model
         model = {
-            'latency'   : layer.get_latency(),
+            'latency'   : layer.latency(),
             'resources' : layer.resource()
         }
         return data, model

@@ -25,7 +25,7 @@ class SqueezeLayerTB(Layer):
             coarse_in=self.param['coarse_in'],
             coarse_out=self.param['coarse_out']
         )
-        layer.load_coef()
+
         # data in
         data_in = self.gen_data([
             self.param['rows_in'],
@@ -47,7 +47,7 @@ class SqueezeLayerTB(Layer):
         }
         # resource and latency model
         model = {
-            'latency'   : layer.get_latency(),
+            'latency'   : layer.latency(),
             'resources' : layer.resource()
         }
         return data, model

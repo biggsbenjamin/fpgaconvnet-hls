@@ -24,7 +24,7 @@ class ReLULayerTB(Layer):
             self.param['channels_in'],
             coarse=self.param['coarse']
         )
-        layer.load_coef()
+
         # data in
         data_in = self.gen_data([
             self.param['rows_in'],
@@ -46,7 +46,7 @@ class ReLULayerTB(Layer):
         }
         # resource and latency model
         model = {
-            'latency'   : layer.get_latency(),
+            'latency'   : layer.latency(),
             'resources' : layer.resource()
         }
         return data, model
