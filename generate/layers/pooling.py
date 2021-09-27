@@ -25,15 +25,14 @@ pooling_layer_template_header = """#ifndef {NAME}_HPP_
 #define {NAME}_KERNEL_SIZE_Y {kernel_size_y}
 #define {NAME}_STRIDE_X      {stride_x}
 #define {NAME}_STRIDE_Y      {stride_y}
-#define {NAME}_PAD           {pad}
 #define {NAME}_FINE          {fine}
 
 #define {NAME}_COARSE_IN    {NAME}_COARSE
 #define {NAME}_COARSE_OUT   {NAME}_COARSE
 
-#define {NAME}_ROWS_OUT     {rows_out} 
-#define {NAME}_COLS_OUT     {cols_out} 
-#define {NAME}_CHANNELS_OUT {channels_out} 
+#define {NAME}_ROWS_OUT     {rows_out}
+#define {NAME}_COLS_OUT     {cols_out}
+#define {NAME}_CHANNELS_OUT {channels_out}
 
 // SLIDING WINDOW
 #define {NAME}_SLIDING_WINDOW_BATCH_SIZE    {batch_size}
@@ -148,13 +147,12 @@ def gen_pooling_layer(name,param,src_path,header_path):
         rows                =param['rows_in'],
         cols                =param['cols_in'],
         channels            =param['channels_in'],
-        channels_per_module =int(param['channels_in']/(param['coarse'])),
+        channels_per_module =param['channels_in']//param['coarse'],
         coarse              =param['coarse'],
         kernel_size_x       =param['kernel_size'][0],
         kernel_size_y       =param['kernel_size'][1],
         stride_x            =param['stride'][0],
         stride_y            =param['stride'][1],
-        pad                 =param['pad'],
         pad_left            =param['pad_left'],
         pad_right           =param['pad_right'],
         pad_top             =param['pad_top'],
@@ -163,7 +161,7 @@ def gen_pooling_layer(name,param,src_path,header_path):
         rows_out            =param['rows_out'],
         cols_out            =param['cols_out'],
         channels_out        =param['channels_out']
-    )   
+    )
 
     # write source file
     with open(src_path,'w') as src_file:

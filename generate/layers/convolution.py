@@ -1,6 +1,6 @@
 # import modules
 import os
-import shutil 
+import shutil
 
 import generate.modules.sliding_window
 import generate.modules.fork
@@ -30,15 +30,14 @@ convolution_layer_template_header = """#ifndef {NAME}_HPP_
 #define {NAME}_FINE          {fine}
 #define {NAME}_STRIDE_X      {stride_x}
 #define {NAME}_STRIDE_Y      {stride_y}
-#define {NAME}_PAD           {pad}
 
 // coefficients
 #define {NAME}_WEIGHTS {NAME}_FILTERS*DIVIDE({NAME}_CHANNELS,{NAME}_GROUPS)*{NAME}_KERNEL_SIZE_X*{NAME}_KERNEL_SIZE_Y
 
 // dimensions out
-#define {NAME}_ROWS_OUT     {rows_out} 
-#define {NAME}_COLS_OUT     {cols_out} 
-#define {NAME}_CHANNELS_OUT {channels_out} 
+#define {NAME}_ROWS_OUT     {rows_out}
+#define {NAME}_COLS_OUT     {cols_out}
+#define {NAME}_CHANNELS_OUT {channels_out}
 
 // SLIDING WINDOW
 #define {NAME}_SLIDING_WINDOW_BATCH_SIZE    {batch_size}
@@ -87,7 +86,7 @@ convolution_layer_template_header = """#ifndef {NAME}_HPP_
 #define {NAME}_GLUE_BATCH_SIZE   {batch_size}
 #define {NAME}_GLUE_ROWS         {rows_out}
 #define {NAME}_GLUE_COLS         {cols_out}
-#define {NAME}_GLUE_FILTERS      {channels_out} 
+#define {NAME}_GLUE_FILTERS      {channels_out}
 #define {NAME}_GLUE_COARSE_IN    {coarse_in}
 #define {NAME}_GLUE_COARSE_OUT   {coarse_out}
 #define {NAME}_GLUE_COARSE_GROUP {coarse_group}
@@ -145,7 +144,7 @@ void {name}(
 
         for(unsigned int j=0;j<{NAME}_COARSE_OUT;j++) {{
             #pragma HLS unroll
-            
+
             {conv}
             {accum}
 
@@ -165,7 +164,7 @@ def gen_convolution_layer(name,param,src_path,header_path):
     single_stream   = True if param['kernel_size'][0] == 1 and param['kernel_size'][1] == 1 else False
     depthwise       = True if ((param['groups'] == param['filters']) and (param['groups'] == param['channels_in'])) else False
     grouped         = True if param['groups'] > 1 else False
- 
+
     inputs = {
         'sliding_window': "in[i]",
         'fork'          : "sw_out[i]",
@@ -224,7 +223,7 @@ def gen_convolution_layer(name,param,src_path,header_path):
     if 'sliding_window' in inputs:
         streams += """
     stream_t(data_t) sw_out[{NAME}_COARSE_IN*{NAME}_COARSE_GROUP][{NAME}_KERNEL_SIZE_X][{NAME}_KERNEL_SIZE_Y];
-    #pragma HLS STREAM variable=sw_out 
+    #pragma HLS STREAM variable=sw_out
     #pragma HLS ARRAY_PARTITION variable=sw_out complete dim=0
         """.format(NAME=name.upper(),name=name)
         sliding_window = generate.modules.sliding_window.gen_sliding_window_module(
@@ -319,21 +318,20 @@ def gen_convolution_layer(name,param,src_path,header_path):
         rows                            =param['rows_in'],
         cols                            =param['cols_in'],
         channels                        =param['channels_in'],
-        channels_per_module             =int(param['channels_in']/(param['coarse_in']*param['coarse_group'])),
+        channels_per_module             =param['channels_in']//(param['coarse_in']*param['coarse_group']),
         filters                         =param['filters'],
-        filters_per_module              =int(param['filters']/(param['coarse_out']*param['coarse_group'])),
+        filters_per_module              =param['filters']//(param['coarse_out']*param['coarse_group']),
         groups                          =param['groups'],
-        groups_per_module               =int(param['groups']/param['coarse_group']),
+        groups_per_module               =param['groups']//param['coarse_group'],
         coarse_in                       =param['coarse_in'],
         coarse_out                      =param['coarse_out'],
         coarse_group                    =param['coarse_group'],
         fine                            =param['fine'],
-        interval                        =int((param['kernel_size'][0]*param['kernel_size'][1])/param['fine']),
+        interval                        =(param['kernel_size'][0]*param['kernel_size'][1])//param['fine'],
         kernel_size_x                   =param['kernel_size'][0],
         kernel_size_y                   =param['kernel_size'][1],
         stride_x                        =param['stride'][0],
         stride_y                        =param['stride'][1],
-        pad                             =param['pad'],
         pad_left                        =param['pad_left'],
         pad_right                       =param['pad_right'],
         pad_top                         =param['pad_top'],

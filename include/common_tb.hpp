@@ -455,7 +455,7 @@ int checkStreamEqual(
 		{
 			//printf("ERROR: wrong value\n");
 			printf("ERROR: wrong value %f, %f, %f\n",tmp.to_float(), tmp_valid.to_float(), tmp.to_float()-tmp_valid.to_float());
-			/* return 1; */
+			return 1;
 			err++;
 		}
 	}
@@ -463,7 +463,7 @@ int checkStreamEqual(
 	if(!test.empty())
 	{
 		printf("ERROR: still data in stream\n");
-		/* return 1; */
+		return 1;
 		err++;
 	}
 	return err;
@@ -540,34 +540,39 @@ int checkStreamEqual_file(
 	return 0;
 }
 
-////////////////////////////////////////////////
-////////// LOAD DATA FROM YAML (NET) ///////////
-////////////////////////////////////////////////
+////////////////////////////////////////////////////
+////////// LOAD DATA FOR PARTITION TESTS ///////////
+////////////////////////////////////////////////////
 
-/*
 template<
     int INPUTS,
     int SIZE,
     int WR_FACTOR=1
 >
 void load_net_weights(
-    int wr_index,
     std::string filepath,
-    std::string doc,
-    volatile mem_int data[INPUTS][DIVIDE(SIZE,INPUTS)]
+    volatile mem_int data[INPUTS][DIVIDE(SIZE,INPUTS)],
+    int wr_index = 0
 )
 {
     // read in file
-    std::string dir = getenv("PWD");
-    YAML::Node f = YAML::LoadFile(dir + "/" + filepath);
-    YAML::Node data_raw = f[doc];
+    const char *filepath_cstr = filepath.c_str();
+    FILE * fp = fopen(filepath_cstr,"r");
 
-    int index = 0;
+    // check file opened
+    if (fp == NULL) {
+        perror("Failed: ");
+    }
+
     for(int w=0;w<WR_FACTOR;w++) {
         for(int i=0;i<INPUTS;i++) {
             for(int j=0;j<DIVIDE(SIZE,INPUTS);j++) {
-                weight_t pixel = weight_t(data_raw[index].as<float>());
-                index++;
+                // read in the value from the file
+                float val;
+                fscanf(fp,"%f\n", &val);
+                // convert to weight_t
+                weight_t pixel = weight_t(val);
+                // add to the input if correct weights reloading index
                 if ( w == wr_index ) {
                     data[i][j] |= ( pixel.range() & BIT_MASK ) ;
                 }
@@ -588,66 +593,44 @@ template<
 >
 void load_net_data(
     std::string filepath,
-    std::string doc,
     volatile mem_int data[INPUTS][BATCH_SIZE*ROWS*COLS*DIVIDE(CHANNELS,STREAMS)*WR_FACTOR],
     int wr_index = 0
 )
 {
-    // read in file
-    std::string dir = getenv("PWD");
-    YAML::Node f = YAML::LoadFile(dir + "/" + filepath);
-    YAML::Node data_raw = f[doc];
 
+    // read in file
+    const char *filepath_cstr = filepath.c_str();
+    FILE * fp = fopen(filepath_cstr,"r");
+
+    // check file opened
+    if (fp == NULL) {
+        perror("Failed: ");
+    }
+
+    // get variables
     int channels_per_stream = DIVIDE(CHANNELS,STREAMS);
     int dma_channels = DIVIDE(DMA_WIDTH,DATA_WIDTH);
 
     // save to array
-    int index = 0;
     for(int i=0;i<BATCH_SIZE*ROWS*COLS;i++) {
         for(int j=0;j<WR_FACTOR;j++) {
             for(int k=0;k<channels_per_stream;k++) {
                 int input_index = 0;
                 for(int l=0;l<STREAMS;l++) {
-                    //
-                    data_t pixel = data_t(data_raw[index].as<float>());
-                    //
+                    // read in the value from the file
+                    float val;
+                    fscanf(fp,"%f\n", &val);
+                    // convert to data type
+                    data_t pixel = data_t(val);
+                    // specific weights reloading index
                     if (j == wr_index) {
-                        //
                         int out_index = i*channels_per_stream*WR_FACTOR + j*channels_per_stream + k;
                         data[(int)(l/dma_channels)][out_index] |= ( ( pixel.range() & BIT_MASK ) << ( ( l%dma_channels ) * DATA_WIDTH ) );
                     }
-                    //
-                    index++;
                 }
             }
         }
     }
 }
 
-template<int FILTERS>
-void load_net_fc_data(
-		std::string filepath,
-		std::string doc,
-		data_t data[FILTERS][1][1]
-)
-{
-	// read in file
-	std::string dir = getenv("PWD");
-	YAML::Node f = YAML::LoadFile(dir + "/" + filepath);
-	YAML::Node data_raw = f[doc];
-
-	int filters = data_raw["filters"].as<int>();
-
-	// check correct dimensions
-	assert(filters==FILTERS);
-
-	// save to array
-	int index = 0;
-	for(int c=0;c<FILTERS;c++) {
-		float pixel = data_raw[index].as<float>();
-		index++;
-		data[c][0][0] = data_t(pixel);
-	}
-}
-*/
 #endif

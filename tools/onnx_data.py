@@ -119,7 +119,7 @@ class ONNXData:
             stream_out[index] = fixed_point(val,total_width=total_width,int_width=int_width)
         return stream_out
 
-    def _fixed_point_stream_to_bin(self, stream, output_path, streams=1, port_width=64, ports=1):
+    def _fixed_point_stream_format(self, stream, streams=1, port_width=64, ports=1):
         # check it's only a 1D array
         assert len(stream.shape) == 1
         # check the stream is fixed-point
@@ -164,11 +164,25 @@ class ONNXData:
                 port_index = math.floor((j*data_width)/port_width)
                 stream_val = data_type( stream[i*streams+j].bits_to_signed() & ((2**data_width)-1) )
                 bin_out[port_index][i] |= port_type( stream_val  << (data_width*j)%port_width )
+        # return the formatted stream
+        return bin_out
+
+    def _fixed_point_stream_to_bin(self, stream, output_path, streams=1, port_width=64, ports=1):
+        # get the formatted_stream
+        bin_out = self._fixed_point_stream_format(stream, streams=streams, port_width=port_width, ports=ports)
+        # get the port type
+        port_type = bin_out.dtype
         # save to binary file
         for i in range(ports):
-            bin_out[i].astype(port_type).tofile(output_path+"_{i}.bin".format(i=i))
-        # return binary stream
-        return bin_out
+            bin_out[i].astype(port_type).tofile(f"{output_path}_{i}.bin".format(i=i))
+
+    def _fixed_point_stream_to_dat(self, stream, output_path, streams=1, port_width=64, ports=1):
+        # get the formatted_stream
+        bin_out = self._fixed_point_stream_format(stream, streams=streams, port_width=port_width, ports=ports)
+        # save to binary file
+        for i in range(ports):
+            with open(f"{output_path}_{i}.dat", 'w') as f:
+                f.write("\n".join([str(j) for j in bin_out[i]]))
 
     def transform_featuremap(self, featuremap):
         # normalise
@@ -177,7 +191,7 @@ class ONNXData:
         return np.moveaxis(featuremap, 1, -1)
         # TODO: handle 1D and 2D featuremaps
 
-    def save_featuremap(self, featuremap, output_path, parallel_streams=1, to_yaml=False, to_bin=False, to_csv=False):
+    def save_featuremap(self, featuremap, output_path, parallel_streams=1, to_yaml=False, to_bin=False, to_csv=False, to_dat=False):
         # yaml format
         if to_yaml:
             # save to yaml file
@@ -188,31 +202,33 @@ class ONNXData:
                     "cols"      : featuremap.shape[2],
                     "channels"  : featuremap.shape[3],
                     "data"      : featuremap.reshape(-1).tolist() }, f)
+        # get feature map stream
+        stream = self._convert_fixed_port_stream(featuremap.reshape(-1))
         # binary format
         if to_bin:
-            # get feature map stream
-            stream = self._convert_fixed_port_stream(featuremap.reshape(-1))
-            # save to binary file
             self._fixed_point_stream_to_bin(stream, output_path, streams=parallel_streams)
+        # dat format
+        if to_dat:
+            self._fixed_point_stream_to_dat(stream, output_path, streams=parallel_streams)
         # csv format
         if to_csv:
             pass
 
-    def save_featuremap_in_out(self, output_path, to_bin=False, to_csv=False):
+    def save_featuremap_in_out(self, output_path, to_bin=False, to_csv=False, to_dat=False):
         # save input layer
         input_node = self.partition.input_node
         input_data = np.array( self.sess.run([input_node], { self.input_name : self.data } )[0] )
         input_data = self.transform_featuremap(input_data)
         input_streams = int(self.partition.layers[0].parameters.coarse_in)
         self.save_featuremap(input_data, os.path.join(output_path, onnx_helper._format_name(input_node)),
-            parallel_streams=input_streams, to_yaml=False, to_bin=to_bin, to_csv=to_csv)
+            parallel_streams=input_streams, to_yaml=False, to_bin=to_bin, to_csv=to_csv, to_dat=to_dat)
         # save output layer
         output_node = self.partition.output_node
         output_data = np.array( self.sess.run([output_node], { self.input_name : self.data } )[0] )
         output_data = self.transform_featuremap(output_data)
         output_streams = int(self.partition.layers[-1].parameters.coarse_out)
         self.save_featuremap(output_data, os.path.join(output_path, onnx_helper._format_name(output_node)),
-            parallel_streams=output_streams, to_yaml=False, to_bin=to_bin, to_csv=to_csv)
+            parallel_streams=output_streams, to_yaml=False, to_bin=to_bin, to_csv=to_csv, to_dat=to_dat)
         # save yaml data
         data = {
             "in"  : input_data.reshape(-1).tolist(),
@@ -251,14 +267,14 @@ class ONNXData:
 
         #print(weights_raw)
         # transform weights raw shape
-        for index,_ in np.ndenumerate(weights):  
-            #print(index)  
+        for index,_ in np.ndenumerate(weights):
+            #print(index)
             weights[index] = weights_raw[
                       index[4]*coarse_group*num_filters*wr_factor*coarse_out+index[1]*num_filters*wr_factor*coarse_out+index[6]*wr_factor*coarse_out+index[0]*coarse_out+index[3],
                       index[5]*coarse_in+index[2],
                       index[7],
                       index[8]]
-            #print(index,weights[index]) 
+            #print(index,weights[index])
         # merge channel and filter dimensions
         weights = np.reshape(weights,[wr_factor,coarse_in*coarse_group,coarse_out,int(groups/coarse_group)*num_channels*num_filters,k_size_x,k_size_y])
         #print(weights)
@@ -277,7 +293,7 @@ class ONNXData:
                 int(layer.parameters.channels_in / layer.parameters.groups),
                 layer.parameters.kernel_size[0],
                 layer.parameters.kernel_size[1]]
-               
+
             # Initialise random data array
             weights_raw = np.ndarray(dim,dtype=float)
             # assign values
@@ -309,7 +325,7 @@ class ONNXData:
         # return transformed weights
         return self._transform_weights(weights_raw,wr_factor,coarse_in,coarse_out,1)
 
-    def save_weights_layer(self,layer,wr_factor=1,output_path=None,to_yaml=False,to_bin=False,to_csv=False):
+    def save_weights_layer(self,layer,wr_factor=1,output_path=None,to_yaml=False,to_bin=False,to_csv=False,to_dat=False):
         # get transformed weights
         if layer_enum.from_proto_layer_type(layer.type) == layer_enum.LAYER_TYPE.Convolution:
             transformed_weights = self.get_weights_convolution(layer, wr_factor=wr_factor)
@@ -328,16 +344,18 @@ class ONNXData:
                     # save to csv file
                     with open(filepath, 'w') as f:
                         f.write(array_init(transformed_weights[weights_reloading_index]))
+            # flatten the weights for binary and data formats
+            weights_stream =  self._convert_fixed_port_stream(transformed_weights.reshape(-1), total_width=8, int_width=4)
             # bin format
             if to_bin:
-                # iterate over weights reloading factor
-                for weights_reloading_index in range(wr_factor):
-                    weights_stream =  self._convert_fixed_port_stream(transformed_weights[weights_reloading_index].reshape(-1), total_width=8, int_width=4)
-                    self._fixed_point_stream_to_bin(weights_stream, output_path=f'{output_path}_{weights_reloading_index}', streams=1, port_width=64, ports=1)
+                self._fixed_point_stream_to_bin(weights_stream, output_path=output_path, streams=1, port_width=64, ports=1)
+            # dat format
+            if to_dat:
+                self._fixed_point_stream_to_dat(weights_stream, output_path=output_path, streams=1, port_width=64, ports=1)
         # return transformed weights
         return transformed_weights
 
-    def save_weights_partition(self,output_path,to_yaml=False,to_bin=False,to_csv=False):
+    def save_weights_partition(self,output_path,to_yaml=False,to_bin=False,to_csv=False,to_dat=False):
 
         def _fix_identifier(name):
             if name[0].isdigit():
@@ -361,7 +379,7 @@ class ONNXData:
                     output_path_layer = os.path.join(output_path,f"{layer_identifier}_weights")
                 # get layer info
                 weights[layer.name] = self.save_weights_layer(layer,wr_factor=wr_factor,
-                        output_path=output_path_layer,to_bin=to_bin,to_csv=to_csv)
+                        output_path=output_path_layer,to_bin=to_bin,to_csv=to_csv,to_dat=to_dat)
         # yaml format
         if to_yaml:
             tmp = {}

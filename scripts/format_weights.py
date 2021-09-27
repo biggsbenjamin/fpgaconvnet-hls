@@ -43,5 +43,6 @@ if __name__ == "__main__":
         f'partition_{args.partition_index}/data',
         to_yaml=True,
         to_csv=True,
-        to_bin=True )
+        to_bin=True,
+        to_dat=True)
 

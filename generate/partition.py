@@ -225,11 +225,11 @@ def gen_network(name,partition,output_path):
     )
     # TB
     network_tb_src = network_tb_src_template.format(
-        name        =name,
-        NAME        =name.upper(),
-        input_node  =input_node,
-        wr_layer    =wr_layer,
-        output_node =output_node
+        name = name,
+        NAME = name.upper(),
+        input_data_path = os.path.join(os.getcwd(), output_path, f"data/{input_node}_0.dat"),
+        weights_reloading_path = os.path.join(os.getcwd(), output_path, f"data/{wr_layer}_weights_0.dat"),
+        output_data_path = os.path.join(os.getcwd(), output_path, f"data/{input_node}_0.dat")
     )
 
     with open(os.path.join(output_path,f'include/{name}_top.hpp'),'w') as f:
