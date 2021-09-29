@@ -3,8 +3,8 @@
 
 int main() {
     // variable initialisation
-    stream_t(acc_t) in;
-    stream_t(acc_t) out;
+    stream_t(accum_t) in;
+    stream_t(accum_t) out;
 
     // dimensions
     const int size_in  = ACCUM_BATCH_SIZE*ACCUM_ROWS*ACCUM_COLS*ACCUM_CHANNELS*DIVIDE(ACCUM_FILTERS,ACCUM_GROUPS);

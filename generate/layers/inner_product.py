@@ -12,6 +12,7 @@ inner_product_layer_template_header = """#ifndef {NAME}_HPP_
 #define {NAME}_HPP_
 
 #define name        {name}
+#define NAME        {NAME}
 #define {NAME}_ID   {id}
 
 #include "fork.hpp"
@@ -19,14 +20,16 @@ inner_product_layer_template_header = """#ifndef {NAME}_HPP_
 #include "accum.hpp"
 #include "glue.hpp"
 
-#define {NAME}_BATCH_SIZE   {batch_size}
-#define {NAME}_ROWS         {rows}
-#define {NAME}_COLS         {cols}
-#define {NAME}_CHANNELS     {channels}
-#define {NAME}_FILTERS      {filters}
-#define {NAME}_COARSE_IN    {coarse_in}
-#define {NAME}_COARSE_OUT   {coarse_out}
-#define {NAME}_KERNEL_SIZE  1
+#define {NAME}_BATCH_SIZE    {batch_size}
+#define {NAME}_ROWS          {rows}
+#define {NAME}_COLS          {cols}
+#define {NAME}_CHANNELS      {channels}
+#define {NAME}_FILTERS       {filters}
+#define {NAME}_COARSE_IN     {coarse_in}
+#define {NAME}_COARSE_OUT    {coarse_out}
+#define {NAME}_COARSE_GROUP  1
+#define {NAME}_KERNEL_SIZE_X 1
+#define {NAME}_KERNEL_SIZE_Y 1
 
 // coefficients
 #define {NAME}_WEIGHTS {NAME}_ROWS*{NAME}_COLS*{NAME}_CHANNELS*{NAME}_FILTERS
@@ -36,27 +39,32 @@ inner_product_layer_template_header = """#ifndef {NAME}_HPP_
 #define {NAME}_COLS_OUT     {cols_out}
 #define {NAME}_CHANNELS_OUT {channels_out}
 
+// define data types
+typedef ap_fixed<{input_width},{input_int_width},AP_RND, AP_SAT>    {name}_input_t;
+typedef ap_fixed<{output_width},{output_int_width},AP_RND, AP_SAT>  {name}_output_t;
+typedef ap_fixed<{acc_width},{acc_int_width},AP_RND, AP_SAT>        {name}_acc_t;
+typedef ap_fixed<{weight_width},{weight_int_width},AP_RND, AP_SAT>  {name}_weight_t;
 
 // FORK
-#define {NAME}_FORK_BATCH_SIZE  {batch_size}
-#define {NAME}_FORK_ROWS        1
-#define {NAME}_FORK_COLS        1
-#define {NAME}_FORK_CHANNELS    {channels_per_module}
-#define {NAME}_FORK_COARSE      {coarse_out}
-#define {NAME}_FORK_KERNEL_SIZE 1
-typedef ap_fixed<{fork_t},{fork_t}/2,AP_RND, AP_SAT>   {NAME}_FORK_t;
+#define {NAME}_FORK_BATCH_SIZE   {batch_size}
+#define {NAME}_FORK_ROWS         1
+#define {NAME}_FORK_COLS         1
+#define {NAME}_FORK_CHANNELS     {channels_per_module}
+#define {NAME}_FORK_COARSE       {coarse_out}
+#define {NAME}_FORK_KERNEL_SIZE_X 1
+#define {NAME}_FORK_KERNEL_SIZE_Y 1
+
 // CONV
-#define {NAME}_CONV_BATCH_SIZE  {batch_size}
-#define {NAME}_CONV_ROWS        1
-#define {NAME}_CONV_COLS        1
-#define {NAME}_CONV_CHANNELS    {channels_per_module}
-#define {NAME}_CONV_FILTERS     {filters_per_module}
-#define {NAME}_CONV_KERNEL_SIZE 1
-#define {NAME}_CONV_FINE        1
-#define {NAME}_CONV_INTERVAL    1
-typedef ap_fixed<{conv_data_t},{conv_data_t}/2,AP_RND, AP_SAT>          {NAME}_CONV_data_t;
-typedef ap_fixed<{conv_weight_t},{conv_weight_t}/2,AP_RND, AP_SAT>          {NAME}_CONV_weight_t;
-typedef ap_fixed<{conv_acc_t},{conv_acc_t}/2,AP_RND, AP_SAT>            {NAME}_CONV_acc_t;
+#define {NAME}_CONV_BATCH_SIZE   {batch_size}
+#define {NAME}_CONV_ROWS         1
+#define {NAME}_CONV_COLS         1
+#define {NAME}_CONV_CHANNELS     {channels_per_module}
+#define {NAME}_CONV_FILTERS      {filters_per_module}
+#define {NAME}_CONV_GROUPS       1
+#define {NAME}_CONV_KERNEL_SIZE_X 1
+#define {NAME}_CONV_KERNEL_SIZE_Y 1
+#define {NAME}_CONV_FINE         1
+#define {NAME}_CONV_INTERVAL     1
 
 // ACCUM
 #define {NAME}_ACCUM_BATCH_SIZE         {batch_size}
@@ -67,39 +75,38 @@ typedef ap_fixed<{conv_acc_t},{conv_acc_t}/2,AP_RND, AP_SAT>            {NAME}_C
 #define {NAME}_ACCUM_FILTERS            {filters_per_module}
 #define {NAME}_ACCUM_CHANNELS_PER_GROUP {channels_per_module}
 #define {NAME}_ACCUM_FILTERS_PER_GROUP  {filters_per_module}
-typedef ap_fixed<{accum_t},{accum_t}/2,AP_RND, AP_SAT>                       {NAME}_ACCUM_t;
+
 // GLUE
-#define {NAME}_GLUE_BATCH_SIZE  {batch_size}
-#define {NAME}_GLUE_ROWS        1
-#define {NAME}_GLUE_COLS        1
-#define {NAME}_GLUE_FILTERS     {channels_out}
-#define {NAME}_GLUE_COARSE_IN   {coarse_in}
-#define {NAME}_GLUE_COARSE_OUT  {coarse_out}
-#define {NAME}_GLUE_ACC         {glue_acc}
-typedef ap_fixed<{glue_acc_t},{glue_acc_t}/2,AP_RND, AP_SAT>            {NAME}_GLUE_acc_t;
-typedef ap_fixed<{glue_data_t},{glue_data_t}/2,AP_RND, AP_SAT>           {NAME}_GLUE_data_t;
+#define {NAME}_GLUE_BATCH_SIZE   {batch_size}
+#define {NAME}_GLUE_ROWS         1
+#define {NAME}_GLUE_COLS         1
+#define {NAME}_GLUE_FILTERS      {channels_out}
+#define {NAME}_GLUE_COARSE_IN    {coarse_in}
+#define {NAME}_GLUE_COARSE_OUT   {coarse_out}
+#define {NAME}_GLUE_COARSE_GROUP 1
 
 /**
  * FUNCTION DEFINITION
  */
 
 void {name}(
-    const {NAME}_CONV_weight_t weights[{NAME}_COARSE_IN][{NAME}_COARSE_OUT][CHANNELS_3D({NAME}_ROWS*{NAME}_COLS*{NAME}_CHANNELS,{NAME}_COARSE_IN)*CHANNELS_3D({NAME}_FILTERS,{NAME}_COARSE_OUT)],
-    stream_t({NAME}_FORK_t) in[{NAME}_COARSE_IN],
-    stream_t({NAME}_GLUE_data_t) out[{NAME}_COARSE_OUT],
+    const {name}_weight_t weights[{NAME}_COARSE_IN][{NAME}_COARSE_OUT][CHANNELS_3D({NAME}_ROWS*{NAME}_COLS*{NAME}_CHANNELS,{NAME}_COARSE_IN)*CHANNELS_3D({NAME}_FILTERS,{NAME}_COARSE_OUT)],
+    stream_t({name}_input_t) in[{NAME}_COARSE_IN],
+    stream_t({name}_output_t) out[{NAME}_COARSE_OUT],
     int mode
 );
 
 #endif
 #undef name
+#undef NAME
 """
 
 inner_product_layer_template_src = """#include "{name}.hpp"
 
 void {name}(
-    const {NAME}_CONV_weight_t weights[{NAME}_COARSE_IN][{NAME}_COARSE_OUT][CHANNELS_3D({NAME}_ROWS*{NAME}_COLS*{NAME}_CHANNELS,{NAME}_COARSE_IN)*CHANNELS_3D({NAME}_FILTERS,{NAME}_COARSE_OUT)],
-    stream_t({NAME}_FORK_t) in[{NAME}_COARSE_IN],
-    stream_t({NAME}_GLUE_data_t) out[{NAME}_COARSE_OUT],
+    const {name}_weight_t weights[{NAME}_COARSE_IN][{NAME}_COARSE_OUT][CHANNELS_3D({NAME}_ROWS*{NAME}_COLS*{NAME}_CHANNELS,{NAME}_COARSE_IN)*CHANNELS_3D({NAME}_FILTERS,{NAME}_COARSE_OUT)],
+    stream_t({name}_input_t) in[{NAME}_COARSE_IN],
+    stream_t({name}_output_t) out[{NAME}_COARSE_OUT],
     int mode
 )
 {{
@@ -184,7 +191,7 @@ def gen_inner_product_layer(name,param,src_path,header_path):
     # FORK MODULE INIT
     if 'fork' in inputs:
         streams += """
-    stream_t({NAME}_FORK_t) fork_out[{NAME}_COARSE_IN][{NAME}_COARSE_OUT];
+    stream_t({name}_input_t) fork_out[{NAME}_COARSE_IN][{NAME}_COARSE_OUT];
     #pragma HLS STREAM variable=fork_out
     #pragma HLS ARRAY_PARTITION variable=fork_out complete dim=0
         """.format(NAME=name.upper(),name=name)
@@ -192,6 +199,7 @@ def gen_inner_product_layer(name,param,src_path,header_path):
             "_".join((name,"fork")),
             inputs['fork'],
             outputs['fork'],
+            fork_t=f"{name}_input_t",
             indent=8,
         )
     else:
@@ -200,7 +208,7 @@ def gen_inner_product_layer(name,param,src_path,header_path):
     # CONV MODULE INIT
     if 'conv' in inputs:
         streams += """
-    stream_t({NAME}_CONV_acc_t) conv_out[{NAME}_COARSE_IN][{NAME}_COARSE_OUT];
+    stream_t({name}_acc_t) conv_out[{NAME}_COARSE_IN][{NAME}_COARSE_OUT];
     #pragma HLS STREAM variable=conv_out
     #pragma HLS ARRAY_PARTITION variable=conv_out complete dim=0
         """.format(NAME=name.upper(),name=name)
@@ -209,6 +217,9 @@ def gen_inner_product_layer(name,param,src_path,header_path):
             inputs['conv'],
             "weights[i][j]",
             outputs['conv'],
+            data_t=f"{name}_input_t",
+            acc_t=f"{name}_acc_t",
+            weight_t=f"{name}_weight_t",
             indent=12,
         )
     else:
@@ -217,7 +228,7 @@ def gen_inner_product_layer(name,param,src_path,header_path):
     # ACCUM MODULE INIT
     if 'accum' in inputs:
         streams += """
-    stream_t({NAME}_ACCUM_t) accum_out[{NAME}_COARSE_IN][{NAME}_COARSE_OUT];
+    stream_t({name}_acc_t) accum_out[{NAME}_COARSE_IN][{NAME}_COARSE_OUT];
     #pragma HLS STREAM variable=accum_out
     #pragma HLS ARRAY_PARTITION variable=accum_out complete dim=0
         """.format(NAME=name.upper(),name=name)
@@ -225,6 +236,7 @@ def gen_inner_product_layer(name,param,src_path,header_path):
             "_".join((name,"accum")),
             inputs['accum'],
             outputs['accum'],
+            accum_t=f"{name}_acc_t",
             indent=12,
         )
     else:
@@ -236,6 +248,8 @@ def gen_inner_product_layer(name,param,src_path,header_path):
             "_".join((name,"glue")),
             inputs['glue'],
             outputs['glue'],
+            data_t=f"{name}_output_t",
+            acc_t=f"{name}_acc_t",
             indent=4
         )
     else:
@@ -252,9 +266,6 @@ def gen_inner_product_layer(name,param,src_path,header_path):
         accum           =accum,
         glue            =glue
     )
-
-    # glue accumulation line
-    glue_acc = "+".join([ "in[{i}][out_index].read()".format(i=i) for i in range(param['coarse_in']) ])
 
     # header
     inner_product_layer_header = inner_product_layer_template_header.format(
@@ -273,14 +284,14 @@ def gen_inner_product_layer(name,param,src_path,header_path):
         filters_per_module  =int(param['filters']/param['coarse_out']),
         coarse_in           =param['coarse_in'],
         coarse_out          =param['coarse_out'],
-        glue_acc            =glue_acc,
-        fork_t              =param['data_width'],
-        conv_data_t         =param['data_width'],
-        conv_weight_t       =param['weight_width'],
-        conv_acc_t          =param['acc_width'],
-        accum_t             =param['acc_width'],
-        glue_acc_t          =param['acc_width'],
-        glue_data_t         =param['data_width']
+        input_width         =param['input_width'],
+        input_int_width     =param['input_width']//2,
+        output_width        =param['output_width'],
+        output_int_width    =param['output_width']//2,
+        acc_width           =param['acc_width'],
+        acc_int_width       =param['acc_width']//2,
+        weight_width        =param['weight_width'],
+        weight_int_width    =param['weight_width']//2,
     )
 
     # write source file

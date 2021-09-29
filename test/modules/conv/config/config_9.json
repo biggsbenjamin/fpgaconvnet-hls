@@ -6,7 +6,7 @@
     "filters": 8,
     "group": 1,
     "fine": 1,
-    "kernel_size": 3,
+    "kernel_size": [3,3],
     "batch_size": 1,
     "description": "module name: conv, layer name: inception_3a/3x3, net name: googlenet.prototxt"
 }

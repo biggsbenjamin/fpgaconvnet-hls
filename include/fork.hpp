@@ -20,7 +20,7 @@ void fork(
 )
 {
 
-#pragma HLS INLINE OFF 
+#pragma HLS INLINE OFF
 
     const unsigned int batch_size   = BATCH_SIZE;
     const unsigned int rows         = ROWS;
@@ -28,7 +28,10 @@ void fork(
     const unsigned int channels     = CHANNELS;
     const unsigned int coarse       = COARSE;
 
-#pragma HLS STREAM variable=in 
+    // assertions
+    assert(batch_size >= 1);
+
+#pragma HLS STREAM variable=in
 #pragma HLS STREAM variable=out
 
 #pragma HLS ARRAY_PARTITION variable=out complete dim=0
@@ -57,41 +60,43 @@ unsigned int ROWS,
 unsigned int COLS,
 unsigned int CHANNELS,
 unsigned int COARSE,
-unsigned int KERNEL_SIZE,
+unsigned int KERNEL_SIZE_X,
+unsigned int KERNEL_SIZE_Y,
 typename fork_t
 >
 void fork(
-    stream_t(fork_t) in[KERNEL_SIZE][KERNEL_SIZE],
-    stream_t(fork_t) out[COARSE][KERNEL_SIZE][KERNEL_SIZE]
+    stream_t(fork_t) in[KERNEL_SIZE_X][KERNEL_SIZE_Y],
+    stream_t(fork_t) out[COARSE][KERNEL_SIZE_X][KERNEL_SIZE_Y]
 )
 {
 
-#pragma HLS INLINE OFF 
+#pragma HLS INLINE OFF
 
-    const unsigned int batch_size   = BATCH_SIZE;
-    const unsigned int rows         = ROWS;
-    const unsigned int cols         = COLS;
-    const unsigned int channels     = CHANNELS;
-    const unsigned int coarse       = COARSE;
-    const unsigned int kernel_size  = KERNEL_SIZE;
+    const unsigned int batch_size    = BATCH_SIZE;
+    const unsigned int rows          = ROWS;
+    const unsigned int cols          = COLS;
+    const unsigned int channels      = CHANNELS;
+    const unsigned int coarse        = COARSE;
+    const unsigned int kernel_size_x = KERNEL_SIZE_X;
+    const unsigned int kernel_size_y = KERNEL_SIZE_Y;
 
-#pragma HLS STREAM variable=in 
+#pragma HLS STREAM variable=in
 #pragma HLS STREAM variable=out
 
 #pragma HLS ARRAY_PARTITION variable=in complete dim=0
 #pragma HLS ARRAY_PARTITION variable=out complete dim=0
 
-    fork_t local_cache[kernel_size][kernel_size];
+    fork_t local_cache[kernel_size_x][kernel_size_y];
 #pragma HLS ARRAY_PARTITION variable=local_cache complete dim=0
 #pragma HLS DEPENDENCE variable=local_cache RAW intra true
 
     pixel_loop: for (unsigned long pixel_index = 0; pixel_index < batch_size*rows*cols*channels; pixel_index++) {
         #pragma HLS PIPELINE II=1 rewind
-        k1_loop: for (unsigned char k1 = 0; k1 < kernel_size; k1++) {
-            k2_loop: for (unsigned char k2 = 0; k2 < kernel_size; k2++) {
+        k1_loop: for (unsigned char k1 = 0; k1 < kernel_size_x; k1++) {
+            k2_loop: for (unsigned char k2 = 0; k2 < kernel_size_y; k2++) {
                 coarse_loop: for(unsigned int coarse_index=0;coarse_index < coarse; coarse_index++) {
                     if(coarse_index == 0) {
-                        DO_PRAGMA(HLS occurrence cycle=batch_size*rows*cols*channels*kernel_size*kernel_size)
+                        DO_PRAGMA(HLS occurrence cycle=batch_size*rows*cols*channels*kernel_size_x*kernel_size_y)
                         local_cache[k1][k2] = in[k1][k2].read();
                     }
                     out[coarse_index][k1][k2].write(local_cache[k1][k2]);

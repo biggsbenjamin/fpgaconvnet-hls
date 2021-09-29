@@ -54,7 +54,11 @@ test/partitions/**/outputs/
 test/partitions/**/partition_*/
 yaml-cpp-release-0.5.3/*
 
+<<<<<<< HEAD
 partition_1/
 partition_0/
 partition_-1/
 sd_card/
+=======
+partition_*/
+>>>>>>> dev-alex

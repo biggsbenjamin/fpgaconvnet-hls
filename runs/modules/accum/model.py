@@ -1,5 +1,10 @@
-#from modules.module_model_neuralnetwork import ModuleModel
-from modules.module_model_randomforest import ModuleModel
+import os
+import sys
+
+sys.path.append(os.environ.get("FPGACONVNET_OPTIMISER"))
+sys.path.append(os.environ.get("FPGACONVNET_HLS"))
+
+from modules.module_model import ModuleModel
 from fpgaconvnet_optimiser.models.modules import Accum
 
 MAX_RSC = {
@@ -11,30 +16,24 @@ MAX_RSC = {
 
 # define resource model
 def build_module(parameter):
-    return Accum([
-        parameter['channels'],
+    return Accum(
         parameter['rows'],
-        parameter['cols']],
+        parameter['cols'],
+        parameter['channels'],
         parameter['filters'],
         parameter['groups'],
-        parameter['data_wordlength']
+        # data_width=parameter['data_width']
     )
 
 # load accum model
 model = ModuleModel(build_module)
 model.load_points("modules/accum/logs")
 
-# filter parameters
-filters = {
-    "data_wordlength" : [0,36]
-}
-model.filter_parameters(filters)
-
 # fit model
 model.fit_model()
 
 # save coefficients
-model.save_coefficients("coefficients","accum")
+model.save_coefficients("coefficients/accum")
 
 # plot error
 model.plot_error(MAX_RSC)

@@ -5,19 +5,20 @@ fork_template="""
 {indent}    {NAME}_COLS,
 {indent}    {NAME}_CHANNELS,
 {indent}    {NAME}_COARSE,
-#if {NAME}_KERNEL_SIZE > 1
-{indent}    {NAME}_KERNEL_SIZE,
+#if {NAME}_KERNEL_SIZE_X > 1 || {NAME}_KERNEL_SIZE_Y > 1
+{indent}    {NAME}_KERNEL_SIZE_X,
+{indent}    {NAME}_KERNEL_SIZE_Y,
 #endif
-{indent}    {NAME}_t
+{indent}    {fork_t}
 {indent}>({input_stream},{output_stream});
-
 """
 
-def gen_fork_module(name,input_stream,output_stream,indent=0):
+def gen_fork_module(name,input_stream,output_stream,
+        fork_t="data_t",indent=0):
     return fork_template.format(
         NAME            =name.upper(),
         input_stream    =input_stream,
         output_stream   =output_stream,
-        indent          =" "*indent
-        #single_stream   ="" if not single_stream else "//"
+        fork_t          =fork_t,
+        indent          =" "*indent,
     )

@@ -40,7 +40,7 @@ void squeeze(
 
     dim_in_loop: for (unsigned int pixel_index = 0; pixel_index < batch_size*rows*cols; pixel_index++) {
         unsigned int cache_in_index = 0;
-        channel_in_loop: for (unsigned int channel_index = 0; channel_index < DIVIDE(channels,coarse_in);channel_index++) {
+        channel_in_loop: for (unsigned int channel_index = 0; channel_index < DIVIDE(channels,coarse_in); channel_index++) {
             #pragma HLS loop_flatten
             #pragma HLS pipeline II=1 rewind
             #pragma HLS unroll region
@@ -53,7 +53,7 @@ void squeeze(
 
     dim_out_loop: for (unsigned int pixel_index = 0; pixel_index < batch_size*rows*cols; pixel_index++) {
         unsigned int cache_out_index = 0;
-        channel_out_loop: for (unsigned int channel_index = 0; channel_index < DIVIDE(channels,coarse_out);channel_index++) {
+        channel_out_loop: for (unsigned int channel_index = 0; channel_index < DIVIDE(channels,coarse_out); channel_index++) {
             #pragma HLS loop_flatten
             #pragma HLS pipeline II=1 rewind
             #pragma HLS unroll region
@@ -63,6 +63,7 @@ void squeeze(
             cache_out_index += coarse_out;
         }
     }
+
 }
 
 #endif

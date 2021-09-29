@@ -5,7 +5,7 @@
     "filters": 1,
     "group": 1,
     "fine": 1,
-    "kernel_size": 1,
+    "kernel_size": [1,1],
     "batch_size": 1,
     "description": "single filter, 1x1"
 }

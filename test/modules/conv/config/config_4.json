@@ -6,7 +6,7 @@
     "filters": 32,
     "group": 1,
     "fine": 1,
-    "kernel_size": 3,
+    "kernel_size": [3,3],
     "batch_size": 1,
-    "description": "1 filter, 3x3"
+    "description": "1 channel, 3x3"
 }

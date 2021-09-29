@@ -5,6 +5,7 @@
     "filters": 32,
     "groups": 1,
     "batch_size": 1,
-    "wordlength":16,
+    "data_width": 16,
+    "data_int_width": 8,
     "description": "multi channel, multi filter"
 }

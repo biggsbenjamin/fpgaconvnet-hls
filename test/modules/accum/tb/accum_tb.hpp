@@ -3,10 +3,13 @@
 
 #include "common.hpp"
 #include "accum_param.hpp"
-typedef ap_fixed<ACCUM_WORDLENGTH,ACCUM_WORDLENGTH/2, AP_RND,AP_SAT> acc;
+
+// define the type based on the test configuration
+typedef ap_fixed<ACCUM_DATA_WIDTH, ACCUM_DATA_INT_WIDTH, AP_RND,AP_SAT> test_accum_t;
+
 void accum_top(
-	stream_t(acc) &in,
-	stream_t(acc) &out
+	stream_t(test_accum_t) &in,
+	stream_t(test_accum_t) &out
 );
 
 #endif

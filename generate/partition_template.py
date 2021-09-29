@@ -35,10 +35,12 @@ network_header_template = """#ifndef {NAME}_TOP_HPP_
 //#include "wr.hpp"
 
 #if {NAME}_WEIGHTS_RELOADING_FLAG
-#define {NAME}_WR_COARSE_IN     {WR_LAYER}_COARSE_IN
-#define {NAME}_WR_COARSE_OUT    {WR_LAYER}_COARSE_OUT
-#define {NAME}_WR_WEIGHTS       {WR_LAYER}_WEIGHTS
-#define {NAME}_WR_KERNEL_SIZE   {WR_LAYER}_KERNEL_SIZE
+#define {NAME}_WR_COARSE_IN       {WR_LAYER}_COARSE_IN
+#define {NAME}_WR_COARSE_OUT      {WR_LAYER}_COARSE_OUT
+#define {NAME}_WR_COARSE_GROUP    {WR_LAYER}_COARSE_GROUP
+#define {NAME}_WR_WEIGHTS         {WR_LAYER}_WEIGHTS
+#define {NAME}_WR_KERNEL_SIZE_X   {WR_LAYER}_KERNEL_SIZE_X
+#define {NAME}_WR_KERNEL_SIZE_Y   {WR_LAYER}_KERNEL_SIZE_Y
 
 #define {NAME}_SIZE_WR  DIVIDE({NAME}_WR_WEIGHTS,{NAME}_STREAMS_WR)
 
@@ -58,11 +60,7 @@ network_header_template = """#ifndef {NAME}_TOP_HPP_
 void reload_weights(
     int weights_reloading_index,
     volatile mem_int wr_hw[{NAME}_PORTS_WR][{NAME}_SIZE_WR],
-#if {NAME}_WR_KERNEL_SIZE == 1
-    weight_t weights[{NAME}_WR_COARSE_IN][{NAME}_WR_COARSE_OUT][DIVIDE({NAME}_WR_WEIGHTS,{NAME}_WR_COARSE_IN*{NAME}_WR_COARSE_OUT*{NAME}_WR_KERNEL_SIZE*{NAME}_WR_KERNEL_SIZE)]
-#else
-    weight_t weights[{NAME}_WR_COARSE_IN][{NAME}_WR_COARSE_OUT][DIVIDE({NAME}_WR_WEIGHTS,{NAME}_WR_COARSE_IN*{NAME}_WR_COARSE_OUT*{NAME}_WR_KERNEL_SIZE*{NAME}_WR_KERNEL_SIZE)][{NAME}_WR_KERNEL_SIZE][{NAME}_WR_KERNEL_SIZE]
-#endif
+    weight_t weights[{NAME}_WR_COARSE_IN*{NAME}_WR_COARSE_GROUP][{NAME}_WR_COARSE_OUT][DIVIDE({NAME}_WR_WEIGHTS,{NAME}_WR_COARSE_IN*{NAME}_WR_COARSE_GROUP*{NAME}_WR_COARSE_OUT*{NAME}_WR_KERNEL_SIZE_X*{NAME}_WR_KERNEL_SIZE_Y)][{NAME}_WR_KERNEL_SIZE_X][{NAME}_WR_KERNEL_SIZE_Y]
 );
 #endif
 
@@ -93,11 +91,7 @@ network_src_template = """#include "{name}_top.hpp"
 void reload_weights(
     int weights_reloading_index,
     volatile mem_int wr_hw[{NAME}_PORTS_WR][{NAME}_SIZE_WR],
-#if {NAME}_WR_KERNEL_SIZE == 1
-    weight_t weights[{NAME}_WR_COARSE_IN][{NAME}_WR_COARSE_OUT][DIVIDE({NAME}_WR_WEIGHTS,{NAME}_WR_COARSE_IN*{NAME}_WR_COARSE_OUT*{NAME}_WR_KERNEL_SIZE*{NAME}_WR_KERNEL_SIZE)]
-#else
-    weight_t weights[{NAME}_WR_COARSE_IN][{NAME}_WR_COARSE_OUT][DIVIDE({NAME}_WR_WEIGHTS,{NAME}_WR_COARSE_IN*{NAME}_WR_COARSE_OUT*{NAME}_WR_KERNEL_SIZE*{NAME}_WR_KERNEL_SIZE)][{NAME}_WR_KERNEL_SIZE][{NAME}_WR_KERNEL_SIZE]
-#endif
+    weight_t weights[{NAME}_WR_COARSE_IN*{NAME}_WR_COARSE_GROUP][{NAME}_WR_COARSE_OUT][DIVIDE({NAME}_WR_WEIGHTS,{NAME}_WR_COARSE_IN*{NAME}_WR_COARSE_GROUP*{NAME}_WR_COARSE_OUT*{NAME}_WR_KERNEL_SIZE_X*{NAME}_WR_KERNEL_SIZE_Y)][{NAME}_WR_KERNEL_SIZE_X][{NAME}_WR_KERNEL_SIZE_Y]
 )
 {{
 
@@ -232,7 +226,7 @@ int main()
         {NAME}_COLS_IN,
         {NAME}_CHANNELS_IN,
         {NAME}_STREAMS_IN
-    >(data_path,"in",test_in);
+    >("{input_data_path}",test_in);
 
     for( int wr_index=0;wr_index<{NAME}_WEIGHTS_RELOADING_FACTOR;wr_index++) {{
 
@@ -248,7 +242,7 @@ int main()
             {NAME}_PORTS_WR,
             {NAME}_SIZE_WR,
             {NAME}_WEIGHTS_RELOADING_FACTOR
-        >(wr_index,weight_path,"{wr_layer}",weights);
+        >("{weights_reloading_path}", weights, wr_index);
 
         // load valid output
         load_net_data<
@@ -259,21 +253,22 @@ int main()
             {NAME}_CHANNELS_OUT,
             {NAME}_STREAMS_OUT,
             {NAME}_WEIGHTS_RELOADING_FACTOR
-        >(data_path,"out",test_out_valid,wr_index);
+        >("{output_data_path}", test_out_valid, wr_index);
 
-        // run network
         printf("RUNNING NETWORK \\n");
-#if {NAME}_WEIGHTS_RELOADING_FLAG
+
+        // perform weights reloading
         if( wr_index > 0 ) {{
             fpgaconvnet_ip(1,wr_index,weights,test_in,test_out);
         }}
+
+        // run the network
         fpgaconvnet_ip(0,wr_index,weights,test_in,test_out);
-#else
-        fpgaconvnet_ip(0,wr_index,test_in,test_out);
-#endif
+
+        // check array is correct
         for(int i=0; i<{NAME}_PORTS_OUT;i++) {{
             printf("PORT %d\\n",i);
-            check_array_equal<{NAME}_SIZE_OUT>(test_out[i],test_out_valid[i]);
+            err += check_array_equal<{NAME}_SIZE_OUT>(test_out[i],test_out_valid[i]);
         }}
 
     }}

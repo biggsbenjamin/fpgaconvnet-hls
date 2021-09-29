@@ -1,5 +1,5 @@
-from modules.module_model_linearmodel import ModuleModel
-from fpgaconvnet_optimiser.models.modules import ReLU 
+from modules.module_model import ModuleModel
+from fpgaconvnet_optimiser.models.modules import ReLU
 
 MAX_RSC = {
     "LUT"   : 53200,
@@ -10,24 +10,15 @@ MAX_RSC = {
 
 # define resource model
 def build_module(parameter):
-    return ReLU([
-            parameter['channels'],
-            parameter['rows'],
-            parameter['cols']
-        ],
-        parameter['batch_size'],
-        parameter['data_wordlength']
+    return ReLU(
+        parameter['rows'],
+        parameter['cols'],
+        parameter['channels']
     )
 
 # load relu model
 model = ModuleModel(build_module)
 model.load_points("modules/relu/logs")
-
-# filter parameters 
-filters = {
-    "data_wordlength" : [0,32]
-}
-model.filter_parameters(filters)
 
 # fit model
 model.fit_model()

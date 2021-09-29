@@ -19,20 +19,20 @@ void relu(
 )
 {
 
-#pragma HLS INLINE OFF 
+#pragma HLS INLINE OFF
 
     const unsigned int batch_size   = BATCH_SIZE;
     const unsigned int rows         = ROWS;
     const unsigned int cols         = COLS;
     const unsigned int channels     = CHANNELS;
- 
+
 #pragma HLS STREAM variable=in
 #pragma HLS STREAM variable=out
 
     for(unsigned long pixel_index=0 ; pixel_index < batch_size*rows*cols*channels ; pixel_index++) {
         #pragma HLS PIPELINE II=1 rewind
         relu_t tmp = in.read();
-        if(tmp[31])
+        if(tmp < 0.0)
             out.write(0.0);
         else
             out.write(tmp);

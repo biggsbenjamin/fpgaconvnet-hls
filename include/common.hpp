@@ -11,7 +11,7 @@
 #include <stdlib.h>
 #include <assert.h>
 
-#define ERROR_TOLERANCE 0.15
+#define ERROR_TOLERANCE 0.20
 
 // MACRO FOR TEMPLATE VARIABLE PRAGMAS
 #define PRAGMA_SUB(x) _Pragma (#x)
@@ -46,7 +46,7 @@
 #define SWITCHING_ACTIVITY_DEBUG 0
 
 // DATA TYPE PARAMETERS
-#define DATA_WIDTH   16 
+#define DATA_WIDTH   16
 #define INTEGER_BITS 8
 #define BIT_MASK    ( (1 << DATA_WIDTH) - 1 )
 
@@ -63,9 +63,9 @@ typedef unsigned int mem_int;
 typedef ap_axis<DMA_WIDTH,1,1,1>    axi_stream_t;
 typedef hls::stream<axi_stream_t>   axi_stream_hw_t;
 
-typedef ap_fixed<DATA_WIDTH,INTEGER_BITS,AP_RND,AP_SAT> data_t;
-typedef ap_fixed<30,16,AP_RND,AP_SAT> acc_t;
-typedef ap_fixed<16,8,AP_RND,AP_SAT> weight_t;
+typedef ap_fixed<DATA_WIDTH,INTEGER_BITS> data_t;
+typedef ap_fixed<30,16> acc_t;
+typedef ap_fixed<8,4> weight_t;
 
 //#define stream_t(x) hlslib::Stream<x>
 #define stream_t(x) hls::stream<x>

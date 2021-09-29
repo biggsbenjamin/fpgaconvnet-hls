@@ -7,6 +7,6 @@
     "coarse_out": 5,
     "batch_size": 1,
     "buffer_depth": 10,
-    "squeeze_t":"ap_fixed<16,8,AP_RND,AP_SAT>",
+    "data_width": 16,
     "description": "module name: fork, layer name: res4f_branch2a, net name: resnet.prototxt"
 }

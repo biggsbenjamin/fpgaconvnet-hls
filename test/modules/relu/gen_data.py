@@ -12,32 +12,40 @@ class ReLUTB(Data):
 
     # update stimulus generation
     def gen_stimulus(self):
+
         # Init Module
         relu = ReLU(
-            [
-                self.param['channels'],
-                self.param['rows'],
-                self.param['cols']
-            ]
+            self.param['rows'],
+            self.param['cols'],
+            self.param['channels']
         )
+
+        # add parameters
+        self.param['data_width'] = relu.data_width
+        self.param['data_int_width'] = relu.data_width//2
+
         # data in
         data_in = self.gen_data([
             self.param['rows'],
             self.param['cols'],
             self.param['channels']
         ])
+
         # data out
         data_out = relu.functional_model(data_in)
+
         # return data
         data = {
             'input'     : data_in.reshape(-1).tolist(),
             'output'    : data_out.reshape(-1).tolist()
         }
+
         # resource and latency model
         model = {
-            'latency'   : relu.get_latency(),
+            'latency'   : relu.latency(),
             'resources' : relu.rsc()
         }
+
         return data, model
 
 if __name__ == '__main__':

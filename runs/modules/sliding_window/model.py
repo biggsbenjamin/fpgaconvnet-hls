@@ -1,5 +1,11 @@
-from modules.module_model_linearmodel import ModuleModel
-from fpgaconvnet_optimiser.models.modules import SlidingWindow 
+import os
+import sys
+
+sys.path.append(os.environ.get("FPGACONVNET_OPTIMISER"))
+sys.path.append(os.environ.get("FPGACONVNET_HLS"))
+
+from modules.module_model import ModuleModel
+from fpgaconvnet_optimiser.models.modules import SlidingWindow
 
 MAX_RSC = {
     "LUT"   : 53200,
@@ -10,29 +16,21 @@ MAX_RSC = {
 
 # define resource model
 def build_module(parameter):
-    return SlidingWindow([
-            parameter['channels'],
-            parameter['rows'],
-            parameter['cols']
-        ],
+    return SlidingWindow(
+        parameter['rows'],
+        parameter['cols'],
+        parameter['channels'],
         parameter['kernel_size'],
         parameter['stride'],
         parameter['pad'],
         parameter['pad'],
         parameter['pad'],
         parameter['pad'],
-        parameter['data_wordlength']
     )
 
 # load accum model
 model = ModuleModel(build_module)
 model.load_points("modules/sliding_window/logs")
-
- #filter parameters 
-filters = {
-    "data_wordlength" : [0,36]
-}
-model.filter_parameters(filters)
 
 # fit model
 model.fit_model()
@@ -41,7 +39,7 @@ model.fit_model()
 # save coefficients
 model.save_coefficients("coefficients/sliding_window")
 
- # plot error
+# plot error
 model.plot_error(MAX_RSC)
 
 # print out error

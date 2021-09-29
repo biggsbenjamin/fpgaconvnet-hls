@@ -46,5 +46,5 @@ if __name__ == "__main__":
     onnx_data.save_featuremap_in_out(
         f'partition_{args.partition_index}/data',
         to_bin=True,
-        to_csv=False )
+        to_dat=True)
 
