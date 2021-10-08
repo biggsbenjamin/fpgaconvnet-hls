@@ -28,7 +28,8 @@ class PoolingLayerTB(Layer):
             kernel_size=self.param['kernel_size'],
             stride=self.param['stride'],
             pad=self.param['pad'],
-            coarse=self.param['coarse']
+            coarse=self.param['coarse'],
+            data_width=self.param["data_width"]
         )
 
         # update parameters

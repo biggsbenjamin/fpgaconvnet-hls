@@ -25,6 +25,10 @@ class SlidingWindowTB(Data):
             self.param['pad_left']
         )
 
+        # add parameters
+        self.param['data_width'] = sliding_window.data_width
+        self.param['data_int_width'] = sliding_window.data_width//2
+
         # output dimensions
         self.param['rows_out'] = sliding_window.rows_out()
         self.param['cols_out'] = sliding_window.cols_out()

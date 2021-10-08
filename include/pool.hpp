@@ -4,7 +4,7 @@
 #include "common.hpp"
 
 /**
-  * POOL 
+  * POOL
   */
 template<
     unsigned int BATCH_SIZE,
@@ -12,15 +12,16 @@ template<
     unsigned int COLS,
     unsigned int CHANNELS,
     unsigned int KERNEL_SIZE_X,
-    unsigned int KERNEL_SIZE_Y
+    unsigned int KERNEL_SIZE_Y,
+    typename pool_t
 >
 void pool(
-    stream_t(data_t)  in[KERNEL_SIZE_X][KERNEL_SIZE_Y],
-    stream_t(data_t) &out
+    stream_t(pool_t) in[KERNEL_SIZE_X][KERNEL_SIZE_Y],
+    stream_t(pool_t) &out
 )
 {
 
-#pragma HLS INLINE OFF 
+#pragma HLS INLINE OFF
 
     const unsigned int batch_size    = BATCH_SIZE;
     const unsigned int rows          = ROWS;
@@ -28,12 +29,12 @@ void pool(
     const unsigned int channels      = CHANNELS;
     const unsigned int kernel_size_x = KERNEL_SIZE_X;
     const unsigned int kernel_size_y = KERNEL_SIZE_Y;
- 
+
 #pragma HLS STREAM variable=in
 #pragma HLS STREAM variable=out
 #pragma HLS ARRAY_PARTITION variable=in complete dim=0
 
-    data_t cache;
+    pool_t cache;
     #pragma HLS DEPENDENCE variable=cache RAW intra true
 
     pixel_loop: for(unsigned long pixel_index=0;pixel_index<batch_size*rows*cols*channels;pixel_index++) {
@@ -44,7 +45,7 @@ void pool(
                     cache = in[k1][k2].read();
                 }
                 else {
-                    data_t tmp = in[k1][k2].read();
+                    pool_t tmp = in[k1][k2].read();
                     cache = (cache > tmp ) ? cache : tmp ;
                 }
             }

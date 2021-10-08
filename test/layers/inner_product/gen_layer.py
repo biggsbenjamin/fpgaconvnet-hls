@@ -27,7 +27,11 @@ class InnerProductLayerTB(Layer):
             self.param['cols_in'],
             self.param['channels_in'],
             coarse_in=self.param['coarse_in'],
-            coarse_out=self.param['coarse_out']
+            coarse_out=self.param['coarse_out'],
+            input_width=self.param["input_width"],
+            output_width=self.param["output_width"],
+            acc_width=self.param["acc_width"],
+            weight_width=self.param["weight_width"]
         )
 
         # data in
@@ -36,12 +40,14 @@ class InnerProductLayerTB(Layer):
             self.param['cols_in'],
             self.param['channels_in']
         ])
+
         # weights
         weights = self.gen_data([
             self.param['filters'],
             self.param['cols_in']*self.param['rows_in']*self.param['channels_in']
         ])
         bias     = np.zeros(self.param['filters'])
+
         # data out
         data_out = layer.functional_model(copy.copy(data_in),weights,bias)[0]
         data_out = np.moveaxis(data_out,0,-1)
@@ -50,7 +56,6 @@ class InnerProductLayerTB(Layer):
         weights = np.reshape(weights,(self.param['filters'],self.param['cols_in'],self.param['rows_in'],self.param['channels_in'],1,1))
         weights = np.rollaxis(weights,1,3)
         weights = np.reshape(weights,(self.param['filters'],self.param['cols_in']*self.param['rows_in']*self.param['channels_in'],1,1))
-
 
         # save weights
         weights = ONNXData._transform_weights(
@@ -74,11 +79,13 @@ class InnerProductLayerTB(Layer):
             'input'  : data_in.reshape(-1).tolist(),
             'output' : data_out.reshape(-1).tolist()
         }
+
         # resource and latency model
         model = {
             'latency'   : layer.latency(),
             'resources' : layer.resource()
         }
+
         return data, model
 
     # update layer generation

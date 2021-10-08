@@ -35,7 +35,11 @@ class ConvolutionLayerTB(Layer):
             coarse_in=self.param['coarse_in'],
             coarse_out=self.param['coarse_out'],
             coarse_group=self.param['coarse_group'],
-            fine=self.param['fine']
+            fine=self.param['fine'],
+            input_width=self.param["input_width"],
+            output_width=self.param["output_width"],
+            acc_width=self.param["acc_width"],
+            weight_width=self.param["weight_width"]
         )
 
         # update parameters

@@ -20,9 +20,8 @@ def build_module(parameter):
         parameter['rows'],
         parameter['cols'],
         parameter['channels'],
-        [parameter['kernel_size_x'],parameter['kernel_size_y']],
-        parameter['coarse'],
-        parameter['data_width']
+        parameter['kernel_size'],
+        parameter['coarse']
     )
 
 # load accum model
@@ -36,7 +35,7 @@ model.fit_model()
 model.save_coefficients("coefficients/fork")
 
 # # plot error
-model.plot_error(MAX_RSC)
+# model.plot_error(MAX_RSC)
 
 # print out error
 model.print_absolute_error()

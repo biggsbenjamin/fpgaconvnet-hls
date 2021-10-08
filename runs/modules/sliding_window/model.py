@@ -20,13 +20,12 @@ def build_module(parameter):
         parameter['rows'],
         parameter['cols'],
         parameter['channels'],
-        [parameter['kernel_size_x'],parameter['kernel_size_y']],
-        [parameter['stride_x'],parameter['stride_y']],
-        parameter['pad_top'],
-        parameter['pad_right'],
-        parameter['pad_bottom'],
-        parameter['pad_left'],
-        parameter['data_width']
+        parameter['kernel_size'],
+        parameter['stride'],
+        parameter['pad'],
+        parameter['pad'],
+        parameter['pad'],
+        parameter['pad'],
     )
 
 # load accum model
@@ -36,10 +35,11 @@ model.load_points("modules/sliding_window/logs")
 # fit model
 model.fit_model()
 
+
 # save coefficients
 model.save_coefficients("coefficients/sliding_window")
 
-# # plot error
+# plot error
 model.plot_error(MAX_RSC)
 
 # print out error

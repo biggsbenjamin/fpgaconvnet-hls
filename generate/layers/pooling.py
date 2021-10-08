@@ -8,13 +8,12 @@ import generate.modules.pool
 pooling_layer_template_header = """#ifndef {NAME}_HPP_
 #define {NAME}_HPP_
 
+#include "sliding_window.hpp"
+#include "pool.hpp"
+
 #define name        {name}
 #define NAME        {NAME}
 #define {NAME}_ID   {id}
-
-#define {name}_input_t          data_t
-#define {name}_sliding_window_t data_t
-#define {name}_output_t         data_t
 
 #define {NAME}_BATCH_SIZE    {batch_size}
 #define {NAME}_ROWS          {rows}
@@ -33,6 +32,9 @@ pooling_layer_template_header = """#ifndef {NAME}_HPP_
 #define {NAME}_ROWS_OUT     {rows_out}
 #define {NAME}_COLS_OUT     {cols_out}
 #define {NAME}_CHANNELS_OUT {channels_out}
+
+// define the data type
+typedef ap_fixed<{data_width},{data_int_width},AP_RND, AP_SAT> {name}_data_t;
 
 // SLIDING WINDOW
 #define {NAME}_SLIDING_WINDOW_BATCH_SIZE    {batch_size}
@@ -57,16 +59,13 @@ pooling_layer_template_header = """#ifndef {NAME}_HPP_
 #define {NAME}_POOL_KERNEL_SIZE_Y {kernel_size_y}
 #define {NAME}_POOL_FINE         {fine}
 
-#include "sliding_window.hpp"
-#include "pool.hpp"
-
 /**
  * FUNCTION DEFINITION
  */
 
 void {name}(
-    stream_t({name}_input_t)  in[{NAME}_COARSE],
-    stream_t({name}_output_t) out[{NAME}_COARSE],
+    stream_t({name}_data_t) in[{NAME}_COARSE],
+    stream_t({name}_data_t) out[{NAME}_COARSE],
     int mode
 );
 
@@ -78,8 +77,8 @@ void {name}(
 pooling_layer_template_src = """#include "{name}.hpp"
 
 void {name}(
-    stream_t({name}_input_t)  in[{NAME}_COARSE],
-    stream_t({name}_output_t) out[{NAME}_COARSE],
+    stream_t({name}_data_t) in[{NAME}_COARSE],
+    stream_t({name}_data_t) out[{NAME}_COARSE],
     int mode
 )
 {{
@@ -93,7 +92,7 @@ void {name}(
 #pragma HLS ARRAY_PARTITION variable=in  complete dim=0
 #pragma HLS ARRAY_PARTITION variable=out complete dim=0
 
-    stream_t(data_t) sw_out[{NAME}_COARSE][{NAME}_KERNEL_SIZE_X][{NAME}_KERNEL_SIZE_Y]; //sliding window output
+    stream_t({name}_data_t) sw_out[{NAME}_COARSE][{NAME}_KERNEL_SIZE_X][{NAME}_KERNEL_SIZE_Y]; //sliding window output
 
 #pragma HLS STREAM variable=sw_out
 #pragma HLS ARRAY_PARTITION variable=sw_out complete dim=0
@@ -118,6 +117,7 @@ def gen_pooling_layer(name,param,src_path,header_path):
         name+"_sliding_window",
         "in[coarseIndex]",
         "sw_out[coarseIndex]",
+        sliding_window_t=f"{name}_data_t",
         indent=8
     )
 
@@ -126,6 +126,7 @@ def gen_pooling_layer(name,param,src_path,header_path):
         name+"_pool",
         "sw_out[coarseIndex]",
         "out[coarseIndex]",
+        pool_t=f"{name}_data_t",
         indent=8
     )
 
@@ -160,7 +161,9 @@ def gen_pooling_layer(name,param,src_path,header_path):
         fine                =param['fine'] if 'fine' in param else "1",
         rows_out            =param['rows_out'],
         cols_out            =param['cols_out'],
-        channels_out        =param['channels_out']
+        channels_out        =param['channels_out'],
+        data_width          =param['data_width'],
+        data_int_width      =param['data_width']//2,
     )
 
     # write source file

@@ -9,11 +9,12 @@ template<
     const unsigned int ROWS,
     const unsigned int COLS,
     const unsigned int PORTS_IN,
-    const MULTI_CHANNELS CHANNELS
+    const MULTI_CHANNELS CHANNELS,
+    typename concat_t
 >
 void concat(
-    stream_t(data_t) in[PORTS_IN],
-    stream_t(data_t) &out
+    stream_t(concat_t) in[PORTS_IN],
+    stream_t(concat_t) &out
     ) {
 
     #pragma HLS INLINE OFF
@@ -30,7 +31,7 @@ void concat(
     #pragma HLS ARRAY_PARTITION variable=in complete dim=0
     #pragma HLS STREAM variable=out
 
-    void channel_loop( stream_t(data_t) in[ports_in], stream_t(data_t) &out, int port_index ) {
+    void channel_loop( stream_t(concat_t) in[ports_in], stream_t(concat_t) &out, int port_index ) {
         #pragma HLS inline off
         channel_loop: for(unsigned int channel_index=0; channel_index<channels; channel_index++) {
             #pragma HLS PIPELINE II=1 rewind

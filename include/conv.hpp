@@ -16,13 +16,15 @@ template<
     unsigned int GROUPS,
     unsigned int FINE,
     unsigned int KERNEL_SIZE_X,
-    unsigned int KERNEL_SIZE_Y
+    unsigned int KERNEL_SIZE_Y,
+    typename conv_data_t,
+    typename conv_weight_t
 >
 void conv_intr(
-    stream_t(data_t)    in[KERNEL_SIZE_X][KERNEL_SIZE_Y],
-    const weight_t      weights[DIVIDE(CHANNELS*FILTERS,GROUPS)][KERNEL_SIZE_X][KERNEL_SIZE_Y],
-    stream_t(data_t)    window_stream[FINE],
-    stream_t(weight_t)  weight_stream[FINE]
+    stream_t(conv_data_t)    in[KERNEL_SIZE_X][KERNEL_SIZE_Y],
+    const conv_weight_t      weights[DIVIDE(CHANNELS*FILTERS,GROUPS)][KERNEL_SIZE_X][KERNEL_SIZE_Y],
+    stream_t(conv_data_t)    window_stream[FINE],
+    stream_t(conv_weight_t)  weight_stream[FINE]
 )
 {
 
@@ -58,7 +60,7 @@ DO_PRAGMA(HLS ARRAY_PARTITION variable=weights block factor=weights_partition_fa
 DO_PRAGMA(HLS ARRAY_PARTITION variable=weights block factor=weights_partition_factor_k2 dim=3)
 
     // INTERLEAVING LOOP
-    data_t window_cache[kernel_size_x][kernel_size_y];
+    conv_data_t window_cache[kernel_size_x][kernel_size_y];
     #pragma HLS ARRAY_PARTITION variable=window_cache complete dim=0
 
     intr_pixel_loop: for(unsigned int pixel_index=0;pixel_index<batch_size*rows*cols;pixel_index++) {
@@ -101,12 +103,15 @@ template<
     unsigned int GROUPS,
     unsigned int FINE,
     unsigned int KERNEL_SIZE_X,
-    unsigned int KERNEL_SIZE_Y
+    unsigned int KERNEL_SIZE_Y,
+    typename conv_data_t,
+    typename conv_weight_t,
+    typename conv_acc_t
 >
 void conv_mul(
-    stream_t(data_t)    window_stream[FINE],
-    stream_t(weight_t)  weight_stream[FINE],
-    stream_t(acc_t)     acc_stream[FINE]
+    stream_t(conv_data_t) window_stream[FINE],
+    stream_t(conv_weight_t) weight_stream[FINE],
+    stream_t(conv_acc_t) acc_stream[FINE]
 )
 {
 
@@ -136,17 +141,16 @@ void conv_mul(
 #pragma HLS ARRAY_PARTITION variable=acc_stream    complete dim=0
 
     // MULTIPLICATION LOOP
-    acc_t acc_cache[fine];
+    conv_acc_t acc_cache[fine];
     unsigned char acc_index=0;
     mul_pixel_loop: for(unsigned int pixel_index=0;pixel_index<batch_size*rows*cols*channels_per_group*filters_per_group*groups*interval;pixel_index++) {
-        /* acc_loop: for(unsigned char acc_index=0;acc_index<interval;acc_index++) { */
             #pragma HLS loop_flatten
             #pragma HLS unroll region
             #pragma HLS pipeline II=1
             mul_loop: for(unsigned char fine_index=0;fine_index<fine;fine_index++) {
                 #pragma HLS pipeline II=1
                 // update accumulation cache
-                acc_t prev = ( acc_index == 0 ) ? acc_t(0) : acc_cache[fine_index] ;
+                conv_acc_t prev = ( acc_index == 0 ) ? conv_acc_t(0) : acc_cache[fine_index] ;
                 acc_cache[fine_index] = prev + window_stream[fine_index].read() * weight_stream[fine_index].read();
                 // write to output stream
                 if( acc_index == (interval-1) ) {
@@ -155,7 +159,6 @@ void conv_mul(
             }
             // increment accumulation index
             acc_index = (acc_index+1) % interval;
-        /* } */
     }
 }
 
@@ -168,18 +171,21 @@ template<
     unsigned int GROUPS,
     unsigned int FINE,
     unsigned int KERNEL_SIZE_X,
-    unsigned int KERNEL_SIZE_Y
+    unsigned int KERNEL_SIZE_Y,
+    typename conv_acc_t
 >
 void conv_acc(
-    stream_t(acc_t) acc_stream[FINE],
-    stream_t(acc_t) &out
+    stream_t(conv_acc_t) acc_stream[FINE],
+    stream_t(conv_acc_t) &out
 )
 {
 
-#pragma HLS INLINE OFF
+    #pragma HLS INLINE OFF
 
-#pragma HLS STREAM variable=acc_stream
-#pragma HLS STREAM variable=out
+    #pragma HLS STREAM variable=acc_stream
+    #pragma HLS ARRAY_PARTITION variable=acc_stream complete dim=0
+
+    #pragma HLS STREAM variable=out
 
     const unsigned int batch_size    = BATCH_SIZE;
     const unsigned int rows          = ROWS;
@@ -191,17 +197,15 @@ void conv_acc(
     const unsigned int kernel_size_y = KERNEL_SIZE_Y;
     const unsigned int fine          = FINE;
 
-
     const unsigned int channels_per_group = DIVIDE(channels,groups);
     const unsigned int filters_per_group  = DIVIDE(filters ,groups);
 
-#pragma HLS ARRAY_PARTITION variable=acc_stream complete dim=0
 
     // ACCUMULATION LOOP
     acc_pixel_loop: for(unsigned int pixel_index=0;pixel_index<batch_size*rows*cols*channels_per_group*filters_per_group*groups;pixel_index++) {
         #pragma HLS pipeline II=1 rewind
         #pragma HLS unroll region
-        acc_t acc = 0 ;
+        conv_acc_t acc = 0 ;
         acc_fine_loop: for(unsigned char fine_index=0;fine_index<fine;fine_index++) {
             acc += acc_stream[fine_index].read();
         }
@@ -218,12 +222,15 @@ template<
     unsigned int GROUPS,
     unsigned int FINE,
     unsigned int KERNEL_SIZE_X,
-    unsigned int KERNEL_SIZE_Y
+    unsigned int KERNEL_SIZE_Y,
+    typename conv_data_t,
+    typename conv_weight_t,
+    typename conv_acc_t
 >
 void conv(
-    stream_t(data_t) in[KERNEL_SIZE_X][KERNEL_SIZE_Y],
-    const weight_t weights[DIVIDE(CHANNELS*FILTERS,GROUPS)][KERNEL_SIZE_X][KERNEL_SIZE_Y],
-    stream_t(acc_t) &out
+    stream_t(conv_data_t) in[KERNEL_SIZE_X][KERNEL_SIZE_Y],
+    const conv_weight_t weights[DIVIDE(CHANNELS*FILTERS,GROUPS)][KERNEL_SIZE_X][KERNEL_SIZE_Y],
+    stream_t(conv_acc_t) &out
 )
 {
 
@@ -240,9 +247,9 @@ void conv(
 
     const unsigned int fine = FINE;
 
-    stream_t(data_t)  window_stream[fine];
-    stream_t(weight_t) weight_stream[fine];
-    stream_t(acc_t) acc_stream[fine];
+    stream_t(conv_data_t) window_stream[fine];
+    stream_t(conv_weight_t) weight_stream[fine];
+    stream_t(conv_acc_t) acc_stream[fine];
 
     #pragma HLS STREAM variable=window_stream
     #pragma HLS STREAM variable=weight_stream
@@ -257,7 +264,9 @@ void conv(
         GROUPS,
         FINE,
         KERNEL_SIZE_X,
-        KERNEL_SIZE_Y
+        KERNEL_SIZE_Y,
+        conv_data_t,
+        conv_weight_t
     >(in,weights,window_stream,weight_stream);
 
     conv_mul<
@@ -269,7 +278,10 @@ void conv(
         GROUPS,
         FINE,
         KERNEL_SIZE_X,
-        KERNEL_SIZE_Y
+        KERNEL_SIZE_Y,
+        conv_data_t,
+        conv_weight_t,
+        conv_acc_t
     >(window_stream,weight_stream,acc_stream);
 
     conv_acc<
@@ -281,8 +293,9 @@ void conv(
         GROUPS,
         FINE,
         KERNEL_SIZE_X,
-        KERNEL_SIZE_Y
-    >(acc_stream,out);
+        KERNEL_SIZE_Y,
+        conv_acc_t
+    >(acc_stream, out);
 
 }
 
@@ -295,12 +308,15 @@ template<
     unsigned int COLS,
     unsigned int CHANNELS,
     unsigned int FILTERS,
-    unsigned int GROUPS
+    unsigned int GROUPS,
+    typename conv_data_t,
+    typename conv_weight_t,
+    typename conv_acc_t
 >
 void conv(
-    stream_t(data_t) &in,
-    const weight_t weights[DIVIDE(CHANNELS*FILTERS,GROUPS)][1][1],
-    stream_t(acc_t) &out
+    stream_t(conv_data_t) &in,
+    const conv_weight_t weights[DIVIDE(CHANNELS*FILTERS,GROUPS)],
+    stream_t(conv_acc_t) &out
 )
 {
 
@@ -319,7 +335,7 @@ void conv(
 #pragma HLS STREAM variable=in
 #pragma HLS STREAM variable=out
 
-    data_t window_cache;
+    conv_data_t window_cache;
 
     pixel_loop: for(unsigned int pixel_index=0;pixel_index<batch_size*rows*cols;pixel_index++) {
         unsigned int weight_index = 0;
@@ -332,8 +348,9 @@ void conv(
                     DO_PRAGMA(HLS occurrence cycle=batch_size*rows*cols*channels)
                     window_cache = in.read();
                 }
-                acc_t acc = window_cache * weights[weight_index][0][0];
-                
+
+                conv_acc_t acc = window_cache * weights[weight_index];
+
                 weight_index++;
                 out.write(acc);
             }

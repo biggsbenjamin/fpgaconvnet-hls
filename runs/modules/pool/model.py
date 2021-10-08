@@ -21,12 +21,6 @@ def build_module(parameter):
 model = ModuleModel(build_module)
 model.load_points("modules/pool/logs")
 
-# filter parameters
-filters = {
-    "data_width" : [15,17]
-}
-model.filter_parameters(filters)
-
 # fit model
 model.fit_model()
 
@@ -34,7 +28,7 @@ model.fit_model()
 model.save_coefficients("coefficients/pool")
 
 # # plot error
-# model.plot_error(MAX_RSC)
+model.plot_error(MAX_RSC)
 
 # print out error
 model.print_absolute_error()

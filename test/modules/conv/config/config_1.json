@@ -1,7 +1,7 @@
 {
     "rows": 28,
     "cols": 28,
-    "channels": 64,
+    "channels": 256,
     "filters": 1,
     "group": 1,
     "fine": 1,

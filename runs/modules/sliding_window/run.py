@@ -8,7 +8,7 @@ for _ in range(runner.max_runners):
     # generate parameters
     #runner.gen_parameters()
 
-    runner.parameters['freq'] = 200 
+    runner.parameters['freq'] = 200
 
     runner.parameters['channels'] = random.randint(1, 256)
 
@@ -28,7 +28,8 @@ for _ in range(runner.max_runners):
     runner.parameters['stride_y'] = random.choice(
         runner.get_factors( max(1,int(runner.parameters['cols'] - runner.parameters['kernel_size_y'] +2*runner.parameters['pad_left'])) ))
 
-    runner.parameters['data_width'] = 16
+    runner.parameters['data_int_width']=random.randint(1,30)
+    runner.parameters['data_width']=random.randint(runner.parameters['data_int_width']+1,32)
 
     # run tests
     runner.run()

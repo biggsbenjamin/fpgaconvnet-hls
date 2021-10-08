@@ -11,6 +11,13 @@ import generate.modules.glue
 convolution_layer_template_header = """#ifndef {NAME}_HPP_
 #define {NAME}_HPP_
 
+#include <ap_fixed.h>
+#include "sliding_window.hpp"
+#include "fork.hpp"
+#include "conv.hpp"
+#include "accum.hpp"
+#include "glue.hpp"
+
 #define name        {name}
 #define NAME        {NAME}
 #define {NAME}_ID   {id}
@@ -38,6 +45,12 @@ convolution_layer_template_header = """#ifndef {NAME}_HPP_
 #define {NAME}_ROWS_OUT     {rows_out}
 #define {NAME}_COLS_OUT     {cols_out}
 #define {NAME}_CHANNELS_OUT {channels_out}
+
+// define data types
+typedef ap_fixed<{input_width},{input_int_width},AP_RND, AP_SAT>    {name}_input_t;
+typedef ap_fixed<{output_width},{output_int_width},AP_RND, AP_SAT>  {name}_output_t;
+typedef ap_fixed<{acc_width},{acc_int_width},AP_RND, AP_SAT>        {name}_acc_t;
+typedef ap_fixed<{weight_width},{weight_int_width},AP_RND, AP_SAT>  {name}_weight_t;
 
 // SLIDING WINDOW
 #define {NAME}_SLIDING_WINDOW_BATCH_SIZE    {batch_size}
@@ -91,20 +104,14 @@ convolution_layer_template_header = """#ifndef {NAME}_HPP_
 #define {NAME}_GLUE_COARSE_OUT   {coarse_out}
 #define {NAME}_GLUE_COARSE_GROUP {coarse_group}
 
-#include "sliding_window.hpp"
-#include "fork.hpp"
-#include "conv.hpp"
-#include "accum.hpp"
-#include "glue.hpp"
-
 /**
  * FUNCTION DEFINITION
  */
 
 void {name}(
-    const weight_t weights[{NAME}_COARSE_IN*{NAME}_COARSE_GROUP][{NAME}_COARSE_OUT][DIVIDE({NAME}_WEIGHTS,{NAME}_COARSE_IN*{NAME}_COARSE_GROUP*{NAME}_COARSE_OUT*{NAME}_KERNEL_SIZE_X*{NAME}_KERNEL_SIZE_Y)][{NAME}_KERNEL_SIZE_X][{NAME}_KERNEL_SIZE_Y],
-    stream_t(data_t)  in[{NAME}_COARSE_IN*{NAME}_COARSE_GROUP],
-    stream_t(data_t) out[{NAME}_COARSE_OUT*{NAME}_COARSE_GROUP],
+    const {name}_weight_t weights[{NAME}_COARSE_IN*{NAME}_COARSE_GROUP][{NAME}_COARSE_OUT][DIVIDE({NAME}_WEIGHTS,{NAME}_COARSE_IN*{NAME}_COARSE_GROUP*{NAME}_COARSE_OUT*{NAME}_KERNEL_SIZE_X*{NAME}_KERNEL_SIZE_Y)][{NAME}_KERNEL_SIZE_X][{NAME}_KERNEL_SIZE_Y],
+    stream_t({name}_input_t)  in[{NAME}_COARSE_IN*{NAME}_COARSE_GROUP],
+    stream_t({name}_output_t) out[{NAME}_COARSE_OUT*{NAME}_COARSE_GROUP],
     int mode
 );
 
@@ -116,9 +123,9 @@ void {name}(
 convolution_layer_template_src = """#include "{name}.hpp"
 
 void {name}(
-    const weight_t weights[{NAME}_COARSE_IN*{NAME}_COARSE_GROUP][{NAME}_COARSE_OUT][DIVIDE({NAME}_WEIGHTS,{NAME}_COARSE_IN*{NAME}_COARSE_GROUP*{NAME}_COARSE_OUT*{NAME}_KERNEL_SIZE_X*{NAME}_KERNEL_SIZE_Y)][{NAME}_KERNEL_SIZE_X][{NAME}_KERNEL_SIZE_Y],
-    stream_t(data_t) in[{NAME}_COARSE_IN*{NAME}_COARSE_GROUP],
-    stream_t(data_t) out[{NAME}_COARSE_OUT*{NAME}_COARSE_GROUP],
+    const {name}_weight_t weights[{NAME}_COARSE_IN*{NAME}_COARSE_GROUP][{NAME}_COARSE_OUT][DIVIDE({NAME}_WEIGHTS,{NAME}_COARSE_IN*{NAME}_COARSE_GROUP*{NAME}_COARSE_OUT*{NAME}_KERNEL_SIZE_X*{NAME}_KERNEL_SIZE_Y)][{NAME}_KERNEL_SIZE_X][{NAME}_KERNEL_SIZE_Y],
+    stream_t({name}_input_t)  in[{NAME}_COARSE_IN*{NAME}_COARSE_GROUP],
+    stream_t({name}_output_t) out[{NAME}_COARSE_OUT*{NAME}_COARSE_GROUP],
     int mode
 )
 {{
@@ -186,13 +193,6 @@ def gen_convolution_layer(name,param,src_path,header_path):
         inputs.pop('sliding_window',None)
         outputs.pop('sliding_window',None)
 
-    """
-    if param['coarse_in'] == 1:
-        outputs['accum'] = "out[j]"
-        inputs.pop('glue',None)
-        outputs.pop('glue',None)
-    """
-
     if single_channel:
         inputs['glue'] = "conv_out"
         #outputs['conv'] = "out[j]"
@@ -201,28 +201,12 @@ def gen_convolution_layer(name,param,src_path,header_path):
         #inputs.pop('glue',None)
         #outputs.pop('glue',None)
 
-    """
-    if depthwise:
-        outputs['conv'] = "out[i]"
-        inputs.pop('accum',None)
-        outputs.pop('accum',None)
-        inputs.pop('glue',None)
-        outputs.pop('glue',None)
-
-    if (param['channels_in'])/(param['coarse_in']*param['groups']) == 1 and not single_channel:
-        inputs['glue'] = "conv_out"
-        inputs.pop('accum',None)
-        outputs.pop('accum',None)
-
-    print(inputs, outputs)
-    """
-
     streams = ""
 
     # SLIDING WINDOW MODULE INIT
     if 'sliding_window' in inputs:
         streams += """
-    stream_t(data_t) sw_out[{NAME}_COARSE_IN*{NAME}_COARSE_GROUP][{NAME}_KERNEL_SIZE_X][{NAME}_KERNEL_SIZE_Y];
+    stream_t({name}_input_t) sw_out[{NAME}_COARSE_IN*{NAME}_COARSE_GROUP][{NAME}_KERNEL_SIZE_X][{NAME}_KERNEL_SIZE_Y];
     #pragma HLS STREAM variable=sw_out
     #pragma HLS ARRAY_PARTITION variable=sw_out complete dim=0
         """.format(NAME=name.upper(),name=name)
@@ -230,6 +214,7 @@ def gen_convolution_layer(name,param,src_path,header_path):
             name+"_sliding_window",
             inputs['sliding_window'],
             outputs['sliding_window'],
+            sliding_window_t=f"{name}_input_t",
             indent=8
         )
     else:
@@ -238,7 +223,7 @@ def gen_convolution_layer(name,param,src_path,header_path):
     # FORK MODULE INIT
     if 'fork' in inputs:
         streams += """
-    stream_t(data_t) fork_out[{NAME}_COARSE_IN*{NAME}_COARSE_GROUP][{NAME}_COARSE_OUT]{single_stream}[{NAME}_KERNEL_SIZE_X][{NAME}_KERNEL_SIZE_Y];
+    stream_t({name}_input_t) fork_out[{NAME}_COARSE_IN*{NAME}_COARSE_GROUP][{NAME}_COARSE_OUT]{single_stream}[{NAME}_KERNEL_SIZE_X][{NAME}_KERNEL_SIZE_Y];
     #pragma HLS STREAM variable=fork_out
     #pragma HLS ARRAY_PARTITION variable=fork_out complete dim=0
         """.format(NAME=name.upper(),name=name,
@@ -247,6 +232,7 @@ def gen_convolution_layer(name,param,src_path,header_path):
             name+"_fork",
             inputs['fork'],
             outputs['fork'],
+            fork_t=f"{name}_input_t",
             indent=8
         )
     else:
@@ -255,7 +241,7 @@ def gen_convolution_layer(name,param,src_path,header_path):
     # CONV MODULE INIT
     if 'conv' in inputs:
         streams += """
-    stream_t(acc_t) conv_out[{NAME}_COARSE_IN*{NAME}_COARSE_GROUP][{NAME}_COARSE_OUT];
+    stream_t({name}_acc_t) conv_out[{NAME}_COARSE_IN*{NAME}_COARSE_GROUP][{NAME}_COARSE_OUT];
     #pragma HLS STREAM variable=conv_out
     #pragma HLS ARRAY_PARTITION variable=conv_out complete dim=0
         """.format(NAME=name.upper(),name=name)
@@ -264,6 +250,9 @@ def gen_convolution_layer(name,param,src_path,header_path):
             inputs['conv'],
             "weights[i][j]",
             outputs['conv'],
+            data_t=f"{name}_input_t",
+            acc_t=f"{name}_acc_t",
+            weight_t=f"{name}_weight_t",
             indent=12
         )
     else:
@@ -272,7 +261,7 @@ def gen_convolution_layer(name,param,src_path,header_path):
     # ACCUM MODULE INIT
     if 'accum' in inputs:
         streams += """
-    stream_t(acc_t) accum_out[{NAME}_COARSE_IN*{NAME}_COARSE_GROUP][{NAME}_COARSE_OUT];
+    stream_t({name}_acc_t) accum_out[{NAME}_COARSE_IN*{NAME}_COARSE_GROUP][{NAME}_COARSE_OUT];
     #pragma HLS STREAM variable=accum_out
     #pragma HLS ARRAY_PARTITION variable=accum_out complete dim=0
         """.format(NAME=name.upper(),name=name)
@@ -280,6 +269,7 @@ def gen_convolution_layer(name,param,src_path,header_path):
             name+"_accum",
             inputs['accum'],
             outputs['accum'],
+            accum_t=f"{name}_acc_t",
             indent=12
         )
     else:
@@ -291,6 +281,8 @@ def gen_convolution_layer(name,param,src_path,header_path):
             name+"_glue",
             inputs['glue'],
             outputs['glue'],
+            acc_t=f"{name}_acc_t",
+            data_t=f"{name}_output_t",
             indent=4
         )
     else:
@@ -311,34 +303,42 @@ def gen_convolution_layer(name,param,src_path,header_path):
 
     # header
     convolution_layer_header = convolution_layer_template_header.format(
-        name                            =name,
-        NAME                            =name.upper(),
-        id                              =0, # param['id'],
-        batch_size                      =param['batch_size'],
-        rows                            =param['rows_in'],
-        cols                            =param['cols_in'],
-        channels                        =param['channels_in'],
-        channels_per_module             =param['channels_in']//(param['coarse_in']*param['coarse_group']),
-        filters                         =param['filters'],
-        filters_per_module              =param['filters']//(param['coarse_out']*param['coarse_group']),
-        groups                          =param['groups'],
-        groups_per_module               =param['groups']//param['coarse_group'],
-        coarse_in                       =param['coarse_in'],
-        coarse_out                      =param['coarse_out'],
-        coarse_group                    =param['coarse_group'],
-        fine                            =param['fine'],
-        interval                        =(param['kernel_size'][0]*param['kernel_size'][1])//param['fine'],
-        kernel_size_x                   =param['kernel_size'][0],
-        kernel_size_y                   =param['kernel_size'][1],
-        stride_x                        =param['stride'][0],
-        stride_y                        =param['stride'][1],
-        pad_left                        =param['pad_left'],
-        pad_right                       =param['pad_right'],
-        pad_top                         =param['pad_top'],
-        pad_bottom                      =param['pad_bottom'],
-        rows_out                        =param['rows_out'],
-        cols_out                        =param['cols_out'],
-        channels_out                    =param['channels_out']
+        name                =name,
+        NAME                =name.upper(),
+        id                  =0, # param['id'],
+        batch_size          =param['batch_size'],
+        rows                =param['rows_in'],
+        cols                =param['cols_in'],
+        channels            =param['channels_in'],
+        channels_per_module =param['channels_in']//(param['coarse_in']*param['coarse_group']),
+        filters             =param['filters'],
+        filters_per_module  =param['filters']//(param['coarse_out']*param['coarse_group']),
+        groups              =param['groups'],
+        groups_per_module   =param['groups']//param['coarse_group'],
+        coarse_in           =param['coarse_in'],
+        coarse_out          =param['coarse_out'],
+        coarse_group        =param['coarse_group'],
+        fine                =param['fine'],
+        interval            =(param['kernel_size'][0]*param['kernel_size'][1])//param['fine'],
+        kernel_size_x       =param['kernel_size'][0],
+        kernel_size_y       =param['kernel_size'][1],
+        stride_x            =param['stride'][0],
+        stride_y            =param['stride'][1],
+        pad_left            =param['pad_left'],
+        pad_right           =param['pad_right'],
+        pad_top             =param['pad_top'],
+        pad_bottom          =param['pad_bottom'],
+        rows_out            =param['rows_out'],
+        cols_out            =param['cols_out'],
+        channels_out        =param['channels_out'],
+        input_width         =param['input_width'],
+        input_int_width     =param['input_width']//2,
+        output_width        =param['output_width'],
+        output_int_width    =param['output_width']//2,
+        acc_width           =param['acc_width'],
+        acc_int_width       =param['acc_width']//2,
+        weight_width        =param['weight_width'],
+        weight_int_width    =param['weight_width']//2,
     )
 
     # write source file

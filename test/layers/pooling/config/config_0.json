@@ -13,5 +13,6 @@
     "fine": 1,
     "pool_type": "max",
     "batch_size": 1,
+    "data_width": 16,
     "description": "layer name: pool1, net name: resnet.prototxt"
 }

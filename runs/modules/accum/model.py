@@ -21,7 +21,8 @@ def build_module(parameter):
         parameter['cols'],
         parameter['channels'],
         parameter['filters'],
-        parameter['groups']
+        parameter['groups'],
+        # data_width=parameter['data_width']
     )
 
 # load accum model

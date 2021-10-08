@@ -1,9 +1,10 @@
 #include "accum_tb.hpp"
 #include "accum.hpp"
 
+
 void accum_top(
-    stream_t(acc_t) &in,
-    stream_t(acc_t) &out
+    stream_t(accum_t) &in,
+    stream_t(accum_t) &out
 )
 {
 
@@ -11,12 +12,13 @@ void accum_top(
 
     // DUT
     accum<
-        ACCUM_BATCH_SIZE,  
-        ACCUM_ROWS,  
-        ACCUM_COLS,  
-        ACCUM_CHANNELS,  
-        ACCUM_FILTERS,  
-        ACCUM_GROUPS 
+        ACCUM_BATCH_SIZE,
+        ACCUM_ROWS,
+        ACCUM_COLS,
+        ACCUM_CHANNELS,
+        ACCUM_FILTERS,
+        ACCUM_GROUPS,
+        accum_t
     >(in,out);
 
 }

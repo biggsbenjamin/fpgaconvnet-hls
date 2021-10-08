@@ -23,8 +23,6 @@ def build_module(parameter):
         parameter['filters'],
         parameter['coarse_in'],
         parameter['coarse_out'],
-        parameter['coarse_group'],
-        parameter['data_width']
     )
 
 # load accum model

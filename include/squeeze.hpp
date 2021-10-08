@@ -9,11 +9,12 @@ template<
     unsigned int COLS,
     unsigned int CHANNELS,
     unsigned int COARSE_IN,
-    unsigned int COARSE_OUT
+    unsigned int COARSE_OUT,
+    typename squeeze_t
 >
 void squeeze(
-    stream_t(data_t) in[COARSE_IN],
-    stream_t(data_t) out[COARSE_OUT]
+    stream_t(squeeze_t) in[COARSE_IN],
+    stream_t(squeeze_t) out[COARSE_OUT]
 )
 {
 
@@ -33,7 +34,7 @@ void squeeze(
 #pragma HLS ARRAY_PARTITION variable=in complete dim=0
 #pragma HLS ARRAY_PARTITION variable=out complete dim=0
 
-    stream_t(data_t)  channel_cache[channels];
+    stream_t(squeeze_t)  channel_cache[channels];
 #pragma HLS STREAM variable=channel_cache
 #pragma HLS ARRAY_PARTITION variable=channel_cache complete dim=0
 

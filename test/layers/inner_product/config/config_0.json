@@ -10,5 +10,9 @@
     "fine": 1,
     "batch_size": 1,
     "wr_factor" : 1,
+    "input_width": 16,
+    "acc_width": 30,
+    "weight_width": 8,
+    "output_width": 16,
     "description": "layer name: ip1, net name: lenet.prototxt"
 }
