@@ -10,11 +10,7 @@ int main()
     std::string weights_path    = std::string(DATA_DIR)+"/weights.dat";
 
     // weights
-#if (CONV_KERNEL_SIZE_0 == 1) && (CONV_KERNEL_SIZE_1 == 1)
-    conv_weight_t weights[CONV_CHANNELS*DIVIDE(CONV_FILTERS,CONV_GROUPS)];
-#else
     conv_weight_t weights[CONV_CHANNELS*DIVIDE(CONV_FILTERS,CONV_GROUPS)][CONV_KERNEL_SIZE_0][CONV_KERNEL_SIZE_1];
-#endif
 
     stream_t(conv_data_t) in[CONV_KERNEL_SIZE_0][CONV_KERNEL_SIZE_1];
     stream_t(conv_acc_t) out("out");
@@ -27,10 +23,8 @@ int main()
     // load weights
     load_data<
         CONV_CHANNELS*DIVIDE(CONV_FILTERS,CONV_GROUPS),
-#if (CONV_KERNEL_SIZE_0 != 1) || (CONV_KERNEL_SIZE_1 != 1)
         CONV_KERNEL_SIZE_0,
         CONV_KERNEL_SIZE_1,
-#endif
         conv_weight_t
     >(weights_path,weights);
 

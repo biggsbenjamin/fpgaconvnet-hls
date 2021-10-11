@@ -90,7 +90,7 @@ typedef ap_fixed<{weight_width},{weight_int_width},AP_RND, AP_SAT>  {name}_weigh
  */
 
 void {name}(
-    const {name}_weight_t weights[{NAME}_COARSE_IN][{NAME}_COARSE_OUT][CHANNELS_3D({NAME}_ROWS*{NAME}_COLS*{NAME}_CHANNELS,{NAME}_COARSE_IN)*CHANNELS_3D({NAME}_FILTERS,{NAME}_COARSE_OUT)],
+    const {name}_weight_t weights[{NAME}_COARSE_IN][{NAME}_COARSE_OUT][CHANNELS_3D({NAME}_ROWS*{NAME}_COLS*{NAME}_CHANNELS,{NAME}_COARSE_IN)*CHANNELS_3D({NAME}_FILTERS,{NAME}_COARSE_OUT)][1][1],
     stream_t({name}_input_t) in[{NAME}_COARSE_IN],
     stream_t({name}_output_t) out[{NAME}_COARSE_OUT],
     int mode
@@ -104,7 +104,7 @@ void {name}(
 inner_product_layer_template_src = """#include "{name}.hpp"
 
 void {name}(
-    const {name}_weight_t weights[{NAME}_COARSE_IN][{NAME}_COARSE_OUT][CHANNELS_3D({NAME}_ROWS*{NAME}_COLS*{NAME}_CHANNELS,{NAME}_COARSE_IN)*CHANNELS_3D({NAME}_FILTERS,{NAME}_COARSE_OUT)],
+    const {name}_weight_t weights[{NAME}_COARSE_IN][{NAME}_COARSE_OUT][CHANNELS_3D({NAME}_ROWS*{NAME}_COLS*{NAME}_CHANNELS,{NAME}_COARSE_IN)*CHANNELS_3D({NAME}_FILTERS,{NAME}_COARSE_OUT)][1][1],
     stream_t({name}_input_t) in[{NAME}_COARSE_IN],
     stream_t({name}_output_t) out[{NAME}_COARSE_OUT],
     int mode

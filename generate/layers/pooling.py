@@ -35,6 +35,8 @@ pooling_layer_template_header = """#ifndef {NAME}_HPP_
 
 // define the data type
 typedef ap_fixed<{data_width},{data_int_width},AP_RND, AP_SAT> {name}_data_t;
+typedef {name}_data_t {name}_input_t;
+typedef {name}_data_t {name}_output_t;
 
 // SLIDING WINDOW
 #define {NAME}_SLIDING_WINDOW_BATCH_SIZE    {batch_size}

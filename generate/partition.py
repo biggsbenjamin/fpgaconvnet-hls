@@ -31,7 +31,7 @@ class generate_weight_def:
 
     def __str__(self):
         return """
-{type} weight_t {name}_weights[{NAME}_COARSE_IN*{NAME}_COARSE_GROUP][{NAME}_COARSE_OUT][DIVIDE({NAME}_WEIGHTS,{NAME}_COARSE_IN*{NAME}_COARSE_GROUP*{NAME}_COARSE_OUT*{NAME}_KERNEL_SIZE_X*{NAME}_KERNEL_SIZE_Y)]{kernel_dim} = {{
+{type} {name}_weight_t {name}_weights[{NAME}_COARSE_IN*{NAME}_COARSE_GROUP][{NAME}_COARSE_OUT][DIVIDE({NAME}_WEIGHTS,{NAME}_COARSE_IN*{NAME}_COARSE_GROUP*{NAME}_COARSE_OUT*{NAME}_KERNEL_SIZE_X*{NAME}_KERNEL_SIZE_Y)]{kernel_dim} = {{
 #include "{name}_weights_0.csv"
 }};
 """.format(
@@ -98,24 +98,24 @@ def gen_network(name,partition,output_path):
     output_node = partition.output_node
 
     # get all streams
-    streams = []
+    streams = {}
     for layer in partition.layers:
         for stream_in in layer.streams_in:
-            streams.append((stream_in.name, stream_in.coarse))
+            streams[stream_in.name] = (stream_in.coarse, f"{layer.name}_input_t")
         for stream_out in layer.streams_out:
-            streams.append((stream_out.name, stream_out.coarse))
+            streams[stream_out.name] = (stream_out.coarse, f"{layer.name}_output_t")
 
     # remove duplicates
-    streams = list(set(streams))
+    # streams = list(set(streams))
 
     # create stream initialisations
     streams_init = ""
     for stream in streams:
         streams_init +=  """
-    stream_t(data_t) {stream_name}[{coarse}];
+    stream_t({stream_type}) {stream_name}[{coarse}];
 #pragma HLS STREAM variable={stream_name}
 #pragma HLS ARRAY_PARTITION variable={stream_name} complete dim=0
-""".format(stream_name=stream[0],coarse=stream[1])
+""".format(stream_name=stream,coarse=streams[stream][0],stream_type=streams[stream][1])
 
     # weight information
     weights = ""
@@ -207,6 +207,8 @@ def gen_network(name,partition,output_path):
         ports       =partition.ports,
         streams_in  =partition.layers[0].parameters.coarse_in, # TODO: change
         streams_out =partition.layers[-1].parameters.coarse_out, # TODO: change
+        input_layer =partition.layers[0].name,
+        output_layer=partition.layers[-1].name,
         wr_layer    =wr_layer,
         WR_LAYER    =wr_layer.upper(),
         wr_factor   =partition.weights_reloading_factor,
@@ -238,10 +240,6 @@ def gen_network(name,partition,output_path):
         f.write(network_src)
     with open(os.path.join(output_path,f'tb/{name}_tb.cpp'),'w') as f:
         f.write(network_tb_src)
-
-    # save modules
-    shutil.copy( os.path.join(os.environ['FPGACONVNET_HLS'],'include/wr.hpp'),
-                os.path.join(output_path,f"include/{name}_wr.hpp") ) # TODO fix
 
 if __name__=="__main__":
 

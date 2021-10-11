@@ -31,6 +31,8 @@ relu_layer_template_header = """#ifndef {NAME}_HPP_
 #define {NAME}_RELU_CHANNELS     {channels_per_module}
 
 typedef ap_fixed<{data_width},{data_int_width},AP_RND, AP_SAT> {name}_data_t;
+typedef {name}_data_t {name}_input_t;
+typedef {name}_data_t {name}_output_t;
 
 /**
  * FUNCTION DEFINITION

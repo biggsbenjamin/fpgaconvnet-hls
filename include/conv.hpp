@@ -315,7 +315,7 @@ template<
 >
 void conv(
     stream_t(conv_data_t) &in,
-    const conv_weight_t weights[DIVIDE(CHANNELS*FILTERS,GROUPS)],
+    const conv_weight_t weights[DIVIDE(CHANNELS*FILTERS,GROUPS)][1][1],
     stream_t(conv_acc_t) &out
 )
 {
@@ -349,7 +349,7 @@ void conv(
                     window_cache = in.read();
                 }
 
-                conv_acc_t acc = window_cache * weights[weight_index];
+                conv_acc_t acc = window_cache * weights[weight_index][0][0];
 
                 weight_index++;
                 out.write(acc);

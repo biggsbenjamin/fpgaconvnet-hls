@@ -1,6 +1,12 @@
 network_header_template = """#ifndef {NAME}_TOP_HPP_
 #define {NAME}_TOP_HPP_
 
+#include "common.hpp"
+{include}
+#include "mem_read.hpp"
+#include "mem_write.hpp"
+#include "wr.hpp"
+
 #define {NAME}_BATCH_SIZE   {batch_size}
 
 #define {NAME}_ROWS_IN      {rows_in}
@@ -27,12 +33,8 @@ network_header_template = """#ifndef {NAME}_TOP_HPP_
 #define {NAME}_SIZE_IN  {NAME}_BATCH_SIZE*{NAME}_ROWS_IN*{NAME}_COLS_IN*DIVIDE({NAME}_CHANNELS_IN,{NAME}_STREAMS_IN)
 #define {NAME}_SIZE_OUT {NAME}_BATCH_SIZE*{NAME}_ROWS_OUT*{NAME}_COLS_OUT*DIVIDE({NAME}_CHANNELS_OUT,{NAME}_STREAMS_OUT)*{NAME}_WEIGHTS_RELOADING_FACTOR
 
-#include "common.hpp"
-{include}
-
-#include "mem_read.hpp"
-#include "mem_write.hpp"
-//#include "wr.hpp"
+typedef {input_layer}_input_t   {name}_input_t;
+typedef {output_layer}_output_t {name}_output_t;
 
 #if {NAME}_WEIGHTS_RELOADING_FLAG
 #define {NAME}_WR_COARSE_IN       {WR_LAYER}_COARSE_IN
@@ -44,23 +46,17 @@ network_header_template = """#ifndef {NAME}_TOP_HPP_
 
 #define {NAME}_SIZE_WR  DIVIDE({NAME}_WR_WEIGHTS,{NAME}_STREAMS_WR)
 
-// weights reloading interfaces
-#define MODULE_NAME {NAME}_WR
 #define {NAME}_WR_BATCH_SIZE    1
 #define {NAME}_WR_ROWS_IN       1
 #define {NAME}_WR_COLS_IN       1
 #define {NAME}_WR_CHANNELS_IN   {NAME}_SIZE_WR
 #define {NAME}_WR_PORTS_IN      {NAME}_PORTS_WR
 #define {NAME}_WR_STREAMS_IN    {NAME}_STREAMS_WR
-#define name        {name}
-#include "{name}_wr.hpp"
-#undef name
-#undef MODULE_NAME
 
 void reload_weights(
     int weights_reloading_index,
     volatile mem_int wr_hw[{NAME}_PORTS_WR][{NAME}_SIZE_WR],
-    weight_t weights[{NAME}_WR_COARSE_IN*{NAME}_WR_COARSE_GROUP][{NAME}_WR_COARSE_OUT][DIVIDE({NAME}_WR_WEIGHTS,{NAME}_WR_COARSE_IN*{NAME}_WR_COARSE_GROUP*{NAME}_WR_COARSE_OUT*{NAME}_WR_KERNEL_SIZE_X*{NAME}_WR_KERNEL_SIZE_Y)][{NAME}_WR_KERNEL_SIZE_X][{NAME}_WR_KERNEL_SIZE_Y]
+    {wr_layer}_weight_t weights[{NAME}_WR_COARSE_IN*{NAME}_WR_COARSE_GROUP][{NAME}_WR_COARSE_OUT][DIVIDE({NAME}_WR_WEIGHTS,{NAME}_WR_COARSE_IN*{NAME}_WR_COARSE_GROUP*{NAME}_WR_COARSE_OUT*{NAME}_WR_KERNEL_SIZE_X*{NAME}_WR_KERNEL_SIZE_Y)][{NAME}_WR_KERNEL_SIZE_X][{NAME}_WR_KERNEL_SIZE_Y]
 );
 #endif
 
@@ -91,7 +87,7 @@ network_src_template = """#include "{name}_top.hpp"
 void reload_weights(
     int weights_reloading_index,
     volatile mem_int wr_hw[{NAME}_PORTS_WR][{NAME}_SIZE_WR],
-    weight_t weights[{NAME}_WR_COARSE_IN*{NAME}_WR_COARSE_GROUP][{NAME}_WR_COARSE_OUT][DIVIDE({NAME}_WR_WEIGHTS,{NAME}_WR_COARSE_IN*{NAME}_WR_COARSE_GROUP*{NAME}_WR_COARSE_OUT*{NAME}_WR_KERNEL_SIZE_X*{NAME}_WR_KERNEL_SIZE_Y)][{NAME}_WR_KERNEL_SIZE_X][{NAME}_WR_KERNEL_SIZE_Y]
+    {wr_layer}_weight_t weights[{NAME}_WR_COARSE_IN*{NAME}_WR_COARSE_GROUP][{NAME}_WR_COARSE_OUT][DIVIDE({NAME}_WR_WEIGHTS,{NAME}_WR_COARSE_IN*{NAME}_WR_COARSE_GROUP*{NAME}_WR_COARSE_OUT*{NAME}_WR_KERNEL_SIZE_X*{NAME}_WR_KERNEL_SIZE_Y)][{NAME}_WR_KERNEL_SIZE_X][{NAME}_WR_KERNEL_SIZE_Y]
 )
 {{
 
@@ -101,7 +97,7 @@ void reload_weights(
 #pragma HLS stable variable=weights
 
     // stream init
-    stream_t(weight_t) wr[{NAME}_STREAMS_WR];
+    stream_t({wr_layer}_weight_t) wr[{NAME}_STREAMS_WR];
 #pragma HLS STREAM variable=wr
 #pragma HLS ARRAY_PARTITION variable=wr complete dim=0
 
@@ -112,10 +108,18 @@ void reload_weights(
         {NAME}_WR_CHANNELS_IN,
         {NAME}_WR_PORTS_IN,
         {NAME}_WR_STREAMS_IN,
-        weight_t
+        {wr_layer}_weight_t
     >(wr_hw,wr);
 
-    {name}_wr<0>(wr[0],weights);
+    weights_reloading<
+       {NAME}_WR_WEIGHTS,
+       {NAME}_WR_COARSE_IN,
+       {NAME}_WR_COARSE_OUT,
+       {NAME}_WR_COARSE_GROUP,
+       {NAME}_WR_KERNEL_SIZE_X,
+       {NAME}_WR_KERNEL_SIZE_Y,
+       {wr_layer}_weight_t
+    >(wr[0],weights);
 }}
 #endif
 
@@ -139,7 +143,7 @@ void process(
         {NAME}_CHANNELS_IN,
         {NAME}_PORTS_IN,
         {NAME}_STREAMS_IN,
-        data_t
+        {name}_input_t
     >(in_hw,in);
 
     int mode = 0;
@@ -154,7 +158,7 @@ void process(
         {NAME}_PORTS_OUT,
         {NAME}_STREAMS_OUT,
         {NAME}_WEIGHTS_RELOADING_FACTOR,
-        data_t
+        {name}_output_t
     >(weights_reloading_index,out,out_hw);
 
 }}
