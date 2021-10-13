@@ -17,6 +17,8 @@ import onnx.numpy_helper
 import fpgaconvnet_optimiser.tools.graphs as graphs
 import fpgaconvnet_optimiser.tools.layer_enum as layer_enum
 import fpgaconvnet_optimiser.tools.onnx_helper as onnx_helper
+import fpgaconvnet_optimiser.proto.fpgaconvnet_pb2 as fpgaconvnet_pb2 #REQUIRED EDIT
+from fpgaconvnet_optimiser.tools.parser import _layer_type #REQUIRED EDIT
 
 from tools.array_init import array_init
 
@@ -27,6 +29,18 @@ def fixed_point(val,total_width=16,int_width=8):
     val = max(val, -2**(int_width-1))
     return FpBinary(int_bits=int_width,frac_bits=(total_width-int_width),signed=True,value=val)
 
+def get_layer_from_partition(partition, layer_name): # Non ONNXData class version
+    for layer in partition.layers:
+        if layer.name == layer_name:
+            return layer
+
+def gen_layer_name(layer): # layer in protobuf form
+    #macro issue is that layers that have numerical names cause compiler to error
+    layer_type_str = str(fpgaconvnet_pb2.layer.layer_type.Name(layer.type))
+    if layer.name.isnumeric(): # preprend with type to avoid macro issue
+        return f'{layer_type_str}{layer.name}'
+    else:
+        return layer.name
 
 class ONNXData:
     def __init__(self, partition, model_path):
@@ -60,6 +74,9 @@ class ONNXData:
 
     def load_input(self,filepath):
         self.data = np.array(Image.open(filepath),dtype=np.float32)
+        #"normalising", more like scaling, input to prevent saturation of quant data types
+        data_max = np.amax(self.data)
+        self.data = self.data / data_max
         if len(self.data.shape) == 2:
            self.data = np.expand_dims(self.data,axis=0)
         self.data = np.stack([self.data for _ in range(self.partition.batch_size)], axis=0 )
@@ -211,16 +228,21 @@ class ONNXData:
         output_streams = int(self.partition.layers[-1].parameters.coarse_out)
         self.save_featuremap(output_data, os.path.join(output_path, onnx_helper._format_name(output_node)),
             parallel_streams=output_streams, to_yaml=False, to_bin=to_bin, to_csv=to_csv)
-        # save yaml data
+        # save data
         data = {
             "in"  : input_data.reshape(-1).tolist(),
             "out" : output_data.reshape(-1).tolist()
         }
-        # yaml format
         if output_path:
-            # save to yaml file
-            with open(os.path.join(output_path,'data.yaml'), 'w') as f:
-                yaml.dump(data, f)
+            # save data as .dat files
+            for filename in data:
+                with open(os.path.join(output_path,filename+".dat"), 'w') as f:
+                    f.write("\n".join([str(i) for i in data[filename]]))
+        ## yaml format
+        #if output_path:
+        #    # save to yaml file
+        #    with open(os.path.join(output_path,'data.yaml'), 'w') as f:
+        #        yaml.dump(data, f)
 
     """
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -279,7 +301,7 @@ class ONNXData:
         cols        = layer.parameters.cols_in
         #reshape for transforming
         weights_raw = np.reshape(weights_raw,(filters*wr_factor,channels,rows,cols))
-        weights_raw = np.rollaxis(weights_raw,1,3)
+        weights_raw = np.rollaxis(weights_raw,1,4) #input filters need to be FINAL axis
         weights_raw = np.reshape(weights_raw,(filters*wr_factor,rows*cols*channels,1,1))
         # return transformed weights
         return self._transform_weights(weights_raw,wr_factor,coarse_in,coarse_out)
@@ -316,6 +338,8 @@ class ONNXData:
         weights = {}
         # iterate over layers in network
         for layer in self.partition.layers:
+            layer_type_str = str(fpgaconvnet_pb2.layer.layer_type.Name(layer.type)) # REQUIRED EDIT
+            layer_name = gen_layer_name(layer) # REQUIRED EDIT
             # skip weights outside of partition
             if layer_enum.from_proto_layer_type(layer.type) in [ layer_enum.LAYER_TYPE.Convolution, layer_enum.LAYER_TYPE.InnerProduct ]:
                 # get weights reloading factor
@@ -326,17 +350,25 @@ class ONNXData:
                 # get output path
                 output_path_layer = None
                 if output_path:
-                    output_path_layer = os.path.join(output_path,f"{layer.name}_weights")
+                    output_path_layer = os.path.join(output_path,f"{layer_name}_weights")
                 # get layer info
-                weights[layer.name] = self.save_weights_layer(layer,wr_factor=wr_factor,
+                weights[layer_name] = self.save_weights_layer(layer,wr_factor=wr_factor,
                         output_path=output_path_layer,to_bin=to_bin,to_csv=to_csv)
-        # yaml format
         if to_yaml:
-            tmp = {}
+            # save data as .dat files
+            print("YAML file usage deprecated, creating .dat files instead")
             for layer in weights:
-                tmp[layer] = weights[layer].reshape(-1).tolist()
-            # save to yaml file
-            with open(os.path.join(output_path,'weights.yaml'), 'w') as f:
-                yaml.dump(tmp, f)
+                weight_list = weights[layer].reshape(-1).tolist()
+                with open(os.path.join(output_path,layer+".dat"), 'w') as f:
+                    f.write("\n".join([str(i) for i in weight_list]))
+
+        ## yaml format
+        #if to_yaml:
+        #    tmp = {}
+        #    for layer in weights:
+        #        tmp[layer] = weights[layer].reshape(-1).tolist()
+        #    # save to yaml file
+        #    with open(os.path.join(output_path,'weights.yaml'), 'w') as f:
+        #        yaml.dump(tmp, f)
         # return weights
         return weights

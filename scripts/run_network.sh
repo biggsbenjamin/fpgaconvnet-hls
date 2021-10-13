@@ -50,10 +50,10 @@ NUM_PARTITIONS=$( jq '.partition | length' $PARTITION_INFO_PATH )
 echo "Expecting ${NUM_PARTITIONS} partitions" #Debug
 
 # iterate over partitions
-for i in $( seq 0 ${NUM_PARTITIONS}); do
+for i in $( seq 1 ${NUM_PARTITIONS}); do
 
     # get current partition index
-    PARTITION_INDEX=$(( $i - 1 ))
+    PARTITION_INDEX=$(( $i - 1))
 
     # create folders
     mkdir -p partition_${PARTITION_INDEX}
