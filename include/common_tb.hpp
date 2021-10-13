@@ -2,7 +2,6 @@
 #define COMMON_TB_HPP_
 
 #include "common.hpp"
-//#include "yaml-cpp/yaml.h"
 #include <string>
 #include <iostream>
 #include <fstream>
@@ -561,7 +560,7 @@ void load_net_weights(
 
     // check file opened
     if (fp == NULL) {
-        perror("Failed: ");
+        perror("Failed to load weights at");
     }
 
     for(int w=0;w<WR_FACTOR;w++) {
@@ -579,7 +578,8 @@ void load_net_weights(
            }
         }
     }
-
+    // close file
+    fclose(fp);
 }
 
 template<
@@ -604,7 +604,7 @@ void load_net_data(
 
     // check file opened
     if (fp == NULL) {
-        perror("Failed: ");
+        perror("Failed to load data at");
     }
 
     // get variables
@@ -625,12 +625,15 @@ void load_net_data(
                     // specific weights reloading index
                     if (j == wr_index) {
                         int out_index = i*channels_per_stream*WR_FACTOR + j*channels_per_stream + k;
-                        data[(int)(l/dma_channels)][out_index] |= ( ( pixel.range() & BIT_MASK ) << ( ( l%dma_channels ) * DATA_WIDTH ) );
+                        data[(int)(l/dma_channels)][out_index] |=
+                            ( ( pixel.range() & BIT_MASK ) << ( ( l%dma_channels )*DATA_WIDTH ) );
                     }
                 }
             }
         }
     }
+    // close file
+    fclose(fp);
 }
 
 #endif

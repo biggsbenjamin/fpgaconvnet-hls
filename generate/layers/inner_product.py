@@ -146,7 +146,7 @@ void {name}(
 def gen_inner_product_layer(name,param,src_path,header_path):
 
     # get sliding window type
-    single_channel  = True if param['channels_in'] == 1 else False
+    channels_per_module =int(param['channels_in']*param['rows_in']*param['cols_in']/param['coarse_in'])
 
     inputs = {
         'fork'          : "in[i]",
@@ -169,19 +169,8 @@ def gen_inner_product_layer(name,param,src_path,header_path):
         outputs.pop('glue',None)
     """
 
-    if single_channel:
-        """
-        outputs['conv'] = "out[j]"
-        inputs.pop('accum',None)
-        outputs.pop('accum',None)
-        inputs.pop('glue',None)
-        outputs.pop('glue',None)
-        """
-        inputs['glue'] = "conv_out"
-        inputs.pop('accum',None)
-        outputs.pop('accum',None)
-
-    if (param['channels_in'])/(param['coarse_in']) == 1:
+    if channels_per_module == 1:
+        print("SINGLE CHANNEL ACTIVATED")
         inputs['glue'] = "conv_out"
         inputs.pop('accum',None)
         outputs.pop('accum',None)
@@ -280,7 +269,7 @@ def gen_inner_product_layer(name,param,src_path,header_path):
         cols_out        =param['cols_out'],
         channels_out    =param['channels_out'],
         filters         =param['filters'],
-        channels_per_module =int(param['channels_in']*param['rows_in']*param['cols_in']/param['coarse_in']),
+        channels_per_module =channels_per_module,
         filters_per_module  =int(param['filters']/param['coarse_out']),
         coarse_in           =param['coarse_in'],
         coarse_out          =param['coarse_out'],
