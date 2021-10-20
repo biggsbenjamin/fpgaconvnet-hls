@@ -1,5 +1,11 @@
+import os
+import sys
+
+sys.path.append(os.environ.get("FPGACONVNET_OPTIMISER"))
+sys.path.append(os.environ.get("FPGACONVNET_HLS"))
+
 from modules.module_model import ModuleModel
-from fpgaconvnet_optimiser.models.modules import Conv 
+from fpgaconvnet_optimiser.models.modules import Conv
 
 MAX_RSC = {
     "LUT"   : 53200,
@@ -10,26 +16,19 @@ MAX_RSC = {
 
 # define resource model
 def build_module(parameter):
-    return Conv([
-            parameter['channels'],
-            parameter['rows'],
-            parameter['cols']
-        ],
+    return Conv(
+        parameter['rows'],
+        parameter['cols'],
+        parameter['channels'],
         parameter['filters'],
         parameter['fine'],
         parameter['kernel_size'],
-        1
+        1,
     )
 
 # load accum model
 model = ModuleModel(build_module)
 model.load_points("modules/conv/logs")
-
-# filter parameters 
-filters = {
-    "data_width" : [15,17]
-}
-model.filter_parameters(filters)
 
 # fit model
 model.fit_model()

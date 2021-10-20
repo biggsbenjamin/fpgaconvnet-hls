@@ -7,11 +7,7 @@
     "coarse": 4,
     "coarse_in": 4,
     "coarse_out": 4,
-    "size_in": 50176,
-    "size_out": 50176,
-    "rows_out": 28,
-    "cols_out": 28,
-    "channels_out": 64,
     "batch_size": 1,
+    "data_width": 16,
     "description": "layer name: inception_3b/relu_pool_proj, net name: googlenet.prototxt"
 }

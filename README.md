@@ -12,7 +12,7 @@ The following programmes are needed:
 2. Anaconda
 3. yaml-cpp (version 0.5.3)
 
-Also, you will need to add the environmental variable `FPGACONVNET_OPTIMISER` that points to the install directory of [fpgaconvnet-hls](https://github.com/AlexMontgomerie/fpgaconvnet-optimiser). 
+Also, you will need to add the environmental variable `FPGACONVNET_OPTIMISER` that points to the install directory of [fpgaconvnet-hls](https://github.com/AlexMontgomerie/fpgaconvnet-optimiser).
 
 > You will need to use the same python environment as fpgaconvnet-hls also
 
@@ -47,21 +47,4 @@ Finally, there is a known [bug](http://svn.clifford.at/handicraft/2017/vivadobug
 
 #endif
 ```
-
-### yaml-cpp Setup
-
-> **_NOTE:_**  This dependency is only for testing complete networks, and is being phased out.
-
-The version 0.5.3 of yaml-cpp can be downloaded from [here](https://github.com/jbeder/yaml-cpp/archive/release-0.5.3.zip). To install, execute the following in the yaml-cpp folder:
-
-```
-mkdir build
-cd build
-cmake ..
-make
-make install
-```
-
-you may have issues with cmake as sometimes the vivado version of cmake overrides your installed version of cmake, so you may need to specify the cmake path.
-
 

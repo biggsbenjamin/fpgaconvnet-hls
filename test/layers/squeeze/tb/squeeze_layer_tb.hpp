@@ -6,8 +6,8 @@
 #include "squeeze_layer_param.hpp"
 
 void squeeze_layer_top(
-  stream_t(data_t) in[SQUEEZE_LAYER_COARSE_IN],
-  stream_t(data_t) out[SQUEEZE_LAYER_COARSE_OUT],
+  stream_t(squeeze_layer_data_t) in[SQUEEZE_LAYER_COARSE_IN],
+  stream_t(squeeze_layer_data_t) out[SQUEEZE_LAYER_COARSE_OUT],
   int mode
 );
 

@@ -82,6 +82,16 @@ class hls_log():
             'SRL'   : int(obj.profile.AreaReport.Resources.SRL.cdata)
         }
 
+    def get_synth_resources(self):
+        assert os.path.exists(self.synth_xml)
+        obj = untangle.parse(self.synth_xml)
+        return {
+            'LUT'   : int(obj.profile.AreaEstimates.Resources.LUT.cdata),
+            'FF'    : int(obj.profile.AreaEstimates.Resources.FF.cdata),
+            'DSP'   : int(obj.profile.AreaEstimates.Resources.DSP48E.cdata),
+            'BRAM'  : int(obj.profile.AreaEstimates.Resources.BRAM_18K.cdata)
+        }
+
     def get_synth_latency(self):
         assert os.path.exists(self.synth_xml)
         latency = untangle.parse(self.synth_xml).profile.PerformanceEstimates.SummaryOfOverallLatency.Average_caseLatency.cdata

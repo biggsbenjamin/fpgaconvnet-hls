@@ -2,8 +2,8 @@
 #include "glue.hpp"
 
 void glue_top(
-    stream_t(acc_t) in[GLUE_COARSE_IN][GLUE_COARSE_OUT],
-    stream_t(data_t) out[GLUE_COARSE_OUT]
+    stream_t(glue_acc_t) in[GLUE_COARSE_IN*GLUE_COARSE_GROUP][GLUE_COARSE_OUT],
+    stream_t(glue_data_t) out[GLUE_COARSE_OUT*GLUE_COARSE_GROUP]
 )
 {
 
@@ -14,7 +14,10 @@ void glue_top(
         GLUE_COLS,
         GLUE_FILTERS,
         GLUE_COARSE_IN,
-        GLUE_COARSE_OUT
+        GLUE_COARSE_OUT,
+        GLUE_COARSE_GROUP,
+        glue_acc_t,
+        glue_data_t
     >(in,out);
 
 

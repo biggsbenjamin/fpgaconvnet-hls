@@ -9,11 +9,12 @@ template<
     unsigned int COLS,
     unsigned int CHANNELS,
     unsigned int COARSE_IN,
-    unsigned int COARSE_OUT
+    unsigned int COARSE_OUT,
+    typename squeeze_t
 >
 void squeeze(
-    stream_t(data_t) in[COARSE_IN],
-    stream_t(data_t) out[COARSE_OUT]
+    stream_t(squeeze_t) in[COARSE_IN],
+    stream_t(squeeze_t) out[COARSE_OUT]
 )
 {
 
@@ -33,13 +34,13 @@ void squeeze(
 #pragma HLS ARRAY_PARTITION variable=in complete dim=0
 #pragma HLS ARRAY_PARTITION variable=out complete dim=0
 
-    stream_t(data_t)  channel_cache[channels];
+    stream_t(squeeze_t)  channel_cache[channels];
 #pragma HLS STREAM variable=channel_cache
 #pragma HLS ARRAY_PARTITION variable=channel_cache complete dim=0
 
     dim_in_loop: for (unsigned int pixel_index = 0; pixel_index < batch_size*rows*cols; pixel_index++) {
         unsigned int cache_in_index = 0;
-        channel_in_loop: for (unsigned int channel_index = 0; channel_index < DIVIDE(channels,coarse_in);channel_index++) {
+        channel_in_loop: for (unsigned int channel_index = 0; channel_index < DIVIDE(channels,coarse_in); channel_index++) {
             #pragma HLS loop_flatten
             #pragma HLS pipeline II=1 rewind
             #pragma HLS unroll region
@@ -52,7 +53,7 @@ void squeeze(
 
     dim_out_loop: for (unsigned int pixel_index = 0; pixel_index < batch_size*rows*cols; pixel_index++) {
         unsigned int cache_out_index = 0;
-        channel_out_loop: for (unsigned int channel_index = 0; channel_index < DIVIDE(channels,coarse_out);channel_index++) {
+        channel_out_loop: for (unsigned int channel_index = 0; channel_index < DIVIDE(channels,coarse_out); channel_index++) {
             #pragma HLS loop_flatten
             #pragma HLS pipeline II=1 rewind
             #pragma HLS unroll region
@@ -62,6 +63,7 @@ void squeeze(
             cache_out_index += coarse_out;
         }
     }
+
 }
 
 #endif

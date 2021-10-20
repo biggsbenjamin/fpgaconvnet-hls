@@ -76,16 +76,16 @@ for i in $( seq 1 ${NUM_PARTITIONS}); do
     #PORTS_OUT=$( jq .[$PARTITION_INDEX].partition_info.ports_out $PARTITION_INFO_PATH )
 
     # partition frequency
-    FREQ=100 # TODO: get from partition information file
+    FREQ=125 # TODO: get from partition information file
 
     # create hardware
-    python $FPGACONVNET_HLS/scripts/generate_hardware.py -n $NETWORK -m $MODEL_PATH -p $PARTITION_INFO_PATH -i $PARTITION_INDEX
+    python $FPGACONVNET_HLS/scripts/generate_hardware.py -n $NETWORK -p $PARTITION_INFO_PATH -i $PARTITION_INDEX
 
     # format weights
-    python $FPGACONVNET_HLS/scripts/format_weights.py -m $MODEL_PATH -p $PARTITION_INFO_PATH -i $PARTITION_INDEX
+    python $FPGACONVNET_HLS/scripts/format_weights.py -p $PARTITION_INFO_PATH -i $PARTITION_INDEX
 
     # format featuremaps
-    python $FPGACONVNET_HLS/scripts/format_featuremaps.py -m $MODEL_PATH -p $PARTITION_INFO_PATH -d $IMAGE_PATH -i $PARTITION_INDEX
+    # python $FPGACONVNET_HLS/scripts/format_featuremaps.py -m $MODEL_PATH -p $PARTITION_INFO_PATH -d $IMAGE_PATH -i $PARTITION_INDEX
 
     # run the network
     cd partition_${PARTITION_INDEX}
