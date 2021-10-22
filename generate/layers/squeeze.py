@@ -1,5 +1,6 @@
 # import modules
 import os
+import math
 import shutil
 import generate.modules.squeeze
 
@@ -29,6 +30,7 @@ squeeze_layer_template_header = """#ifndef {NAME}_HPP_
 #define {NAME}_SQUEEZE_CHANNELS     {channels_in}
 #define {NAME}_SQUEEZE_COARSE_IN    {coarse_in}
 #define {NAME}_SQUEEZE_COARSE_OUT   {coarse_out}
+#define {NAME}_SQUEEZE_BUFFER_SIZE  {buffer_size}
 
 /**
  * FUNCTION DEFINITION
@@ -69,6 +71,9 @@ void {name}(
 
 """
 
+def lcm(a, b):
+    return abs(a*b) // math.gcd(a, b)
+
 def gen_squeeze_layer(name,param,src_path,header_path):
 
     # BATCH NORM MODULE INIT
@@ -100,7 +105,10 @@ def gen_squeeze_layer(name,param,src_path,header_path):
         coarse_out          =param['coarse_out'],
         rows_out            =param['rows_out'],
         cols_out            =param['cols_out'],
-        channels_out        =param['channels_out']
+        channels_out        =param['channels_out'],
+        data_width          =param['data_width'],
+        data_int_width      =param['data_width']//2,
+        buffer_size         =lcm(param['coarse_in'],param['coarse_out']),
     )
 
     # write source file

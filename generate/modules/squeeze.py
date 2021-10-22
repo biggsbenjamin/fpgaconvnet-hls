@@ -5,7 +5,9 @@ squeeze_template = """
 {indent}    {NAME}_COLS,
 {indent}    {NAME}_CHANNELS,
 {indent}    {NAME}_COARSE_IN,
-{indent}    {NAME}_COARSE_OUT
+{indent}    {NAME}_COARSE_OUT,
+{indent}    {NAME}_BUFFER_SIZE,
+{indent}    {squeeze_t}
 {indent}>({input_stream},{output_stream});
 
 """

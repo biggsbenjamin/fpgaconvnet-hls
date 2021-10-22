@@ -1,13 +1,17 @@
 import os
 import sys
+import math
 
 sys.path.append('..')
 
 from fpgaconvnet_optimiser.models.modules.Squeeze import Squeeze
 from Data import Data
 
+def lcm(a, b):
+    return abs(a*b) // math.gcd(a, b)
+
 class SqueezeTB(Data):
-    def __init__(self):     
+    def __init__(self):
         Data.__init__(self,'squeeze')
 
     # update stimulus generation
@@ -22,6 +26,13 @@ class SqueezeTB(Data):
             self.param['coarse_out'],
             self.param['coarse_in']
         )
+
+        # add parameters
+        self.param['data_width'] = squeeze.data_width
+        self.param['data_int_width'] = squeeze.data_width//2
+
+        self.param['buffer_size'] = lcm(self.param['coarse_in'], self.param['coarse_out'])
+
         # data in
         data_in = self.gen_data([
             self.param['rows'],
@@ -45,5 +56,5 @@ class SqueezeTB(Data):
 
 if __name__ == '__main__':
     squeeze_tb = SqueezeTB()
-    squeeze_tb.main(sys.argv[1:])    
- 
+    squeeze_tb.main(sys.argv[1:])
+
