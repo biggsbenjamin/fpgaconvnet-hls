@@ -9,17 +9,13 @@ template<
     unsigned int COLS,
     unsigned int CHANNELS,
     unsigned int COARSE_IN,
-<<<<<<< Updated upstream
-    unsigned int COARSE_OUT
-=======
     unsigned int COARSE_OUT,
     unsigned int BUFFER_SIZE,
     typename squeeze_t
->>>>>>> Stashed changes
 >
 void squeeze(
-    stream_t(data_t) in[COARSE_IN],
-    stream_t(data_t) out[COARSE_OUT]
+    stream_t(squeeze_t) in[COARSE_IN],
+    stream_t(squeeze_t) out[COARSE_OUT]
 )
 {
 
@@ -67,6 +63,7 @@ void squeeze(
             cache_out_index += coarse_out;
         }
     }
+
 }
 
 #endif

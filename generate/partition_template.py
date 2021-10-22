@@ -1,6 +1,12 @@
 network_header_template = """#ifndef {NAME}_TOP_HPP_
 #define {NAME}_TOP_HPP_
 
+#include "common.hpp"
+{include}
+#include "mem_read.hpp"
+#include "mem_write.hpp"
+#include "wr.hpp"
+
 #define {NAME}_BATCH_SIZE   {batch_size}
 
 #define {NAME}_ROWS_IN      {rows_in}
@@ -27,42 +33,30 @@ network_header_template = """#ifndef {NAME}_TOP_HPP_
 #define {NAME}_SIZE_IN  {NAME}_BATCH_SIZE*{NAME}_ROWS_IN*{NAME}_COLS_IN*DIVIDE({NAME}_CHANNELS_IN,{NAME}_STREAMS_IN)
 #define {NAME}_SIZE_OUT {NAME}_BATCH_SIZE*{NAME}_ROWS_OUT*{NAME}_COLS_OUT*DIVIDE({NAME}_CHANNELS_OUT,{NAME}_STREAMS_OUT)*{NAME}_WEIGHTS_RELOADING_FACTOR
 
-#include "common.hpp"
-{include}
-
-#include "mem_read.hpp"
-#include "mem_write.hpp"
-//#include "wr.hpp"
+typedef {input_layer}_input_t   {name}_input_t;
+typedef {output_layer}_output_t {name}_output_t;
 
 #if {NAME}_WEIGHTS_RELOADING_FLAG
-#define {NAME}_WR_COARSE_IN     {WR_LAYER}_COARSE_IN
-#define {NAME}_WR_COARSE_OUT    {WR_LAYER}_COARSE_OUT
-#define {NAME}_WR_WEIGHTS       {WR_LAYER}_WEIGHTS
-#define {NAME}_WR_KERNEL_SIZE   {WR_LAYER}_KERNEL_SIZE
+#define {NAME}_WR_COARSE_IN       {WR_LAYER}_COARSE_IN
+#define {NAME}_WR_COARSE_OUT      {WR_LAYER}_COARSE_OUT
+#define {NAME}_WR_COARSE_GROUP    {WR_LAYER}_COARSE_GROUP
+#define {NAME}_WR_WEIGHTS         {WR_LAYER}_WEIGHTS
+#define {NAME}_WR_KERNEL_SIZE_X   {WR_LAYER}_KERNEL_SIZE_X
+#define {NAME}_WR_KERNEL_SIZE_Y   {WR_LAYER}_KERNEL_SIZE_Y
 
 #define {NAME}_SIZE_WR  DIVIDE({NAME}_WR_WEIGHTS,{NAME}_STREAMS_WR)
 
-// weights reloading interfaces
-#define MODULE_NAME {NAME}_WR
 #define {NAME}_WR_BATCH_SIZE    1
 #define {NAME}_WR_ROWS_IN       1
 #define {NAME}_WR_COLS_IN       1
 #define {NAME}_WR_CHANNELS_IN   {NAME}_SIZE_WR
 #define {NAME}_WR_PORTS_IN      {NAME}_PORTS_WR
 #define {NAME}_WR_STREAMS_IN    {NAME}_STREAMS_WR
-#define name        {name}
-#include "{name}_wr.hpp"
-#undef name
-#undef MODULE_NAME
 
 void reload_weights(
     int weights_reloading_index,
     volatile mem_int wr_hw[{NAME}_PORTS_WR][{NAME}_SIZE_WR],
-#if {NAME}_WR_KERNEL_SIZE == 1
-    weight_t weights[{NAME}_WR_COARSE_IN][{NAME}_WR_COARSE_OUT][DIVIDE({NAME}_WR_WEIGHTS,{NAME}_WR_COARSE_IN*{NAME}_WR_COARSE_OUT*{NAME}_WR_KERNEL_SIZE*{NAME}_WR_KERNEL_SIZE)]
-#else
-    weight_t weights[{NAME}_WR_COARSE_IN][{NAME}_WR_COARSE_OUT][DIVIDE({NAME}_WR_WEIGHTS,{NAME}_WR_COARSE_IN*{NAME}_WR_COARSE_OUT*{NAME}_WR_KERNEL_SIZE*{NAME}_WR_KERNEL_SIZE)][{NAME}_WR_KERNEL_SIZE][{NAME}_WR_KERNEL_SIZE]
-#endif
+    {wr_layer}_weight_t weights[{NAME}_WR_COARSE_IN*{NAME}_WR_COARSE_GROUP][{NAME}_WR_COARSE_OUT][DIVIDE({NAME}_WR_WEIGHTS,{NAME}_WR_COARSE_IN*{NAME}_WR_COARSE_GROUP*{NAME}_WR_COARSE_OUT*{NAME}_WR_KERNEL_SIZE_X*{NAME}_WR_KERNEL_SIZE_Y)][{NAME}_WR_KERNEL_SIZE_X][{NAME}_WR_KERNEL_SIZE_Y]
 );
 #endif
 
@@ -93,11 +87,7 @@ network_src_template = """#include "{name}_top.hpp"
 void reload_weights(
     int weights_reloading_index,
     volatile mem_int wr_hw[{NAME}_PORTS_WR][{NAME}_SIZE_WR],
-#if {NAME}_WR_KERNEL_SIZE == 1
-    weight_t weights[{NAME}_WR_COARSE_IN][{NAME}_WR_COARSE_OUT][DIVIDE({NAME}_WR_WEIGHTS,{NAME}_WR_COARSE_IN*{NAME}_WR_COARSE_OUT*{NAME}_WR_KERNEL_SIZE*{NAME}_WR_KERNEL_SIZE)]
-#else
-    weight_t weights[{NAME}_WR_COARSE_IN][{NAME}_WR_COARSE_OUT][DIVIDE({NAME}_WR_WEIGHTS,{NAME}_WR_COARSE_IN*{NAME}_WR_COARSE_OUT*{NAME}_WR_KERNEL_SIZE*{NAME}_WR_KERNEL_SIZE)][{NAME}_WR_KERNEL_SIZE][{NAME}_WR_KERNEL_SIZE]
-#endif
+    {wr_layer}_weight_t weights[{NAME}_WR_COARSE_IN*{NAME}_WR_COARSE_GROUP][{NAME}_WR_COARSE_OUT][DIVIDE({NAME}_WR_WEIGHTS,{NAME}_WR_COARSE_IN*{NAME}_WR_COARSE_GROUP*{NAME}_WR_COARSE_OUT*{NAME}_WR_KERNEL_SIZE_X*{NAME}_WR_KERNEL_SIZE_Y)][{NAME}_WR_KERNEL_SIZE_X][{NAME}_WR_KERNEL_SIZE_Y]
 )
 {{
 
@@ -107,7 +97,7 @@ void reload_weights(
 #pragma HLS stable variable=weights
 
     // stream init
-    stream_t(weight_t) wr[{NAME}_STREAMS_WR];
+    stream_t({wr_layer}_weight_t) wr[{NAME}_STREAMS_WR];
 #pragma HLS STREAM variable=wr
 #pragma HLS ARRAY_PARTITION variable=wr complete dim=0
 
@@ -118,10 +108,18 @@ void reload_weights(
         {NAME}_WR_CHANNELS_IN,
         {NAME}_WR_PORTS_IN,
         {NAME}_WR_STREAMS_IN,
-        weight_t
+        {wr_layer}_weight_t
     >(wr_hw,wr);
 
-    {name}_wr<0>(wr[0],weights);
+    weights_reloading<
+       {NAME}_WR_WEIGHTS,
+       {NAME}_WR_COARSE_IN,
+       {NAME}_WR_COARSE_OUT,
+       {NAME}_WR_COARSE_GROUP,
+       {NAME}_WR_KERNEL_SIZE_X,
+       {NAME}_WR_KERNEL_SIZE_Y,
+       {wr_layer}_weight_t
+    >(wr[0],weights);
 }}
 #endif
 
@@ -145,7 +143,7 @@ void process(
         {NAME}_CHANNELS_IN,
         {NAME}_PORTS_IN,
         {NAME}_STREAMS_IN,
-        data_t
+        {name}_input_t
     >(in_hw,in);
 
     int mode = 0;
@@ -160,7 +158,7 @@ void process(
         {NAME}_PORTS_OUT,
         {NAME}_STREAMS_OUT,
         {NAME}_WEIGHTS_RELOADING_FACTOR,
-        data_t
+        {name}_output_t
     >(weights_reloading_index,out,out_hw);
 
 }}
@@ -218,8 +216,9 @@ network_tb_src_template = """#include "{name}_top.hpp"
 int main()
 {{
     int err = 0;
-    std::string data_path   = "data/data.yaml";
-    std::string weight_path = "data/weights.yaml";
+    std::string input_path  = "{data_path}/in.dat";
+    std::string output_path = "{data_path}/out.dat";
+    std::string {wr_layer}_path = "{data_path}/{wr_layer}.dat"; //FIXME for multiple wr layers
 
     static mem_int test_in[{NAME}_PORTS_IN][{NAME}_SIZE_IN]             = {{0}};
 
@@ -232,7 +231,7 @@ int main()
         {NAME}_COLS_IN,
         {NAME}_CHANNELS_IN,
         {NAME}_STREAMS_IN
-    >(data_path,"in",test_in);
+    >("{input_data_path}",test_in);
 
     for( int wr_index=0;wr_index<{NAME}_WEIGHTS_RELOADING_FACTOR;wr_index++) {{
 
@@ -248,7 +247,7 @@ int main()
             {NAME}_PORTS_WR,
             {NAME}_SIZE_WR,
             {NAME}_WEIGHTS_RELOADING_FACTOR
-        >(wr_index,weight_path,"{wr_layer}",weights);
+        >("{weights_reloading_path}", weights, wr_index);
 
         // load valid output
         load_net_data<
@@ -259,21 +258,22 @@ int main()
             {NAME}_CHANNELS_OUT,
             {NAME}_STREAMS_OUT,
             {NAME}_WEIGHTS_RELOADING_FACTOR
-        >(data_path,"out",test_out_valid,wr_index);
+        >("{output_data_path}", test_out_valid, wr_index);
 
-        // run network
         printf("RUNNING NETWORK \\n");
-#if {NAME}_WEIGHTS_RELOADING_FLAG
+
+        // perform weights reloading
         if( wr_index > 0 ) {{
             fpgaconvnet_ip(1,wr_index,weights,test_in,test_out);
         }}
+
+        // run the network
         fpgaconvnet_ip(0,wr_index,weights,test_in,test_out);
-#else
-        fpgaconvnet_ip(0,wr_index,test_in,test_out);
-#endif
+
+        // check array is correct
         for(int i=0; i<{NAME}_PORTS_OUT;i++) {{
             printf("PORT %d\\n",i);
-            check_array_equal<{NAME}_SIZE_OUT>(test_out[i],test_out_valid[i]);
+            err += check_array_equal<{NAME}_SIZE_OUT>(test_out[i],test_out_valid[i]);
         }}
 
     }}

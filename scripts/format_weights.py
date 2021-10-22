@@ -10,6 +10,7 @@ import onnx
 from PIL import Image
 from google.protobuf import json_format
 
+sys.path.append(os.environ.get("FPGACONVNET_OPTIMISER"))
 sys.path.append(os.environ.get("FPGACONVNET_HLS"))
 
 import fpgaconvnet_optimiser.proto.fpgaconvnet_pb2
@@ -21,7 +22,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Weights Formatting Script")
     parser.add_argument('-p','--partition_path',metavar='PATH',required=True,
         help='Path to partition info (.pb.bin)')
-    parser.add_argument('-m','--onnx_path',metavar='PATH',required=True,
+    parser.add_argument('-m','--onnx_path',metavar='PATH',required=False,
         help='Path to onnx model (.onnx)')
     parser.add_argument('-i','--partition_index',metavar='N',required=True, type=int,
         help='Partition index')
@@ -42,5 +43,6 @@ if __name__ == "__main__":
         f'partition_{args.partition_index}/data',
         to_yaml=True,
         to_csv=True,
-        to_bin=True )
+        to_bin=True,
+        to_dat=True)
 

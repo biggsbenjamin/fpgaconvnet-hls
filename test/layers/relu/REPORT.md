@@ -12,14 +12,14 @@
 
 | TEST | MODEL | SYNTH | SIM |
 |:----:|:-----:|:-----:|:---:|
-| 0 | 50176.0 | N/A | N/A | 
+| 0 | 12544.0 | N/A | N/A | 
 
 
 ## Resource Results
 
-| TEST | LUT | FF | DSP | BRAM || LUT (model) | FF (model) | DSP (model) | BRAM (model) |
-|:----:|:---:|:--:|:---:|:----:||:---:|:--:|:---:|:----:|
-| 0 | N/A | N/A | N/A | N/A || 0 | 0 | 0 | 0 | 
+| TEST | LUT (impl) | FF (impl) | DSP (impl) | BRAM (impl) || LUT (synth) | FF (synth) | DSP (synth) | BRAM (synth) || LUT (model) | FF (model) | DSP (model) | BRAM (model) |
+|:----:|:----------:|:---------:|:----------:|:-----------:||:-----------:|:----------:|:-----------:|:------------:||:-----------:|:----------:|:-----------:|:--------------------:|
+| 0 | N/A | N/A | N/A | N/A || N/A | N/A | N/A | N/A || 0 | 0 | 0 | 0 | 
 
 
 ## Timing Results

@@ -20,18 +20,19 @@ from generate.layers.squeeze        import gen_squeeze_layer
 import fpgaconvnet_optimiser.tools.graphs as graphs
 import fpgaconvnet_optimiser.proto.fpgaconvnet_pb2 as fpgaconvnet_pb2
 from google.protobuf.json_format import MessageToDict
+from tools.onnx_data import get_layer_from_partition, gen_layer_name # REQUIRED EDIT
 
 # class for weight definition
 class generate_weight_def:
     # initialise class
-    def __init__(self, name, kernel_size=1, wr=False):
+    def __init__(self, name, kernel_size_x=1, kernel_size_y=1, wr=False):
         self.name       = name
         self.type       = "static" if wr else "const static"
-        self.kernel_dim = " " if not kernel_size > 1 else "[{NAME}_KERNEL_SIZE][{NAME}_KERNEL_SIZE]".format(NAME=self.name.upper())
+        self.kernel_dim = "[{NAME}_KERNEL_SIZE_X][{NAME}_KERNEL_SIZE_Y]".format(NAME=self.name.upper())
 
     def __str__(self):
         return """
-{type} weight_t {name}_weights[{NAME}_COARSE_IN][{NAME}_COARSE_OUT][DIVIDE({NAME}_WEIGHTS,{NAME}_COARSE_IN*{NAME}_COARSE_OUT*{NAME}_KERNEL_SIZE*{NAME}_KERNEL_SIZE)]{kernel_dim} = {{
+{type} {name}_weight_t {name}_weights[{NAME}_COARSE_IN*{NAME}_COARSE_GROUP][{NAME}_COARSE_OUT][DIVIDE({NAME}_WEIGHTS,{NAME}_COARSE_IN*{NAME}_COARSE_GROUP*{NAME}_COARSE_OUT*{NAME}_KERNEL_SIZE_X*{NAME}_KERNEL_SIZE_Y)]{kernel_dim} = {{
 #include "{name}_weights_0.csv"
 }};
 """.format(
@@ -58,46 +59,62 @@ class generate_weight_init():
 
 """.format(name=self.name,bram_type=self.bram_type)
 
-"""
-# class for stream initialisation
-class generate_stream_init():
-    # initialise class
-    def __init__(self):
-
-    def __str__(self):
-        return ''
-
-    def __repr__(self):
-        return self.__str__()
-"""
+## class for stream initialisation
+#class generate_stream_init():
+#    # initialise class
+#    def __init__(self):
+#
+#    def __str__(self):
+#        return ''
+#
+#    def __repr__(self):
+#        return self.__str__()
 
 def gen_network(name,partition,output_path):
 
-    wr_layer   = partition.weights_reloading_layer
+    def _fix_identifier(name):
+        if name[0].isdigit():
+            return "n" + name
+        else:
+            return name
+
+    partition.weights_reloading_layer = _fix_identifier(partition.weights_reloading_layer)
+    for layer in partition.layers:
+        for stream_in in layer.streams_in:
+            stream_in.name = _fix_identifier(stream_in.name)
+        for stream_out in layer.streams_out:
+            stream_out.name = _fix_identifier(stream_out.name)
+
+        layer.name = _fix_identifier(layer.name)
+
+
+    wr_layer = partition.weights_reloading_layer
+    wr_layer_identifier = _fix_identifier(wr_layer)
+
     batch_size = partition.batch_size
 
     input_node  = partition.input_node
     output_node = partition.output_node
 
     # get all streams
-    streams = []
+    streams = {}
     for layer in partition.layers:
         for stream_in in layer.streams_in:
-            streams.append((stream_in.name, stream_in.coarse))
+            streams[stream_in.name] = (stream_in.coarse, f"{layer.name}_input_t")
         for stream_out in layer.streams_out:
-            streams.append((stream_out.name, stream_out.coarse))
+            streams[stream_out.name] = (stream_out.coarse, f"{layer.name}_output_t")
 
     # remove duplicates
-    streams = list(set(streams))
+    # streams = list(set(streams))
 
     # create stream initialisations
     streams_init = ""
     for stream in streams:
         streams_init +=  """
-    stream_t(data_t) {stream_name}[{coarse}];
+    stream_t({stream_type}) {stream_name}[{coarse}];
 #pragma HLS STREAM variable={stream_name}
 #pragma HLS ARRAY_PARTITION variable={stream_name} complete dim=0
-""".format(stream_name=stream[0],coarse=stream[1])
+""".format(stream_name=stream,coarse=streams[stream][0],stream_type=streams[stream][1])
 
     # weight information
     weights = ""
@@ -112,27 +129,29 @@ def gen_network(name,partition,output_path):
         parameters = MessageToDict(layer.parameters, preserving_proto_field_name=True)
         # init function arguments for this layer
         fn_args=[]
+        layer_name = gen_layer_name(layer)
         # init hardware generation args
         args = [
-            layer.name,
+            layer_name,
             parameters,
-            os.path.join(output_path,'src',f'{layer.name}.cpp'),
-            os.path.join(output_path,'include',f'{layer.name}.hpp')
+            os.path.join(output_path,'src',f'{layer_name}.cpp'),
+            os.path.join(output_path,'include',f'{layer_name}.hpp')
         ]
         if layer.type == fpgaconvnet_pb2.layer.layer_type.CONVOLUTION:
             # add weights to function arguments
-            fn_args.append(f"{layer.name}_weights")
+            fn_args.append(f"{layer_name}_weights")
             # generate hardware
             gen_convolution_layer(*args)
             # create weights
             weights += str(generate_weight_def(
                 layer.name,
-                kernel_size=int(parameters["kernel_size"]),
+                kernel_size_x=int(parameters["kernel_size"][0]),
+                kernel_size_y=int(parameters["kernel_size"][1]),
                 wr=True if layer.name == wr_layer else False
             ))
             weights_init += str(generate_weight_init(
-                layer.name,
-                wr=True if layer.name == wr_layer else False
+                layer_name,
+                wr=True if layer_name == wr_layer else False
             ))
         if layer.type == fpgaconvnet_pb2.layer.layer_type.POOLING:
             gen_pooling_layer(*args)
@@ -144,18 +163,19 @@ def gen_network(name,partition,output_path):
             gen_split_layer(*args)
         if layer.type == fpgaconvnet_pb2.layer.layer_type.INNER_PRODUCT:
             # add weights to function arguments
-            fn_args.append(f"{layer.name}_weights")
+            fn_args.append(f"{layer_name}_weights")
             # generate hardware
             gen_inner_product_layer(*args)
             # create weights
             weights += str(generate_weight_def(
                 layer.name,
-                kernel_size=1,
+                kernel_size_x=1,
+                kernel_size_y=1,
                 wr=True if layer.name == wr_layer else False
             ))
             weights_init += str(generate_weight_init(
-                layer.name,
-                wr=True if layer.name == wr_layer else False
+                layer_name,
+                wr=True if layer_name == wr_layer else False
             ))
         if layer.type == fpgaconvnet_pb2.layer.layer_type.SQUEEZE:
             gen_squeeze_layer(*args)
@@ -166,12 +186,14 @@ def gen_network(name,partition,output_path):
             fn_args.append(stream_out.name)
         fn_args.append("mode")
         fn_args = ", ".join(fn_args)
-        layers += f"    {layer.name}({fn_args});\n"
+        layers +=  f"   printf(\"LAYER: {layer_name} \\n\");\n"
+        layers += f"    {layer_name}({fn_args});\n"
 
     # include generation
     include = ""
     for layer in partition.layers:
-        include +=f"#include \"{layer.name}.hpp\"\n"
+        layer_name = gen_layer_name(layer)
+        include +=f"#include \"{layer_name}.hpp\"\n"
 
     # HEADER
     network_header = network_header_template.format(
@@ -187,6 +209,8 @@ def gen_network(name,partition,output_path):
         ports       =partition.ports,
         streams_in  =partition.layers[0].parameters.coarse_in, # TODO: change
         streams_out =partition.layers[-1].parameters.coarse_out, # TODO: change
+        input_layer =partition.layers[0].name,
+        output_layer=partition.layers[-1].name,
         wr_layer    =wr_layer,
         WR_LAYER    =wr_layer.upper(),
         wr_factor   =partition.weights_reloading_factor,
@@ -204,12 +228,13 @@ def gen_network(name,partition,output_path):
         layers      =layers
     )
     # TB
+    print(os.path.abspath(os.path.join(output_path,'data/')))
     network_tb_src = network_tb_src_template.format(
-        name        =name,
-        NAME        =name.upper(),
-        input_node  =input_node,
-        wr_layer    =wr_layer,
-        output_node =output_node
+        name = name,
+        NAME = name.upper(),
+        input_data_path = os.path.join(os.getcwd(), output_path, f"data/{input_node}_0.dat"),
+        weights_reloading_path = os.path.join(os.getcwd(), output_path, f"data/{wr_layer}_weights_0.dat"),
+        output_data_path = os.path.join(os.getcwd(), output_path, f"data/{input_node}_0.dat")
     )
 
     with open(os.path.join(output_path,f'include/{name}_top.hpp'),'w') as f:
@@ -218,10 +243,6 @@ def gen_network(name,partition,output_path):
         f.write(network_src)
     with open(os.path.join(output_path,f'tb/{name}_tb.cpp'),'w') as f:
         f.write(network_tb_src)
-
-    # save modules
-    shutil.copy( os.path.join(os.environ['FPGACONVNET_HLS'],'include/wr.hpp'),
-                os.path.join(output_path,f"include/{name}_wr.hpp") ) # TODO fix
 
 if __name__=="__main__":
 

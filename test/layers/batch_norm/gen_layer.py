@@ -4,13 +4,12 @@ import numpy as np
 import csv
 
 sys.path.append('..')
-sys.path.append('../..')
-sys.path.append('../../..')
 
-from models.layers.BatchNormLayer import BatchNormLayer
+from fpgaconvnet_optimiser.models.layers.BatchNormLayer import BatchNormLayer
+
 import generate.layers.batch_norm
 from Layer import Layer
-from tools.caffe_data import CaffeData
+from tools.onnx_data import ONNXData
 
 class BatchNormLayerTB(Layer):
     def __init__(self):
@@ -21,21 +20,20 @@ class BatchNormLayerTB(Layer):
     def gen_stimulus(self):
         # Init Module
         layer = BatchNormLayer(
-            [
-                self.param['channels'],
-                self.param['rows'],
-                self.param['cols']
-            ],
+            self.param['rows'],
+            self.param['cols'],
+            self.param['channels'],
             self.param['coarse'],
             self.param['coarse']
         )
-        layer.load_coef()
+
         # data in
         data_in = self.gen_data([
             self.param['rows'],
             self.param['cols'],
             self.param['channels']
         ])
+
         # batch norm coefficients
         gamma = self.gen_data([self.param['channels']])
         beta  = self.gen_data([self.param['channels']])
@@ -48,8 +46,8 @@ class BatchNormLayerTB(Layer):
         # get hardware coefficients
         scale = gamma / np.sqrt( var + eps )
         shift = np.divide(beta,scale) - mean
-        
-        # save scale 
+
+        # save scale
         scale = CaffeData().transform_batch_norm_coef(
             scale,
             self.param['coarse']
@@ -58,7 +56,7 @@ class BatchNormLayerTB(Layer):
             writer = csv.writer(f)
             writer.writerows([scale.reshape(-1).tolist()])
 
-        # save shift 
+        # save shift
         shift = CaffeData().transform_batch_norm_coef(
             shift,
             self.param['coarse']
@@ -80,7 +78,7 @@ class BatchNormLayerTB(Layer):
         }
         # resource and latency model
         model = {
-            'latency'   : layer.get_latency(),
+            'latency'   : layer.latency(),
             'resources' : layer.resource()
         }
         return data, model

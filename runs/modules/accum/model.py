@@ -1,3 +1,9 @@
+import os
+import sys
+
+sys.path.append(os.environ.get("FPGACONVNET_OPTIMISER"))
+sys.path.append(os.environ.get("FPGACONVNET_HLS"))
+
 from modules.module_model import ModuleModel
 from fpgaconvnet_optimiser.models.modules import Accum
 
@@ -10,24 +16,18 @@ MAX_RSC = {
 
 # define resource model
 def build_module(parameter):
-    return Accum([
-        parameter['channels'],
+    return Accum(
         parameter['rows'],
-        parameter['cols']],
+        parameter['cols'],
+        parameter['channels'],
         parameter['filters'],
         parameter['groups'],
-        parameter['data_width']
+        # data_width=parameter['data_width']
     )
 
 # load accum model
 model = ModuleModel(build_module)
 model.load_points("modules/accum/logs")
-
-# filter parameters
-filters = {
-    "data_width" : [15,17]
-}
-model.filter_parameters(filters)
 
 # fit model
 model.fit_model()
@@ -36,7 +36,7 @@ model.fit_model()
 model.save_coefficients("coefficients/accum")
 
 # plot error
-accum_model.plot_error(MAX_RSC)
+model.plot_error(MAX_RSC)
 
 # print out error
 model.print_absolute_error()

@@ -22,6 +22,8 @@ class ModuleRunner(Runner):
         self.resource_flag  = True
         self.power_flag     = False
 
+        self.max_runners = 50
+
     def get_factors(self, n):
         return list(set(reduce(list.__add__, 
             ([i, n//i] for i in range(1, int(n**0.5) + 1) if n % i == 0))))
@@ -33,7 +35,6 @@ class ModuleRunner(Runner):
         self.parameters['cols']       = random.randint(1,128)
         self.parameters['channels']   = random.randint(1,96)
         # basic 
-        self.parameters['data_width'] = random.choice([4,8,16,32])
         self.parameters['freq']       = random.randint(50,150)
 
     def get_param_string(self):

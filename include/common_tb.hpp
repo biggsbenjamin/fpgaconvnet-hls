@@ -2,7 +2,6 @@
 #define COMMON_TB_HPP_
 
 #include "common.hpp"
-//#include "yaml-cpp/yaml.h"
 #include <string>
 #include <iostream>
 #include <fstream>
@@ -96,10 +95,10 @@ void to_stream(
 }
 
 /* (CONV,POOL) */
-template<int SIZE, int KERNEL_SIZE, typename T>
+template<int SIZE, int KERNEL_SIZE_X, int KERNEL_SIZE_Y, typename T>
 void load_data(
     std::string filepath,
-    T data[SIZE][KERNEL_SIZE][KERNEL_SIZE]
+    T data[SIZE][KERNEL_SIZE_X][KERNEL_SIZE_Y]
 ) {
 
     // read in file
@@ -112,38 +111,38 @@ void load_data(
     }
      // save to array
     for(int i=0;i<SIZE;i++) {
-        for(int k1=0;k1<KERNEL_SIZE;k1++) {
-            for(int k2=0;k2<KERNEL_SIZE;k2++) {
+        for(int k1=0;k1<KERNEL_SIZE_X;k1++) {
+            for(int k2=0;k2<KERNEL_SIZE_Y;k2++) {
                 float val;
                 fscanf(fp,"%f\n", &val);
                 data[i][k1][k2] = T(val);
+	        }
 	    }
-	}
     }
 
     // close file
     fclose(fp);
 }
 
-template<int SIZE, int KERNEL_SIZE, typename T>
+template<int SIZE, int KERNEL_SIZE_X, int KERNEL_SIZE_Y, typename T>
 void to_stream(
-    T in[SIZE][KERNEL_SIZE][KERNEL_SIZE],
-    stream_t(T) out[KERNEL_SIZE][KERNEL_SIZE]
+    T in[SIZE][KERNEL_SIZE_X][KERNEL_SIZE_Y],
+    stream_t(T) out[KERNEL_SIZE_X][KERNEL_SIZE_Y]
 ) {
     for(int i=0;i<SIZE;i++) {
-        for(int k1=0;k1<KERNEL_SIZE;k1++) {
-	    for(int k2=0;k2<KERNEL_SIZE;k2++) {
-	        out[k1][k2].write(in[i][k1][k2]);
+        for(int k1=0;k1<KERNEL_SIZE_X;k1++) {
+            for(int k2=0;k2<KERNEL_SIZE_Y;k2++) {
+                out[k1][k2].write(in[i][k1][k2]);
             }
-	}
+	    }
     }
 }
 
 /* (FORK) */
-template<int SIZE, int COARSE, int KERNEL_SIZE, typename T>
+template<int SIZE, int COARSE, int KERNEL_SIZE_X, int KERNEL_SIZE_Y, typename T>
 void load_data(
     std::string filepath,
-    T data[SIZE][COARSE][KERNEL_SIZE][KERNEL_SIZE]
+    T data[SIZE][COARSE][KERNEL_SIZE_X][KERNEL_SIZE_Y]
 ) {
     // read in file
     const char *filepath_cstr = filepath.c_str();
@@ -157,8 +156,8 @@ void load_data(
     // save to array
     for(int i=0;i<SIZE;i++) {
         for(int c=0;c<COARSE;c++) {
-            for(int k1=0;k1<KERNEL_SIZE;k1++) {
-                for(int k2=0;k2<KERNEL_SIZE;k2++) {
+            for(int k1=0;k1<KERNEL_SIZE_X;k1++) {
+                for(int k2=0;k2<KERNEL_SIZE_Y;k2++) {
                     float val;
                     fscanf(fp,"%f\n", &val);
                     data[i][c][k1][k2] = T(val);
@@ -171,27 +170,27 @@ void load_data(
     fclose(fp);
 }
 
-template<int SIZE, int COARSE, int KERNEL_SIZE, typename T>
+template<int SIZE, int COARSE, int KERNEL_SIZE_X, int KERNEL_SIZE_Y, typename T>
 void to_stream(
-    T in[SIZE][COARSE][KERNEL_SIZE][KERNEL_SIZE],
-    stream_t(T) out[COARSE][KERNEL_SIZE][KERNEL_SIZE]
+    T in[SIZE][COARSE][KERNEL_SIZE_X][KERNEL_SIZE_Y],
+    stream_t(T) out[COARSE][KERNEL_SIZE_X][KERNEL_SIZE_Y]
 ) {
     for(int i=0;i<SIZE;i++) {
         for(int c=0;c<COARSE;c++) {
-            for(int k1=0;k1<KERNEL_SIZE;k1++) {
-	        for(int k2=0;k2<KERNEL_SIZE;k2++) {
-	            out[c][k1][k2].write(in[i][c][k1][k2]);
+            for(int k1=0;k1<KERNEL_SIZE_X;k1++) {
+	            for(int k2=0;k2<KERNEL_SIZE_Y;k2++) {
+	                out[c][k1][k2].write(in[i][c][k1][k2]);
                 }
-	    }
+	        }
         }
     }
 }
 
 /* (WEIGHTS_INTR) */
-template<int COARSE_IN, int COARSE_OUT, int CHANNELS, int FILTERS, int KERNEL_SIZE, typename T>
+template<int COARSE_IN, int COARSE_OUT, int CHANNELS, int FILTERS, int KERNEL_SIZE_X, int KERNEL_SIZE_Y, typename T>
 void load_data(
     std::string filepath,
-    T data[COARSE_IN][COARSE_OUT][DIVIDE(CHANNELS,COARSE_IN)*DIVIDE(FILTERS,COARSE_OUT)][KERNEL_SIZE][KERNEL_SIZE]
+    T data[COARSE_IN][COARSE_OUT][DIVIDE(CHANNELS,COARSE_IN)*DIVIDE(FILTERS,COARSE_OUT)][KERNEL_SIZE_X][KERNEL_SIZE_Y]
 ) {
     // read in file
     const char *filepath_cstr = filepath.c_str();
@@ -210,8 +209,8 @@ void load_data(
         for(int cin=0;cin<COARSE_IN;cin++) {
             for(int j=0;j<filters_per_coarse_out;j++) {
                 for(int cout=0;cout<COARSE_OUT;cout++) {
-                    for(int k1=0;k1<KERNEL_SIZE;k1++) {
-                        for(int k2=0;k2<KERNEL_SIZE;k2++) {
+                    for(int k1=0;k1<KERNEL_SIZE_X;k1++) {
+                        for(int k2=0;k2<KERNEL_SIZE_Y;k2++) {
                             float val;
                             fscanf(fp,"%f\n", &val);
                             //int index = (i*COARSE_IN+cin)*filters_per_coarse_out+j*COARSE_OUT+cout;
@@ -265,16 +264,16 @@ void load_data(
 }
 
 
-template<int SIZE, int COARSE_IN, int COARSE_OUT, int KERNEL_SIZE, typename T>
+template<int SIZE, int COARSE_IN, int COARSE_OUT, int KERNEL_SIZE_X, int KERNEL_SIZE_Y, typename T>
 void to_stream(
-    T in[COARSE_IN][COARSE_OUT][SIZE][KERNEL_SIZE][KERNEL_SIZE],
-    stream_t(T) out[COARSE_IN][COARSE_OUT][KERNEL_SIZE][KERNEL_SIZE]
+    T in[COARSE_IN][COARSE_OUT][SIZE][KERNEL_SIZE_X][KERNEL_SIZE_Y],
+    stream_t(T) out[COARSE_IN][COARSE_OUT][KERNEL_SIZE_X][KERNEL_SIZE_Y]
 ) {
     for(int cin=0;cin<COARSE_IN;cin++) {
         for(int cout=0;cout<COARSE_OUT;cout++) {
             for(int i=0;i<SIZE;i++) {
-                for(int k1=0;k1<KERNEL_SIZE;k1++) {
-                    for(int k2=0;k2<KERNEL_SIZE;k2++) {
+                for(int k1=0;k1<KERNEL_SIZE_X;k1++) {
+                    for(int k2=0;k2<KERNEL_SIZE_Y;k2++) {
                         out[cin][cout][k1][k2].write(in[cin][cout][i][k1][k2]);
                     }
                 }
@@ -283,35 +282,35 @@ void to_stream(
     }
 }
 
-/* (WEIGHTS_INTR) */
-template<int SIZE, int COARSE_IN, int COARSE_OUT, typename T>
-void load_data(
-    std::string filepath,
-    T data[COARSE_IN][COARSE_OUT][SIZE]
-) {
-    // read in file
-    const char *filepath_cstr = filepath.c_str();
-    FILE * fp = fopen(filepath_cstr,"r");
+/* /1* (WEIGHTS_INTR) *1/ */
+/* template<int SIZE, int COARSE_IN, int COARSE_OUT, typename T> */
+/* void load_data( */
+/*     std::string filepath, */
+/*     T data[COARSE_IN][COARSE_OUT][SIZE] */
+/* ) { */
+/*     // read in file */
+/*     const char *filepath_cstr = filepath.c_str(); */
+/*     FILE * fp = fopen(filepath_cstr,"r"); */
 
-    // check file opened
-    if (fp == NULL) {
-        perror("Failed: ");
-    }
+/*     // check file opened */
+/*     if (fp == NULL) { */
+/*         perror("Failed: "); */
+/*     } */
 
-    // save to array
-    for(int cin=0;cin<COARSE_IN;cin++) {
-        for(int cout=0;cout<COARSE_OUT;cout++) {
-            for(int i=0;i<SIZE;i++) {
-                float val;
-                fscanf(fp,"%f\n", &val);
-                data[cin][cout][i] = T(val);
-            }
-        }
-    }
+/*     // save to array */
+/*     for(int cin=0;cin<COARSE_IN;cin++) { */
+/*         for(int cout=0;cout<COARSE_OUT;cout++) { */
+/*             for(int i=0;i<SIZE;i++) { */
+/*                 float val; */
+/*                 fscanf(fp,"%f\n", &val); */
+/*                 data[cin][cout][i] = T(val); */
+/*             } */
+/*         } */
+/*     } */
 
-    // close file
-    fclose(fp);
-}
+/*     // close file */
+/*     fclose(fp); */
+/* } */
 
 template<int SIZE, int COARSE_IN, int COARSE_OUT, typename T>
 void to_stream(
@@ -377,7 +376,8 @@ void to_stream(
 
 
 /* (GLUE) */
-template<int SIZE, int COARSE_IN, int COARSE_OUT, typename T>
+/* same as CONV/POOL */
+/*template<int SIZE, int COARSE_IN, int COARSE_OUT, typename T>
 void load_data(
     std::string filepath,
     T data[SIZE][COARSE_IN][COARSE_OUT]
@@ -419,7 +419,7 @@ void to_stream(
 	    }
         }
     }
-}
+}*/
 
 
 ////////////////////////////////////////////////
@@ -434,7 +434,8 @@ int checkStreamEqual(
 		bool print_out=false
 )
 {
-	while(!valid.empty())
+    int err = 0;
+    while(!valid.empty())
 	{
 		if(test.empty())
 		{
@@ -452,8 +453,9 @@ int checkStreamEqual(
 		)
 		{
 			//printf("ERROR: wrong value\n");
-			printf("ERROR: wrong value %x, %x \n",tmp.range()&BIT_MASK, tmp_valid.range()&BIT_MASK);
+			printf("ERROR: wrong value %f, %f, %f\n",tmp.to_float(), tmp_valid.to_float(), tmp.to_float()-tmp_valid.to_float());
 			return 1;
+			err++;
 		}
 	}
 
@@ -461,8 +463,9 @@ int checkStreamEqual(
 	{
 		printf("ERROR: still data in stream\n");
 		return 1;
+		err++;
 	}
-	return 0;
+	return err;
 }
 
 template<int SIZE>
@@ -536,41 +539,47 @@ int checkStreamEqual_file(
 	return 0;
 }
 
-////////////////////////////////////////////////
-////////// LOAD DATA FROM YAML (NET) ///////////
-////////////////////////////////////////////////
+////////////////////////////////////////////////////
+////////// LOAD DATA FOR PARTITION TESTS ///////////
+////////////////////////////////////////////////////
 
-/*
 template<
     int INPUTS,
     int SIZE,
     int WR_FACTOR=1
 >
 void load_net_weights(
-    int wr_index,
     std::string filepath,
-    std::string doc,
-    volatile mem_int data[INPUTS][DIVIDE(SIZE,INPUTS)]
+    volatile mem_int data[INPUTS][DIVIDE(SIZE,INPUTS)],
+    int wr_index = 0
 )
 {
     // read in file
-    std::string dir = getenv("PWD");
-    YAML::Node f = YAML::LoadFile(dir + "/" + filepath);
-    YAML::Node data_raw = f[doc];
+    const char *filepath_cstr = filepath.c_str();
+    FILE * fp = fopen(filepath_cstr,"r");
 
-    int index = 0;
+    // check file opened
+    if (fp == NULL) {
+        perror("Failed to load weights at");
+    }
+
     for(int w=0;w<WR_FACTOR;w++) {
         for(int i=0;i<INPUTS;i++) {
             for(int j=0;j<DIVIDE(SIZE,INPUTS);j++) {
-                weight_t pixel = weight_t(data_raw[index].as<float>());
-                index++;
+                // read in the value from the file
+                float val;
+                fscanf(fp,"%f\n", &val);
+                // convert to weight_t
+                weight_t pixel = weight_t(val);
+                // add to the input if correct weights reloading index
                 if ( w == wr_index ) {
                     data[i][j] |= ( pixel.range() & BIT_MASK ) ;
                 }
            }
         }
     }
-
+    // close file
+    fclose(fp);
 }
 
 template<
@@ -584,66 +593,47 @@ template<
 >
 void load_net_data(
     std::string filepath,
-    std::string doc,
     volatile mem_int data[INPUTS][BATCH_SIZE*ROWS*COLS*DIVIDE(CHANNELS,STREAMS)*WR_FACTOR],
     int wr_index = 0
 )
 {
-    // read in file
-    std::string dir = getenv("PWD");
-    YAML::Node f = YAML::LoadFile(dir + "/" + filepath);
-    YAML::Node data_raw = f[doc];
 
+    // read in file
+    const char *filepath_cstr = filepath.c_str();
+    FILE * fp = fopen(filepath_cstr,"r");
+
+    // check file opened
+    if (fp == NULL) {
+        perror("Failed to load data at");
+    }
+
+    // get variables
     int channels_per_stream = DIVIDE(CHANNELS,STREAMS);
     int dma_channels = DIVIDE(DMA_WIDTH,DATA_WIDTH);
 
     // save to array
-    int index = 0;
     for(int i=0;i<BATCH_SIZE*ROWS*COLS;i++) {
         for(int j=0;j<WR_FACTOR;j++) {
             for(int k=0;k<channels_per_stream;k++) {
                 int input_index = 0;
                 for(int l=0;l<STREAMS;l++) {
-                    //
-                    data_t pixel = data_t(data_raw[index].as<float>());
-                    //
+                    // read in the value from the file
+                    float val;
+                    fscanf(fp,"%f\n", &val);
+                    // convert to data type
+                    data_t pixel = data_t(val);
+                    // specific weights reloading index
                     if (j == wr_index) {
-                        //
                         int out_index = i*channels_per_stream*WR_FACTOR + j*channels_per_stream + k;
-                        data[(int)(l/dma_channels)][out_index] |= ( ( pixel.range() & BIT_MASK ) << ( ( l%dma_channels ) * DATA_WIDTH ) );
+                        data[(int)(l/dma_channels)][out_index] |=
+                            ( ( pixel.range() & BIT_MASK ) << ( ( l%dma_channels )*DATA_WIDTH ) );
                     }
-                    //
-                    index++;
                 }
             }
         }
     }
+    // close file
+    fclose(fp);
 }
 
-template<int FILTERS>
-void load_net_fc_data(
-		std::string filepath,
-		std::string doc,
-		data_t data[FILTERS][1][1]
-)
-{
-	// read in file
-	std::string dir = getenv("PWD");
-	YAML::Node f = YAML::LoadFile(dir + "/" + filepath);
-	YAML::Node data_raw = f[doc];
-
-	int filters = data_raw["filters"].as<int>();
-
-	// check correct dimensions
-	assert(filters==FILTERS);
-
-	// save to array
-	int index = 0;
-	for(int c=0;c<FILTERS;c++) {
-		float pixel = data_raw[index].as<float>();
-		index++;
-		data[c][0][0] = data_t(pixel);
-	}
-}
-*/
 #endif

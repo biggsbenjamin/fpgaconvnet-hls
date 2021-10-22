@@ -12,47 +12,53 @@ pooling_layer_template_header = """#ifndef {NAME}_HPP_
 #include "pool.hpp"
 
 #define name        {name}
+#define NAME        {NAME}
 #define {NAME}_ID   {id}
 
-#define {name}_input_t          data_t
-#define {name}_sliding_window_t data_t
-#define {name}_output_t         data_t
-
-#define {NAME}_BATCH_SIZE   {batch_size}
-#define {NAME}_ROWS         {rows}
-#define {NAME}_COLS         {cols}
-#define {NAME}_CHANNELS     {channels}
-#define {NAME}_COARSE       {coarse}
-#define {NAME}_KERNEL_SIZE  {kernel_size}
-#define {NAME}_STRIDE       {stride}
-#define {NAME}_PAD          {pad}
-#define {NAME}_FINE         {fine}
+#define {NAME}_BATCH_SIZE    {batch_size}
+#define {NAME}_ROWS          {rows}
+#define {NAME}_COLS          {cols}
+#define {NAME}_CHANNELS      {channels}
+#define {NAME}_COARSE        {coarse}
+#define {NAME}_KERNEL_SIZE_X {kernel_size_x}
+#define {NAME}_KERNEL_SIZE_Y {kernel_size_y}
+#define {NAME}_STRIDE_X      {stride_x}
+#define {NAME}_STRIDE_Y      {stride_y}
+#define {NAME}_FINE          {fine}
 
 #define {NAME}_COARSE_IN    {NAME}_COARSE
 #define {NAME}_COARSE_OUT   {NAME}_COARSE
 
-#define {NAME}_ROWS_OUT     {rows_out} 
-#define {NAME}_COLS_OUT     {cols_out} 
-#define {NAME}_CHANNELS_OUT {channels_out} 
+#define {NAME}_ROWS_OUT     {rows_out}
+#define {NAME}_COLS_OUT     {cols_out}
+#define {NAME}_CHANNELS_OUT {channels_out}
+
+// define the data type
+typedef ap_fixed<{data_width},{data_int_width},AP_RND, AP_SAT> {name}_data_t;
+typedef {name}_data_t {name}_input_t;
+typedef {name}_data_t {name}_output_t;
 
 // SLIDING WINDOW
-#define {NAME}_SLIDING_WINDOW_BATCH_SIZE   {batch_size}
-#define {NAME}_SLIDING_WINDOW_ROWS         {rows}
-#define {NAME}_SLIDING_WINDOW_COLS         {cols}
-#define {NAME}_SLIDING_WINDOW_CHANNELS     {channels_per_module}
-#define {NAME}_SLIDING_WINDOW_KERNEL_SIZE  {kernel_size}
-#define {NAME}_SLIDING_WINDOW_STRIDE       {stride}
-#define {NAME}_SLIDING_WINDOW_PAD_LEFT     {pad_left}
-#define {NAME}_SLIDING_WINDOW_PAD_RIGHT    {pad_right}
-#define {NAME}_SLIDING_WINDOW_PAD_TOP      {pad_top}
-#define {NAME}_SLIDING_WINDOW_PAD_BOTTOM   {pad_bottom}
+#define {NAME}_SLIDING_WINDOW_BATCH_SIZE    {batch_size}
+#define {NAME}_SLIDING_WINDOW_ROWS          {rows}
+#define {NAME}_SLIDING_WINDOW_COLS          {cols}
+#define {NAME}_SLIDING_WINDOW_CHANNELS      {channels_per_module}
+#define {NAME}_SLIDING_WINDOW_KERNEL_SIZE_X {kernel_size_x}
+#define {NAME}_SLIDING_WINDOW_KERNEL_SIZE_Y {kernel_size_y}
+#define {NAME}_SLIDING_WINDOW_STRIDE_X      {stride_x}
+#define {NAME}_SLIDING_WINDOW_STRIDE_Y      {stride_y}
+#define {NAME}_SLIDING_WINDOW_PAD_LEFT      {pad_left}
+#define {NAME}_SLIDING_WINDOW_PAD_RIGHT     {pad_right}
+#define {NAME}_SLIDING_WINDOW_PAD_TOP       {pad_top}
+#define {NAME}_SLIDING_WINDOW_PAD_BOTTOM    {pad_bottom}
 
 // POOL
 #define {NAME}_POOL_BATCH_SIZE   {batch_size}
 #define {NAME}_POOL_ROWS         {rows_out}
 #define {NAME}_POOL_COLS         {cols_out}
 #define {NAME}_POOL_CHANNELS     {channels_per_module}
-#define {NAME}_POOL_KERNEL_SIZE  {kernel_size}
+#define {NAME}_POOL_KERNEL_SIZE_X {kernel_size_x}
+#define {NAME}_POOL_KERNEL_SIZE_Y {kernel_size_y}
 #define {NAME}_POOL_FINE         {fine}
 
 /**
@@ -60,20 +66,21 @@ pooling_layer_template_header = """#ifndef {NAME}_HPP_
  */
 
 void {name}(
-    stream_t({name}_input_t)  in[{NAME}_COARSE],
-    stream_t({name}_output_t) out[{NAME}_COARSE],
+    stream_t({name}_data_t) in[{NAME}_COARSE],
+    stream_t({name}_data_t) out[{NAME}_COARSE],
     int mode
 );
 
 #undef name
+#undef NAME
 #endif
 """
 
 pooling_layer_template_src = """#include "{name}.hpp"
 
 void {name}(
-    stream_t({name}_input_t)  in[{NAME}_COARSE],
-    stream_t({name}_output_t) out[{NAME}_COARSE],
+    stream_t({name}_data_t) in[{NAME}_COARSE],
+    stream_t({name}_data_t) out[{NAME}_COARSE],
     int mode
 )
 {{
@@ -87,7 +94,7 @@ void {name}(
 #pragma HLS ARRAY_PARTITION variable=in  complete dim=0
 #pragma HLS ARRAY_PARTITION variable=out complete dim=0
 
-    stream_t(data_t) sw_out[{NAME}_COARSE][{NAME}_KERNEL_SIZE][{NAME}_KERNEL_SIZE]; //sliding window output
+    stream_t({name}_data_t) sw_out[{NAME}_COARSE][{NAME}_KERNEL_SIZE_X][{NAME}_KERNEL_SIZE_Y]; //sliding window output
 
 #pragma HLS STREAM variable=sw_out
 #pragma HLS ARRAY_PARTITION variable=sw_out complete dim=0
@@ -112,6 +119,7 @@ def gen_pooling_layer(name,param,src_path,header_path):
         name+"_sliding_window",
         "in[coarseIndex]",
         "sw_out[coarseIndex]",
+        sliding_window_t=f"{name}_data_t",
         indent=8
     )
 
@@ -120,6 +128,7 @@ def gen_pooling_layer(name,param,src_path,header_path):
         name+"_pool",
         "sw_out[coarseIndex]",
         "out[coarseIndex]",
+        pool_t=f"{name}_data_t",
         indent=8
     )
 
@@ -141,11 +150,12 @@ def gen_pooling_layer(name,param,src_path,header_path):
         rows                =param['rows_in'],
         cols                =param['cols_in'],
         channels            =param['channels_in'],
-        channels_per_module =int(param['channels_in']/(param['coarse'])),
+        channels_per_module =param['channels_in']//param['coarse'],
         coarse              =param['coarse'],
-        kernel_size         =param['kernel_size'],
-        stride              =param['stride'],
-        pad                 =param['pad'],
+        kernel_size_x       =param['kernel_size'][0],
+        kernel_size_y       =param['kernel_size'][1],
+        stride_x            =param['stride'][0],
+        stride_y            =param['stride'][1],
         pad_left            =param['pad_left'],
         pad_right           =param['pad_right'],
         pad_top             =param['pad_top'],
@@ -153,8 +163,10 @@ def gen_pooling_layer(name,param,src_path,header_path):
         fine                =param['fine'] if 'fine' in param else "1",
         rows_out            =param['rows_out'],
         cols_out            =param['cols_out'],
-        channels_out        =param['channels_out']
-    )   
+        channels_out        =param['channels_out'],
+        data_width          =param['data_width'],
+        data_int_width      =param['data_width']//2,
+    )
 
     # write source file
     with open(src_path,'w') as src_file:

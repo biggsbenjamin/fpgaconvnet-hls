@@ -16,15 +16,14 @@ class SqueezeTB(Data):
 
     # update stimulus generation
     def gen_stimulus(self):
+
         # Init Module
         squeeze = Squeeze(
-            [
-                self.param['channels'],
-                self.param['rows'],
-                self.param['cols']
-            ],
-            self.param['coarse_out'],
-            self.param['coarse_in']
+            self.param['rows'],
+            self.param['cols'],
+            self.param['channels'],
+            self.param['coarse_in'],
+            self.param['coarse_out']
         )
 
         # add parameters
@@ -37,21 +36,25 @@ class SqueezeTB(Data):
         data_in = self.gen_data([
             self.param['rows'],
             self.param['cols'],
-            int(self.param['channels']/self.param['coarse_out']),
-            self.param['coarse_out']
+            self.param['channels']//self.param['coarse_in'],
+            self.param['coarse_in']
         ])
+
         # data out
         data_out = squeeze.functional_model(data_in)
+
         # return data
         data = {
             'input'  : data_in.reshape(-1).tolist(),
             'output' : data_out.reshape(-1).tolist()
         }
+
         # resource and latency model
         model = {
-            'latency'   : squeeze.get_latency(),
+            'latency'   : squeeze.latency(),
             'resources' : squeeze.rsc()
         }
+
         return data, model
 
 if __name__ == '__main__':

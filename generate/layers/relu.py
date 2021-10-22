@@ -9,6 +9,7 @@ relu_layer_template_header = """#ifndef {NAME}_HPP_
 #include "relu.hpp"
 
 #define name        {name}
+#define NAME        {NAME}
 #define {NAME}_ID   {id}
 
 #define {NAME}_BATCH_SIZE   {batch_size}
@@ -29,25 +30,30 @@ relu_layer_template_header = """#ifndef {NAME}_HPP_
 #define {NAME}_RELU_COLS         {cols}
 #define {NAME}_RELU_CHANNELS     {channels_per_module}
 
+typedef ap_fixed<{data_width},{data_int_width},AP_RND, AP_SAT> {name}_data_t;
+typedef {name}_data_t {name}_input_t;
+typedef {name}_data_t {name}_output_t;
+
 /**
  * FUNCTION DEFINITION
  */
 
 void {name}(
-    stream_t(data_t) in[{NAME}_COARSE],
-    stream_t(data_t) out[{NAME}_COARSE],
+    stream_t({name}_data_t) in[{NAME}_COARSE],
+    stream_t({name}_data_t) out[{NAME}_COARSE],
     int mode
 );
 
 #undef name
+#undef NAME
 #endif
 """
 
 relu_layer_template_src = """#include "{name}.hpp"
 
 void {name}(
-    stream_t(data_t) in[{NAME}_COARSE],
-    stream_t(data_t) out[{NAME}_COARSE],
+    stream_t({name}_data_t) in[{NAME}_COARSE],
+    stream_t({name}_data_t) out[{NAME}_COARSE],
     int mode
 )
 {{
@@ -76,14 +82,11 @@ void {name}(
 def gen_relu_layer(name,param,src_path,header_path):
 
     # RELU MODULE INIT
-    relu_param = {
-        'input_t'       : "{name}_input_t".format(name=name),
-        'output_t'      : "{name}_output_t".format(name=name)
-    }
     relu = generate.modules.relu.gen_relu_module(
         name+"_relu",
         "in[coarseIndex]",
         "out[coarseIndex]",
+        relu_t=f"{name}_data_t",
         indent=8
     )
 
@@ -96,6 +99,7 @@ def gen_relu_layer(name,param,src_path,header_path):
     )
 
     # header
+    print(param)
     relu_layer_header = relu_layer_template_header.format(
         name                =name,
         NAME                =name.upper(),
@@ -104,11 +108,13 @@ def gen_relu_layer(name,param,src_path,header_path):
         rows                =param['rows_in'],
         cols                =param['cols_in'],
         channels            =param['channels_in'],
-        channels_per_module =int(param['channels_in']/param['coarse_in']),
+        channels_per_module =param['channels_in']//param['coarse_in'],
         coarse              =param['coarse_in'],
         rows_out            =param['rows_out'],
         cols_out            =param['cols_out'],
-        channels_out        =param['channels_out']
+        channels_out        =param['channels_out'],
+        data_width          =param['data_width'],
+        data_int_width      =param['data_width']//2
     )
 
     # write source file
