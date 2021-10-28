@@ -328,9 +328,9 @@ class ONNXData:
 
     def save_weights_layer(self,layer,wr_factor=1,output_path=None,to_yaml=False,to_bin=False,to_csv=False,to_dat=False):
         # get transformed weights
-        if layer_enum.from_proto_layer_type(layer.type) == layer_enum.LAYER_TYPE.Convolution:
+        if layer_enum.from_protofrom_onnx_op_type(layer.type) == layer_enum.LAYER_TYPE.Convolution:
             transformed_weights = self.get_weights_convolution(layer, wr_factor=wr_factor)
-        elif layer_enum.from_proto_layer_type(layer.type) == layer_enum.LAYER_TYPE.InnerProduct:
+        elif layer_enum.from_protofrom_onnx_op_type(layer.type) == layer_enum.LAYER_TYPE.InnerProduct:
             transformed_weights = self.get_weights_inner_product(layer, wr_factor=wr_factor)
         else:
             raise TypeError
@@ -371,7 +371,7 @@ class ONNXData:
             layer_type_str = str(fpgaconvnet_pb2.layer.layer_type.Name(layer.type)) # REQUIRED EDIT
             layer_name = gen_layer_name(layer) # REQUIRED EDIT
             # skip weights outside of partition
-            if layer_enum.from_proto_layer_type(layer.type) in [ layer_enum.LAYER_TYPE.Convolution, layer_enum.LAYER_TYPE.InnerProduct ]:
+            if layer_enum.from_protofrom_onnx_op_type(layer.type) in [ layer_enum.LAYER_TYPE.Convolution, layer_enum.LAYER_TYPE.InnerProduct ]:
                 # get weights reloading factor
                 if layer.name == self.partition.weights_reloading_layer:
                     wr_factor = self.partition.weights_reloading_factor
