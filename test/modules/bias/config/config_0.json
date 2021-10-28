@@ -1,0 +1,10 @@
+{
+    "batch_size": 1,
+    "rows": 16,
+    "cols": 16,
+    "channels":64,
+    "filters":32,
+    "coarse_in":1,
+    "coarse_out":1,
+    "description": "basic filters"
+}

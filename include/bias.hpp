@@ -4,41 +4,42 @@
  *  BIAS FUNCTION
  */
 
-/*
-template<int _>
+template<
+    unsigned int BATCH_SIZE,
+    unsigned int ROWS,
+    unsigned int COLS,
+    unsigned int CHANNELS,
+    unsigned int FILTERS,
+    unsigned int COARSE_OUT,
+    typename bias_data_t,
+    typename bias_weight_t
+>
 void bias(
-    stream_t(data_t) &in,
-    data_t bias[CHANNELS],
-    stream_t(data_t) &out
+    stream_t(bias_data_t) in[COARSE_OUT],
+    const bias_weight_t bias[FILTERS],
+    stream_t(bias_data_t) out[COARSE_OUT]
 )
 {
 
 #pragma HLS INLINE OFF 
 
-    const unsigned int batch_size   = NAME_SUB(MODULE_NAME,_BATCH_SIZE);
-    const unsigned int rows         = NAME_SUB(MODULE_NAME,_ROWS);
-    const unsigned int cols         = NAME_SUB(MODULE_NAME,_COLS);
-    const unsigned int channels     = NAME_SUB(MODULE_NAME,_CHANNELS);
-    const unsigned int coarse       = NAME_SUB(MODULE_NAME,_COARSE);
+    const unsigned int batch_size   = BATCH_SIZE;
+    const unsigned int rows         = ROWS;
+    const unsigned int cols         = COLS;
+    const unsigned int filters      = FILTERS;
+    const unsigned int coarse_out   = COARSE_OUT;
+    //const unsigned int coarse_group = COARSE_GROUP;
+    const unsigned int filters_per_coarse   = DIVIDE(filters,coarse_out);//*coarse_group);
 
 #pragma HLS STREAM variable=in 
 #pragma HLS STREAM variable=out
 
-#if (NAME_SUB(MODULE_NAME,_BATCH_SIZE) > 1) || (NAME_SUB(MODULE_NAME,_ROWS) > 1) || (NAME_SUB(MODULE_NAME,_COLS) > 1)
     pixel_loop: for(unsigned int pixel_index=0;pixel_index<batch_size*rows*cols;pixel_index++) {
-#endif
-#if NAME_SUB(MODULE_NAME,_CHANNELS) != 1
-        channel_loop: for(unsigned int channel_index=0;channel_index<channels;channel_ndex++) {
-#else
-            unsigned int channel_index=0;
-#endif
+        filter_loop: for(unsigned int filter_index=0;filter_index<filters_per_coarse;filter_index++) {
             #pragma HLS PIPELINE II=1 rewind
-	    out.write( in.read() + bias[channel_index] );
-#if NAME_SUB(MODULE_NAME,_CHANNELS) != 1
-	}
-#endif
-#if (NAME_SUB(MODULE_NAME,_BATCH_SIZE) > 1) || (NAME_SUB(MODULE_NAME,_ROWS) > 1) || (NAME_SUB(MODULE_NAME,_COLS) > 1)
+            coarse_out_loop: for(unsigned int out_index=0; out_index<coarse_out; out_index++) {
+                in[out_index].read() + bias 
+	            out.write( in.read() + bias[filter_index] );
+            }
+	    }
     }
-#endif
-}
-*/
