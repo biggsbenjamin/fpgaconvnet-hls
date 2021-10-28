@@ -63,9 +63,9 @@ typedef unsigned int mem_int;
 typedef ap_axis<DMA_WIDTH,1,1,1>    axi_stream_t;
 typedef hls::stream<axi_stream_t>   axi_stream_hw_t;
 
-typedef ap_fixed<DATA_WIDTH,INTEGER_BITS> data_t;
-typedef ap_fixed<30,16> acc_t;
-typedef ap_fixed<8,4> weight_t;
+typedef ap_fixed<DATA_WIDTH,INTEGER_BITS,AP_RND> data_t;
+typedef ap_fixed<30,16,AP_RND> acc_t;
+typedef ap_fixed<8,1,AP_RND> weight_t;
 
 //#define stream_t(x) hlslib::Stream<x>
 #define stream_t(x) hls::stream<x>

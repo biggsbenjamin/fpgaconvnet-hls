@@ -17,7 +17,7 @@
     "batch_size": 1,
     "input_width": 16,
     "acc_width": 30,
-    "weight_width": 8,
+    "weight_width": 16,
     "output_width": 16,
     "description": "layer name: inception_3b/5x5, net name: googlenet.prototxt"
 }

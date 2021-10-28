@@ -54,6 +54,9 @@ if [ $TEST_NUM ]; then
   # RUN TEST
   vivado_hls -f $FPGACONVNET_HLS/scripts/run_hls.tcl "_  -num ${TEST_NUM} -type ${TEST_TYPE} -name ${LAYER} -layer_flag -fpga xc7z045ffg900-2 -fast"
 
+# GENERATE REPORTS
+python ../report.py -l $LAYER -n $TEST_NUM
+
 else
 
   # NUMBER OF TESTS
@@ -69,7 +72,6 @@ else
       vivado_hls -f $FPGACONVNET_HLS/scripts/run_hls.tcl "_  -num ${i} -type ${TEST_TYPE} -name ${LAYER} -layer_flag -fpga xc7z045ffg900-2 -fast"
   done
 
-fi
-
 # GENERATE REPORTS
 python ../report.py -l $LAYER
+fi

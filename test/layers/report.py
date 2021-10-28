@@ -12,15 +12,30 @@ from tools.reporter import report
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Layer Report Generator")
     parser.add_argument('-l','--layer', required=True, help='Name of layer')
+    parser.add_argument('-n','--number', default=-1, help='test config number')
     args = parser.parse_args()
+
+    # make the path
+    output_path = f"rpt/"
+    if not os.path.exists(output_path):
+        os.makedirs(output_path)
 
     # create a report instance
     layer_report = report(f"{args.layer} report")
 
-    # iterate over tests
-    for config_file in os.listdir("config"):
+    if args.number == -1:
+        test_pool = [config_file for config_file in os.listdir("config")]
+    else:
+        #do a single report
+        test_pool = [args.number]
+
+    for i in range(len(test_pool)):
         # get test number
-        test_num = int(re.search(r"\d+",config_file).group(0))
+        if args.number == -1:
+            test_num = int(re.search(r"\d+",test_pool[i]).group(0))
+        else:
+            test_num = args.number
+
         # get hls logs
         layer_test_log = hls_log(f"{args.layer}_layer_top", f"{args.layer}_hls_prj/solution{test_num}")
         # generate results of test
@@ -76,3 +91,4 @@ if __name__ == "__main__":
     # save report
     with open("REPORT.md","w") as f:
         f.write(layer_report.print_report())
+

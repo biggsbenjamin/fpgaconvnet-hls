@@ -18,7 +18,6 @@ import fpgaconvnet_optimiser.tools.graphs as graphs
 import fpgaconvnet_optimiser.tools.layer_enum as layer_enum
 import fpgaconvnet_optimiser.tools.onnx_helper as onnx_helper
 import fpgaconvnet_optimiser.proto.fpgaconvnet_pb2 as fpgaconvnet_pb2 #REQUIRED EDIT
-from fpgaconvnet_optimiser.tools.parser import _layer_type #REQUIRED EDIT
 
 from tools.array_init import array_init
 
