@@ -1,8 +1,8 @@
 {
     "type": "RELU",
-    "rows": 28,
-    "cols": 28,
-    "channels": 512,
+    "rows_in": 28,
+    "cols_in": 28,
+    "channels_in": 512,
     "coarse": 2,
     "coarse_in": 2,
     "coarse_out": 2,

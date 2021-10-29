@@ -13,12 +13,11 @@
     "coarse_out": 2,
     "coarse_group": 1,
     "fine": 1,
-    "size_in": 2880,
-    "size_out": 640,
     "wr_factor": 5,
-    "rows_out": 8,
-    "cols_out": 8,
-    "channels_out": 10,
     "batch_size": 1,
+    "input_width": 36,
+    "acc_width": 36,
+    "weight_width": 36,
+    "output_width": 36,
     "description": "layer name: conv2, net name: lenet.prototxt"
 }

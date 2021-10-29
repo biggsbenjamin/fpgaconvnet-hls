@@ -11,13 +11,13 @@
     "pad": 0,
     "coarse_in": 8,
     "coarse_out": 8,
+    "coarse_group": 1,
     "fine": 1,
-    "size_in": 100352,
-    "size_out": 12544,
     "wr_factor": 32,
-    "rows_out": 28,
-    "cols_out": 28,
-    "channels_out": 16,
     "batch_size": 1,
+    "input_width": 16,
+    "acc_width": 30,
+    "weight_width": 16,
+    "output_width": 16,
     "description": "layer name: res3d_branch2c, net name: resnet.prototxt"
 }

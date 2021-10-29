@@ -49,6 +49,9 @@ if [ $TEST_NUM ]; then
     # RUN TEST
     vivado_hls -f $FPGACONVNET_HLS/scripts/run_hls.tcl "_ -num ${TEST_NUM} -type ${TEST_TYPE} -name ${MODULE} -module_flag"
 
+# GENERATE REPORTS
+python3 ../report.py -m $MODULE -n $TEST_NUM
+
 else
 
     # NUMBER OF TESTS
@@ -65,7 +68,7 @@ else
         vivado_hls -f $FPGACONVNET_HLS/scripts/run_hls.tcl "_  -num ${i} -type ${TEST_TYPE} -name ${MODULE} -module_flag "
     done
 
-fi
-
 # GENERATE REPORTS
 python3 ../report.py -m $MODULE
+
+fi
