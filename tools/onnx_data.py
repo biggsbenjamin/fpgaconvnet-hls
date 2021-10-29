@@ -18,7 +18,6 @@ import fpgaconvnet_optimiser.tools.graphs as graphs
 import fpgaconvnet_optimiser.tools.layer_enum as layer_enum
 import fpgaconvnet_optimiser.tools.onnx_helper as onnx_helper
 import fpgaconvnet_optimiser.proto.fpgaconvnet_pb2 as fpgaconvnet_pb2 #REQUIRED EDIT
-from fpgaconvnet_optimiser.tools.parser import _layer_type #REQUIRED EDIT
 
 from tools.array_init import array_init
 
@@ -179,6 +178,7 @@ class ONNXData:
         for i in range(size):
             for j in range(streams):
                 port_index = math.floor((j*data_width)/port_width)
+                # print(stream[i*streams+j].bits_to_signed() & ((2**data_width)-1), data_type(stream[i*streams+j].bits_to_signed()))
                 stream_val = data_type( stream[i*streams+j].bits_to_signed() & ((2**data_width)-1) )
                 bin_out[port_index][i] |= port_type( stream_val  << (data_width*j)%port_width )
         # return the formatted stream
@@ -245,22 +245,7 @@ class ONNXData:
         output_data = self.transform_featuremap(output_data)
         output_streams = int(self.partition.layers[-1].parameters.coarse_out)
         self.save_featuremap(output_data, os.path.join(output_path, onnx_helper._format_name(output_node)),
-            parallel_streams=output_streams, to_yaml=False, to_bin=to_bin, to_csv=to_csv, to_dat=to_dat)
-        # save yaml data
-        data = {
-            "in"  : input_data.reshape(-1).tolist(),
-            "out" : output_data.reshape(-1).tolist()
-        }
-        if output_path:
-            # save data as .dat files
-            for filename in data:
-                with open(os.path.join(output_path,filename+".dat"), 'w') as f:
-                    f.write("\n".join([str(i) for i in data[filename]]))
-        ## yaml format
-        #if output_path:
-        #    # save to yaml file
-        #    with open(os.path.join(output_path,'data.yaml'), 'w') as f:
-        #        yaml.dump(data, f)
+            parallel_streams=output_streams, to_yaml=True, to_bin=to_bin, to_csv=to_csv, to_dat=to_dat)
 
     """
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -287,22 +272,15 @@ class ONNXData:
                 num_filters,
                 k_size_x,k_size_y),dtype=float,order='C')
 
-        #print(weights_raw)
         # transform weights raw shape
         for index,_ in np.ndenumerate(weights):
-            #print(index)
             weights[index] = weights_raw[
                       index[4]*coarse_group*num_filters*wr_factor*coarse_out+index[1]*num_filters*wr_factor*coarse_out+index[6]*wr_factor*coarse_out+index[0]*coarse_out+index[3],
                       index[5]*coarse_in+index[2],
                       index[7],
                       index[8]]
-            #print(index,weights[index])
         # merge channel and filter dimensions
         weights = np.reshape(weights,[wr_factor,coarse_in*coarse_group,coarse_out,int(groups/coarse_group)*num_channels*num_filters,k_size_x,k_size_y])
-        #print(weights)
-        # remove last two dimensions if kernel size is 1
-        #if k_size == 1:
-        #    weights = weights[:,:,:,:,0,0]
         # return transformed weights
         return weights
 
@@ -311,6 +289,7 @@ class ONNXData:
         if self.model:
             weights_raw = onnx_helper.get_model_initializer(self.model, layer.weights_path)
         else:
+            print(f"WARNING: no initializer found for {layer.name}, creating a random initializer")
             dim = [layer.parameters.filters*wr_factor,
                 int(layer.parameters.channels_in / layer.parameters.groups),
                 layer.parameters.kernel_size[0],
@@ -366,8 +345,10 @@ class ONNXData:
                     # save to csv file
                     with open(filepath, 'w') as f:
                         f.write(array_init(transformed_weights[weights_reloading_index]))
+            # get the bitwidth for the weights
+            bitwidth = layer.parameters.weight_width
             # flatten the weights for binary and data formats
-            weights_stream =  self._convert_fixed_port_stream(transformed_weights.reshape(-1), total_width=8, int_width=4)
+            weights_stream =  self._convert_fixed_port_stream(transformed_weights.reshape(-1), total_width=bitwidth, int_width=bitwidth//2)
             # bin format
             if to_bin:
                 self._fixed_point_stream_to_bin(weights_stream, output_path=output_path, streams=1, port_width=64, ports=1)
@@ -413,13 +394,4 @@ class ONNXData:
                 with open(os.path.join(output_path,layer+".dat"), 'w') as f:
                     f.write("\n".join([str(i) for i in weight_list]))
 
-        ## yaml format
-        #if to_yaml:
-        #    tmp = {}
-        #    for layer in weights:
-        #        tmp[layer] = weights[layer].reshape(-1).tolist()
-        #    # save to yaml file
-        #    with open(os.path.join(output_path,'weights.yaml'), 'w') as f:
-        #        yaml.dump(tmp, f)
-        # return weights
         return weights

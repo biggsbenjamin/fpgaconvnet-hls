@@ -18,7 +18,7 @@ import fpgaconvnet_optimiser.tools.onnx_helper as onnx_helper
 from tools.onnx_data import ONNXData
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Weights Formatting Script")
+    parser = argparse.ArgumentParser(description="Feature-map Formatting Script")
     parser.add_argument('-p','--partition_path',metavar='PATH',required=True,
         help='Path to partition info (.pb.bin)')
     parser.add_argument('-m','--onnx_path',metavar='PATH',required=True,
@@ -32,7 +32,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # load partition information
-    partitions = fpgaconvnet_optimiser.proto.fpgaconvnet_pb2.partitions() 
+    partitions = fpgaconvnet_optimiser.proto.fpgaconvnet_pb2.partitions()
     with open(args.partition_path,'r') as f:
        json_format.Parse(f.read(), partitions)
 

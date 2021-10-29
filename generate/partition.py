@@ -186,7 +186,6 @@ def gen_network(name,partition,output_path):
             fn_args.append(stream_out.name)
         fn_args.append("mode")
         fn_args = ", ".join(fn_args)
-        layers +=  f"   printf(\"LAYER: {layer_name} \\n\");\n"
         layers += f"    {layer_name}({fn_args});\n"
 
     # include generation
@@ -234,7 +233,7 @@ def gen_network(name,partition,output_path):
         NAME = name.upper(),
         input_data_path = os.path.join(os.getcwd(), output_path, f"data/{input_node}_0.dat"),
         weights_reloading_path = os.path.join(os.getcwd(), output_path, f"data/{wr_layer}_weights_0.dat"),
-        output_data_path = os.path.join(os.getcwd(), output_path, f"data/{input_node}_0.dat")
+        output_data_path = os.path.join(os.getcwd(), output_path, f"data/{output_node}_0.dat")
     )
 
     with open(os.path.join(output_path,f'include/{name}_top.hpp'),'w') as f:

@@ -81,7 +81,7 @@ DO_PRAGMA(HLS ARRAY_PARTITION variable=weights block factor=weights_partition_fa
                             DO_PRAGMA(HLS occurrence cycle=batch_size*rows*cols*channels)
                             window_cache[k1][k2] = in[k1][k2].read();
                         }
-
+                        /* printf("%f,%f\n", window_cache[k1][k2].to_float(), weights[weight_index][k1][k2].to_float()); */
                         window_stream[fine_index].write(window_cache[k1][k2]);
                         weight_stream[fine_index].write(weights[weight_index][k1][k2]);
 
@@ -145,10 +145,8 @@ void conv_mul(
     unsigned char acc_index=0;
     mul_pixel_loop: for(unsigned int pixel_index=0;pixel_index<batch_size*rows*cols*channels_per_group*filters_per_group*groups*interval;pixel_index++) {
             #pragma HLS loop_flatten
-            #pragma HLS unroll region
             #pragma HLS pipeline II=1
             mul_loop: for(unsigned char fine_index=0;fine_index<fine;fine_index++) {
-                #pragma HLS pipeline II=1
                 // update accumulation cache
                 conv_acc_t prev = ( acc_index == 0 ) ? conv_acc_t(0) : acc_cache[fine_index] ;
                 acc_cache[fine_index] = prev + window_stream[fine_index].read() * weight_stream[fine_index].read();

@@ -21,7 +21,6 @@ void mem_write(
 {
 
 #pragma HLS INLINE OFF
-#pragma HLS INTERFACE ap_ctrl_chain port=return
 
     const unsigned batch_size               = BATCH_SIZE;
     const unsigned rows                     = ROWS;
