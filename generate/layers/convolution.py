@@ -11,7 +11,6 @@ import generate.modules.glue
 convolution_layer_template_header = """#ifndef {NAME}_HPP_
 #define {NAME}_HPP_
 
-#include <ap_fixed.h>
 #include "sliding_window.hpp"
 #include "fork.hpp"
 #include "conv.hpp"

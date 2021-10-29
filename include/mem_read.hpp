@@ -36,22 +36,23 @@ void mem_read(
         #pragma HLS PIPELINE II=1
 
         mem_int port_cache[ports];
-#pragma HLS ARRAY_PARTITION variable=port_cache complete dim=0
+        #pragma HLS ARRAY_PARTITION variable=port_cache complete dim=0
 
         port_read_loop: for (unsigned port_index=0; port_index < ports; port_index++) {
-            //if ( streams_in > port_index*dma_channels ) {
-                port_cache[port_index] = in_hw[port_index][size_index];
-                // mem_int tmp = in_hw[port_index][size_index];
-            //}
+            port_cache[port_index] = in_hw[port_index][size_index];
         }
+
         stream_loop: for (unsigned int stream_index=0; stream_index < streams; stream_index++) {
 
-            //
+            // get the port index
             unsigned int port_index = (int)(stream_index/dma_channels);
 
-            //
+            // get the stream value
             type_t stream_cache = 0;
             stream_cache.range() = ( ( ( port_cache[port_index] ) >> ( ( stream_index%dma_channels ) * DATA_WIDTH ) ) & BIT_MASK );
+
+            /* printf("%d: %f\n", port_cache[port_index], stream_cache.to_float()); */
+
             // write to the stream
             in[stream_index].write(stream_cache);
 

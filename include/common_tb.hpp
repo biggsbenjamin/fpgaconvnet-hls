@@ -476,7 +476,7 @@ int check_array_equal(
 {
     int err = 0;
     for(int i=0;i<SIZE;i++) {
-        for(int j=0;j<4;j++) {
+        for(int j=0;j<1;j++) {
             data_t tmp, tmp_valid;
             tmp.range()         = (test[i] >> j*DATA_WIDTH) & BIT_MASK;
             tmp_valid.range()   = (valid[i]>> j*DATA_WIDTH) & BIT_MASK;
@@ -567,13 +567,11 @@ void load_net_weights(
         for(int i=0;i<INPUTS;i++) {
             for(int j=0;j<DIVIDE(SIZE,INPUTS);j++) {
                 // read in the value from the file
-                float val;
-                fscanf(fp,"%f\n", &val);
-                // convert to weight_t
-                weight_t pixel = weight_t(val);
+                mem_int val;
+                fscanf(fp,"%l\n", &val);
                 // add to the input if correct weights reloading index
                 if ( w == wr_index ) {
-                    data[i][j] |= ( pixel.range() & BIT_MASK ) ;
+                    data[i][j] = val;
                 }
            }
         }
@@ -615,19 +613,13 @@ void load_net_data(
     for(int i=0;i<BATCH_SIZE*ROWS*COLS;i++) {
         for(int j=0;j<WR_FACTOR;j++) {
             for(int k=0;k<channels_per_stream;k++) {
-                int input_index = 0;
-                for(int l=0;l<STREAMS;l++) {
-                    // read in the value from the file
-                    float val;
-                    fscanf(fp,"%f\n", &val);
-                    // convert to data type
-                    data_t pixel = data_t(val);
-                    // specific weights reloading index
-                    if (j == wr_index) {
-                        int out_index = i*channels_per_stream*WR_FACTOR + j*channels_per_stream + k;
-                        data[(int)(l/dma_channels)][out_index] |=
-                            ( ( pixel.range() & BIT_MASK ) << ( ( l%dma_channels )*DATA_WIDTH ) );
-                    }
+                // read in the value from the file
+                mem_int val;
+                fscanf(fp,"%ld\n", &val);
+                // specific weights reloading index
+                if (j == wr_index) {
+                    int out_index = i*channels_per_stream*WR_FACTOR + j*channels_per_stream + k;
+                    data[0][out_index] = val;
                 }
             }
         }

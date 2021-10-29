@@ -3,7 +3,7 @@
     {
       "id": 0,
       "ports": 1,
-      "batch_size": 512,
+      "batch_size": 1,
       "input_node": "data",
       "output_node": "pool1",
       "weights_reloading_factor": 1,
@@ -25,7 +25,7 @@
           ],
           "parameters": {
             "buffer_depth": 0,
-            "batch_size": 512,
+            "batch_size": 1,
             "rows_in": 28,
             "cols_in": 28,
             "channels_in": 1,
@@ -52,7 +52,7 @@
             ],
             "data_width": 16,
             "weight_width": 16,
-            "acc_width": 16,
+            "acc_width": 32,
             "input_width": 16,
             "output_width": 16
           },
@@ -78,7 +78,7 @@
           ],
           "parameters": {
             "buffer_depth": 0,
-            "batch_size": 512,
+            "batch_size": 1,
             "rows_in": 24,
             "cols_in": 24,
             "channels_in": 20,
@@ -109,7 +109,7 @@
           ],
           "parameters": {
             "buffer_depth": 0,
-            "batch_size": 512,
+            "batch_size": 1,
             "rows_in": 24,
             "cols_in": 24,
             "channels_in": 20,
@@ -148,12 +148,12 @@
           "streams_out": [
             {
               "name": "out",
-              "coarse": 4
+              "coarse": 1
             }
           ],
           "parameters": {
             "buffer_depth": 0,
-            "batch_size": 512,
+            "batch_size": 1,
             "rows_in": 12,
             "cols_in": 12,
             "channels_in": 20,
@@ -161,7 +161,7 @@
             "cols_out": 12,
             "channels_out": 20,
             "coarse_in": 20,
-            "coarse_out": 4,
+            "coarse_out": 1,
             "data_width": 16
           },
           "node_in": "pool1",

@@ -6,7 +6,7 @@ void sliding_window_top(
     stream_t(sliding_window_t) out[SLIDING_WINDOW_KERNEL_SIZE_0][SLIDING_WINDOW_KERNEL_SIZE_1]
 )
 {
-    #pragma HLS ARRA1_PARTITION variable=out complete dim=0
+    #pragma HLS ARRAY_PARTITION variable=out complete dim=0
     #pragma HLS DATAFLOW
 
 #if SLIDING_WINDOW_KERNEL_SIZE_0 == 1

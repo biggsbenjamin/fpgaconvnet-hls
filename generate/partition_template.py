@@ -216,11 +216,8 @@ network_tb_src_template = """#include "{name}_top.hpp"
 int main()
 {{
     int err = 0;
-    std::string input_path  = "{data_path}/in.dat";
-    std::string output_path = "{data_path}/out.dat";
-    std::string {wr_layer}_path = "{data_path}/{wr_layer}.dat"; //FIXME for multiple wr layers
 
-    static mem_int test_in[{NAME}_PORTS_IN][{NAME}_SIZE_IN]             = {{0}};
+    static mem_int test_in[{NAME}_PORTS_IN][{NAME}_SIZE_IN] = {{0}};
 
     // load input
     printf("LOADING INPUT DATA \\n");
