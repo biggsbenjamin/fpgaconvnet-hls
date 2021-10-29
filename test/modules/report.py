@@ -12,15 +12,31 @@ from tools.reporter import report
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Module Report Generator")
     parser.add_argument('-m','--module', required=True, help='Name of module')
+    parser.add_argument('-n','--number', default=-1, help='test config number')
     args = parser.parse_args()
+
+    # make the path
+    output_path = f"rpt/"
+    if not os.path.exists(output_path):
+        os.makedirs(output_path)
 
     # create a report instance
     module_report = report(f"{args.module} report")
 
+    if args.number == -1:
+        test_pool = [config_file for config_file in os.listdir("config")]
+    else:
+        #do a single report
+        test_pool = [args.number]
+
     # iterate over tests
-    for config_file in os.listdir("config"):
+    for i in range(len(test_pool)):
         # get test number
-        test_num = int(re.search(r"\d+",config_file).group(0))
+        if args.number == -1:
+            test_num = int(re.search(r"\d+",test_pool[i]).group(0))
+        else:
+            test_num = args.number
+
         # get hls logs
         module_test_log = hls_log(f"{args.module}_top", f"{args.module}_hls_prj/solution{test_num}")
         # generate results of test

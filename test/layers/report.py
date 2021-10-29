@@ -91,4 +91,3 @@ if __name__ == "__main__":
     # save report
     with open("REPORT.md","w") as f:
         f.write(layer_report.print_report())
-
