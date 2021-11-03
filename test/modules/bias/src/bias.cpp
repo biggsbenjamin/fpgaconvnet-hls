@@ -2,16 +2,15 @@
 #include "bias.hpp"
 
 void bias_top(
-    stream_t(bias_data_t) in[BIAS_COARSE_OUT],
-    //bias_weight_t weights[BIAS_CHANNELS*DIVIDE(BIAS_FILTERS,BIAS_GROUPS)],
-    bias_weight_t weights[BIAS_FILTERS],
-    stream_t(bias_acc_t) &ou[BIAS_COARSE_OUT]t
+    stream_t(bias_data_t) &in,
+    bias_biases_t biases[BIAS_FILTERS],
+    stream_t(bias_data_t) &out
 )
 {
 
 #pragma HLS DATAFLOW
-#pragma HLS RESOURCE variable=weights core=ROM_2P_BRAM
-
+//#pragma HLS RESOURCE variable=biases core=ROM
+    
     bias<
         BIAS_BATCH_SIZE,
         BIAS_ROWS,
@@ -19,7 +18,6 @@ void bias_top(
         BIAS_CHANNELS,
         BIAS_FILTERS,
         bias_data_t,
-        bias_weight_t,
-        bias_acc_t
-    >(in[0][0],weights,out);
+        bias_biases_t
+    >(in,biases,out);
 }
