@@ -39,7 +39,8 @@ class ConvolutionLayerTB(Layer):
             input_width=self.param["input_width"],
             output_width=self.param["output_width"],
             acc_width=self.param["acc_width"],
-            weight_width=self.param["weight_width"]
+            weight_width=self.param["weight_width"],
+            biases_width=self.param["biases_width"]
         )
 
         # update parameters
@@ -56,6 +57,7 @@ class ConvolutionLayerTB(Layer):
             self.param['cols_in'],
             self.param['channels_in']
         ])
+
         # weights
         weights = self.gen_data([
             self.param['filters'],
@@ -63,12 +65,18 @@ class ConvolutionLayerTB(Layer):
             self.param['kernel_size'][0],
             self.param['kernel_size'][1]
         ],[-8,8]) #todo: consistent with weight_t
-        bias     = np.zeros(self.param['filters'])
-        # data out
-        data_out = layer.functional_model(copy.copy(data_in),weights,bias)[0]
+
+        # biases
+        biases = np.zeros(self.param['filters'])
+        if self.param['has_bias'] == 1:
+            biases = self.gen_data([
+                self.param['filters']
+            ])
+
+        # generate data out with functional model
+        data_out = layer.functional_model(copy.copy(data_in),weights,biases)[0]
         data_out = np.moveaxis(data_out,0,-1)
-        #print(weights)
-        #print(data_in)
+
         # save weights
         weights = ONNXData._transform_weights(
             weights,
@@ -81,6 +89,18 @@ class ConvolutionLayerTB(Layer):
         #print(weights)
         with open('data/weights.csv', 'w') as f:
             f.write(array_init(weights[0]))
+
+        if self.param['has_bias'] == 1:
+            # save biases #FIXME finish placeholder fn
+            biases = ONNXData._transform_biases(
+                biases,
+                self.param['filters'],
+                self.param['coarse_out']
+            )
+            #print(biases) #FIXME save the biases
+            with open('data/biases.csv', 'w') as f:
+                f.write(array_init(biases))#[0]))
+
 
         # add output dimensions
         self.param['rows_out']      = layer.rows_out()
@@ -111,7 +131,9 @@ class ConvolutionLayerTB(Layer):
         # return data
         data = {
             'input'  : data_in.reshape(-1).tolist(),
-            'output' : data_out.reshape(-1).tolist()
+            'output' : data_out.reshape(-1).tolist(),
+            'weights': array_init(weights[0]),
+            'biases' : array_init(biases)
         }
         # resource and latency model
         model = {

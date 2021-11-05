@@ -7,6 +7,7 @@ import generate.modules.fork
 import generate.modules.conv
 import generate.modules.accum
 import generate.modules.glue
+import generate.modules.bias
 
 convolution_layer_template_header = """#ifndef {NAME}_HPP_
 #define {NAME}_HPP_
@@ -16,6 +17,7 @@ convolution_layer_template_header = """#ifndef {NAME}_HPP_
 #include "conv.hpp"
 #include "accum.hpp"
 #include "glue.hpp"
+#include "bias.hpp"
 
 #define name        {name}
 #define NAME        {NAME}
@@ -36,9 +38,11 @@ convolution_layer_template_header = """#ifndef {NAME}_HPP_
 #define {NAME}_FINE          {fine}
 #define {NAME}_STRIDE_X      {stride_x}
 #define {NAME}_STRIDE_Y      {stride_y}
+#define {NAME}_HAS_BIAS      {has_bias}
 
 // coefficients
 #define {NAME}_WEIGHTS {NAME}_FILTERS*DIVIDE({NAME}_CHANNELS,{NAME}_GROUPS)*{NAME}_KERNEL_SIZE_X*{NAME}_KERNEL_SIZE_Y
+#define {NAME}_BIASES  {NAME}_FILTERS
 
 // dimensions out
 #define {NAME}_ROWS_OUT     {rows_out}
@@ -50,6 +54,7 @@ typedef ap_fixed<{input_width},{input_int_width},AP_RND>    {name}_input_t;
 typedef ap_fixed<{output_width},{output_int_width},AP_RND>  {name}_output_t;
 typedef ap_fixed<{acc_width},{acc_int_width},AP_RND>        {name}_acc_t;
 typedef ap_fixed<{weight_width},{weight_int_width},AP_RND>  {name}_weight_t;
+typedef ap_fixed<{biases_width},{biases_int_width},AP_RND>  {name}_biases_t;
 
 // SLIDING WINDOW
 #define {NAME}_SLIDING_WINDOW_BATCH_SIZE    {batch_size}
@@ -103,12 +108,22 @@ typedef ap_fixed<{weight_width},{weight_int_width},AP_RND>  {name}_weight_t;
 #define {NAME}_GLUE_COARSE_OUT   {coarse_out}
 #define {NAME}_GLUE_COARSE_GROUP {coarse_group}
 
+// BIAS
+#define {NAME}_BIAS_BATCH_SIZE   {batch_size}
+#define {NAME}_BIAS_ROWS         {rows_out}
+#define {NAME}_BIAS_COLS         {cols_out}
+#define {NAME}_BIAS_CHANNELS     {channels_per_module} //FIXME not sure needed
+#define {NAME}_BIAS_FILTERS      {channels_out}
+
 /**
  * FUNCTION DEFINITION
  */
 
 void {name}(
     const {name}_weight_t weights[{NAME}_COARSE_IN*{NAME}_COARSE_GROUP][{NAME}_COARSE_OUT][DIVIDE({NAME}_WEIGHTS,{NAME}_COARSE_IN*{NAME}_COARSE_GROUP*{NAME}_COARSE_OUT*{NAME}_KERNEL_SIZE_X*{NAME}_KERNEL_SIZE_Y)][{NAME}_KERNEL_SIZE_X][{NAME}_KERNEL_SIZE_Y],
+#if ({NAME}_HAS_BIAS == 1)
+    const {name}_biases_t biases[{NAME}_COARSE_OUT][DIVIDE({NAME}_FILTERS,{NAME}_COARSE_OUT)],
+#endif
     stream_t({name}_input_t)  in[{NAME}_COARSE_IN*{NAME}_COARSE_GROUP],
     stream_t({name}_output_t) out[{NAME}_COARSE_OUT*{NAME}_COARSE_GROUP],
     int mode
@@ -123,6 +138,9 @@ convolution_layer_template_src = """#include "{name}.hpp"
 
 void {name}(
     const {name}_weight_t weights[{NAME}_COARSE_IN*{NAME}_COARSE_GROUP][{NAME}_COARSE_OUT][DIVIDE({NAME}_WEIGHTS,{NAME}_COARSE_IN*{NAME}_COARSE_GROUP*{NAME}_COARSE_OUT*{NAME}_KERNEL_SIZE_X*{NAME}_KERNEL_SIZE_Y)][{NAME}_KERNEL_SIZE_X][{NAME}_KERNEL_SIZE_Y],
+#if ({NAME}_HAS_BIAS == 1)
+    const {name}_biases_t biases[{NAME}_COARSE_OUT][DIVIDE({NAME}_FILTERS,{NAME}_COARSE_OUT)],
+#endif
     stream_t({name}_input_t)  in[{NAME}_COARSE_IN*{NAME}_COARSE_GROUP],
     stream_t({name}_output_t) out[{NAME}_COARSE_OUT*{NAME}_COARSE_GROUP],
     int mode
@@ -158,7 +176,13 @@ void {name}(
     }}
 
     {glue}
+#if ({NAME}_HAS_BIAS == 1)
+    for(unsigned int j=0;j<{NAME}_COARSE_OUT;j++) {{
+        #pragma HLS unroll
 
+        {bias}
+    }}
+#endif
 }}
 
 """
@@ -170,21 +194,23 @@ def gen_convolution_layer(name,param,src_path,header_path):
     single_stream   = True if param['kernel_size'][0] == 1 and param['kernel_size'][1] == 1 else False
     depthwise       = True if ((param['groups'] == param['filters']) and (param['groups'] == param['channels_in'])) else False
     grouped         = True if param['groups'] > 1 else False
+    has_bias        = True if param['has_bias'] ==1 else False
 
     inputs = {
         'sliding_window': "in[i]",
         'fork'          : "sw_out[i]",
         'conv'          : "fork_out[i][j]",
         'accum'         : "conv_out[i][j]",
-        'glue'          : "accum_out"
+        'glue'          : "accum_out",
+        'bias'          : "glue_out[j]"
     }
-
     outputs = {
         'sliding_window': "sw_out[i]",
         'fork'          : "fork_out[i]",
         'conv'          : "conv_out[i][j]",
         'accum'         : "accum_out[i][j]",
-        'glue'          : "out"
+        'glue'          : "glue_out",
+        'bias'          : "out[j]"
     }
 
     if single_stream:
@@ -199,6 +225,11 @@ def gen_convolution_layer(name,param,src_path,header_path):
         outputs.pop('accum',None)
         #inputs.pop('glue',None)
         #outputs.pop('glue',None)
+
+    if not has_bias:
+        inputs.pop('bias',None)
+        outputs.pop('bias',None)
+        outputs['glue'] = "out"
 
     streams = ""
 
@@ -287,6 +318,26 @@ def gen_convolution_layer(name,param,src_path,header_path):
     else:
         glue = ''
 
+    # BIAS MODULE INIT
+    if 'bias' in inputs:
+        # add output for glue module to feed into bias module
+        streams += """
+    stream_t({name}_output_t) glue_out[{NAME}_COARSE_OUT];
+    #pragma HLS STREAM variable=glue_out
+    #pragma HLS ARRAY_PARTITION variable=glue_out complete dim=0
+        """.format(NAME=name.upper(),name=name)
+        bias = generate.modules.bias.gen_bias_module(
+            name+"_bias",
+            inputs['bias'],
+            "biases[j]",
+            outputs['bias'],
+            data_t=f"{name}_output_t",
+            biases_t=f"{name}_biases_t",
+            indent=8
+        )
+    else:
+        bias = ''
+
     # src
     convolution_layer_src = convolution_layer_template_src.format(
         name            =name,
@@ -297,7 +348,8 @@ def gen_convolution_layer(name,param,src_path,header_path):
         fork            =fork,
         conv            =conv,
         accum           =accum,
-        glue            =glue
+        glue            =glue,
+        bias            =bias
     )
 
     # header
@@ -338,6 +390,9 @@ def gen_convolution_layer(name,param,src_path,header_path):
         acc_int_width       =param['acc_width']//2,
         weight_width        =param['weight_width'],
         weight_int_width    =param['weight_width']//2,
+        has_bias            =param['has_bias'],
+        biases_width        =param['biases_width'],
+        biases_int_width    =param['biases_width']//2,
     )
 
     # write source file
