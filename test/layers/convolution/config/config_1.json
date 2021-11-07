@@ -18,6 +18,8 @@
     "input_width": 36,
     "acc_width": 36,
     "weight_width": 36,
+    "has_bias": 0,
+    "biases_width": 16,
     "output_width": 36,
     "description": "layer name: conv2, net name: lenet.prototxt"
 }
