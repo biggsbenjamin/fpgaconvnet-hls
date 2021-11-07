@@ -3,7 +3,6 @@ bias_template = """
 {indent}    {NAME}_BATCH_SIZE,
 {indent}    {NAME}_ROWS,
 {indent}    {NAME}_COLS,
-{indent}    {NAME}_CHANNELS,
 {indent}    {NAME}_FILTERS,
 {indent}    {data_t},
 {indent}    {biases_t}

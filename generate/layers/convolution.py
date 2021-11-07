@@ -112,8 +112,7 @@ typedef ap_fixed<{biases_width},{biases_int_width},AP_RND>  {name}_biases_t;
 #define {NAME}_BIAS_BATCH_SIZE   {batch_size}
 #define {NAME}_BIAS_ROWS         {rows_out}
 #define {NAME}_BIAS_COLS         {cols_out}
-#define {NAME}_BIAS_CHANNELS     {channels_per_module} //FIXME not sure needed
-#define {NAME}_BIAS_FILTERS      {channels_out}
+#define {NAME}_BIAS_FILTERS      {filters_per_module}
 
 /**
  * FUNCTION DEFINITION
@@ -392,7 +391,7 @@ def gen_convolution_layer(name,param,src_path,header_path):
         weight_int_width    =param['weight_width']//2,
         has_bias            =param['has_bias'],
         biases_width        =param['biases_width'],
-        biases_int_width    =param['biases_width']//2,
+        biases_int_width    =param['biases_width']//2
     )
 
     # write source file

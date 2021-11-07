@@ -7,6 +7,7 @@ import generate.modules.fork
 import generate.modules.conv
 import generate.modules.accum
 import generate.modules.glue
+import generate.modules.bias
 
 inner_product_layer_template_header = """#ifndef {NAME}_HPP_
 #define {NAME}_HPP_
@@ -19,6 +20,7 @@ inner_product_layer_template_header = """#ifndef {NAME}_HPP_
 #include "conv.hpp"
 #include "accum.hpp"
 #include "glue.hpp"
+#include "bias.hpp"
 
 #define {NAME}_BATCH_SIZE    {batch_size}
 #define {NAME}_ROWS          {rows}
@@ -30,6 +32,7 @@ inner_product_layer_template_header = """#ifndef {NAME}_HPP_
 #define {NAME}_COARSE_GROUP  1
 #define {NAME}_KERNEL_SIZE_X 1
 #define {NAME}_KERNEL_SIZE_Y 1
+#define {NAME}_HAS_BIAS      {has_bias}
 
 // coefficients
 #define {NAME}_WEIGHTS {NAME}_ROWS*{NAME}_COLS*{NAME}_CHANNELS*{NAME}_FILTERS
@@ -44,6 +47,7 @@ typedef ap_fixed<{input_width},{input_int_width},AP_RND>    {name}_input_t;
 typedef ap_fixed<{output_width},{output_int_width},AP_RND>  {name}_output_t;
 typedef ap_fixed<{acc_width},{acc_int_width},AP_RND>        {name}_acc_t;
 typedef ap_fixed<{weight_width},{weight_int_width},AP_RND>  {name}_weight_t;
+typedef ap_fixed<{biases_width},{biases_int_width},AP_RND>  {name}_biases_t;
 
 // FORK
 #define {NAME}_FORK_BATCH_SIZE   {batch_size}
@@ -85,12 +89,23 @@ typedef ap_fixed<{weight_width},{weight_int_width},AP_RND>  {name}_weight_t;
 #define {NAME}_GLUE_COARSE_OUT   {coarse_out}
 #define {NAME}_GLUE_COARSE_GROUP 1
 
+// BIAS
+#define {NAME}_BIAS_BATCH_SIZE   {batch_size}
+#define {NAME}_BIAS_ROWS         1
+#define {NAME}_BIAS_COLS         1
+//#define {NAME}_BIAS_ROWS         {rows_out}
+//#define {NAME}_BIAS_COLS         {cols_out}
+#define {NAME}_BIAS_FILTERS      {filters_per_module}
+
 /**
  * FUNCTION DEFINITION
  */
 
 void {name}(
     const {name}_weight_t weights[{NAME}_COARSE_IN][{NAME}_COARSE_OUT][CHANNELS_3D({NAME}_ROWS*{NAME}_COLS*{NAME}_CHANNELS,{NAME}_COARSE_IN)*CHANNELS_3D({NAME}_FILTERS,{NAME}_COARSE_OUT)][1][1],
+#if ({NAME}_HAS_BIAS == 1)
+    const {name}_biases_t biases[{NAME}_COARSE_OUT][DIVIDE({NAME}_FILTERS,{NAME}_COARSE_OUT)],
+#endif
     stream_t({name}_input_t) in[{NAME}_COARSE_IN],
     stream_t({name}_output_t) out[{NAME}_COARSE_OUT],
     int mode
@@ -105,6 +120,9 @@ inner_product_layer_template_src = """#include "{name}.hpp"
 
 void {name}(
     const {name}_weight_t weights[{NAME}_COARSE_IN][{NAME}_COARSE_OUT][CHANNELS_3D({NAME}_ROWS*{NAME}_COLS*{NAME}_CHANNELS,{NAME}_COARSE_IN)*CHANNELS_3D({NAME}_FILTERS,{NAME}_COARSE_OUT)][1][1],
+#if ({NAME}_HAS_BIAS == 1)
+    const {name}_biases_t biases[{NAME}_COARSE_OUT][DIVIDE({NAME}_FILTERS,{NAME}_COARSE_OUT)],
+#endif
     stream_t({name}_input_t) in[{NAME}_COARSE_IN],
     stream_t({name}_output_t) out[{NAME}_COARSE_OUT],
     int mode
@@ -138,7 +156,14 @@ void {name}(
     }}
 
     {glue}
+#if ({NAME}_HAS_BIAS == 1)
+    std::cout << "made it to bias" << std::endl;
+    for(unsigned int j=0;j<{NAME}_COARSE_OUT;j++) {{
+        #pragma HLS unroll
 
+        {bias}
+    }}
+#endif
 }}
 
 """
@@ -147,19 +172,22 @@ def gen_inner_product_layer(name,param,src_path,header_path):
 
     # get sliding window type
     channels_per_module =int(param['channels_in']*param['rows_in']*param['cols_in']/param['coarse_in'])
+    has_bias        = True if param['has_bias'] ==1 else False
 
     inputs = {
         'fork'          : "in[i]",
         'conv'          : "fork_out[i][j]",
         'accum'         : "conv_out[i][j]",
-        'glue'          : "accum_out"
+        'glue'          : "accum_out",
+        'bias'          : "glue_out[j]"
     }
 
     outputs = {
         'fork'          : "fork_out[i]",
         'conv'          : "conv_out[i][j]",
         'accum'         : "accum_out[i][j]",
-        'glue'          : "out"
+        'glue'          : "glue_out",
+        'bias'          : "out[j]"
     }
 
     """
@@ -174,6 +202,11 @@ def gen_inner_product_layer(name,param,src_path,header_path):
         inputs['glue'] = "conv_out"
         inputs.pop('accum',None)
         outputs.pop('accum',None)
+
+    if not has_bias:
+        inputs.pop('bias',None)
+        outputs.pop('bias',None)
+        outputs['glue'] = "out"
 
     streams = ""
 
@@ -244,6 +277,26 @@ def gen_inner_product_layer(name,param,src_path,header_path):
     else:
         glue = ''
 
+    # BIAS MODULE INIT
+    if 'bias' in inputs:
+        # add output for glue module to feed into bias module
+        streams += """
+    stream_t({name}_output_t) glue_out[{NAME}_COARSE_OUT];
+    #pragma HLS STREAM variable=glue_out
+    #pragma HLS ARRAY_PARTITION variable=glue_out complete dim=0
+        """.format(NAME=name.upper(),name=name)
+        bias = generate.modules.bias.gen_bias_module(
+            name+"_bias",
+            inputs['bias'],
+            "biases[j]",
+            outputs['bias'],
+            data_t=f"{name}_output_t",
+            biases_t=f"{name}_biases_t",
+            indent=8
+        )
+    else:
+        bias = ''
+
     # src
     inner_product_layer_src = inner_product_layer_template_src.format(
         name            =name,
@@ -253,7 +306,8 @@ def gen_inner_product_layer(name,param,src_path,header_path):
         fork            =fork,
         conv            =conv,
         accum           =accum,
-        glue            =glue
+        glue            =glue,
+        bias            =bias
     )
 
     # header
@@ -281,6 +335,9 @@ def gen_inner_product_layer(name,param,src_path,header_path):
         acc_int_width       =param['acc_width']//2,
         weight_width        =param['weight_width'],
         weight_int_width    =param['weight_width']//2,
+        has_bias            =param['has_bias'],
+        biases_width        =param['biases_width'],
+        biases_int_width    =param['biases_width']//2
     )
 
     # write source file

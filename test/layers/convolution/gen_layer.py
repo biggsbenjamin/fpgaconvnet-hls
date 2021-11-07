@@ -90,17 +90,16 @@ class ConvolutionLayerTB(Layer):
         with open('data/weights.csv', 'w') as f:
             f.write(array_init(weights[0]))
 
+        # save biases #FIXME finish placeholder fn
+        biases = ONNXData._transform_biases(
+            biases,
+            self.param['filters'],
+            self.param['coarse_out']
+        )
         if self.param['has_bias'] == 1:
-            # save biases #FIXME finish placeholder fn
-            biases = ONNXData._transform_biases(
-                biases,
-                self.param['filters'],
-                self.param['coarse_out']
-            )
             #print(biases) #FIXME save the biases
             with open('data/biases.csv', 'w') as f:
                 f.write(array_init(biases))#[0]))
-
 
         # add output dimensions
         self.param['rows_out']      = layer.rows_out()
