@@ -40,10 +40,10 @@ inner_product_layer_template_header = """#ifndef {NAME}_HPP_
 #define {NAME}_CHANNELS_OUT {channels_out}
 
 // define data types
-typedef ap_fixed<{input_width},{input_int_width},AP_RND, AP_SAT>    {name}_input_t;
-typedef ap_fixed<{output_width},{output_int_width},AP_RND, AP_SAT>  {name}_output_t;
-typedef ap_fixed<{acc_width},{acc_int_width},AP_RND, AP_SAT>        {name}_acc_t;
-typedef ap_fixed<{weight_width},{weight_int_width},AP_RND, AP_SAT>  {name}_weight_t;
+typedef ap_fixed<{input_width},{input_int_width},AP_RND>    {name}_input_t;
+typedef ap_fixed<{output_width},{output_int_width},AP_RND>  {name}_output_t;
+typedef ap_fixed<{acc_width},{acc_int_width},AP_RND>        {name}_acc_t;
+typedef ap_fixed<{weight_width},{weight_int_width},AP_RND>  {name}_weight_t;
 
 // FORK
 #define {NAME}_FORK_BATCH_SIZE   {batch_size}
