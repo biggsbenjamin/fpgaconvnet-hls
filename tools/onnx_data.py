@@ -324,7 +324,7 @@ class ONNXData:
         weights_raw = np.rollaxis(weights_raw,1,4) #input filters need to be FINAL axis
         weights_raw = np.reshape(weights_raw,(filters*wr_factor,rows*cols*channels,1,1))
         # return transformed weights
-        return self._transform_weights(weights_raw,wr_factor,coarse_in,coarse_out,1)
+        return self._transform_weights(weights_raw,wr_factor,coarse_in,coarse_out,1,1)
 
     def save_weights_layer(self,layer,wr_factor=1,output_path=None,to_yaml=False,to_bin=False,to_csv=False,to_dat=False):
         # get transformed weights
