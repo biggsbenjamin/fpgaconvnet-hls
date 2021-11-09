@@ -8,7 +8,6 @@ template<
     unsigned int BATCH_SIZE,
     unsigned int ROWS,
     unsigned int COLS,
-    //unsigned int CHANNELS,
     unsigned int FILTERS,
     typename bias_data_t,
     typename bias_biases_t
@@ -33,14 +32,14 @@ void bias(
     pixel_loop: for(unsigned int pixel_index=0;pixel_index<batch_size*rows*cols;pixel_index++) {
         filter_loop: for(unsigned int filter_index=0;filter_index<filters;filter_index++) {
             #pragma HLS PIPELINE II=1 rewind
-            //#pragma HLS loop_flatten
+            #pragma HLS loop_flatten
             //temporary prints for debug
-            bias_data_t rin, wout, b;
-            rin = in.read();
-            b = bias[filter_index];
-            wout = rin + b;
-            std::cout << rin << " + " << b << " = " << wout << " b idx:"<<filter_index<< std::endl;
-            out.write(wout);
+            //bias_data_t rin, wout, b;
+            //rin = in.read();
+            //b = bias[filter_index];
+            //wout = rin + b;
+            //std::cout << rin << " + " << b << " = " << wout << " b idx:"<<filter_index<< std::endl;
+            out.write(in.read() + bias[filter_index]);
 	    }
     }
 }

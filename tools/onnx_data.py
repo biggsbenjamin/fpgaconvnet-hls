@@ -403,56 +403,26 @@ class ONNXData:
     """
 
     @staticmethod
-    def _transform_biases(biases_raw, filters, coarse_out):#TODO work out if grps needed
-        print("WARNING: I AM A PLACEHOLDER FUNCTION")
-        print("PRINTING RAW BIASES")
-        print(biases_raw)
+    def _transform_biases(biases_raw, filters, coarse_out):
+        #print("PRINTING RAW BIASES")
+        #print(biases_raw)
 
+        #print(biases_raw.shape[0], coarse_out)
         # parameters
-        print(biases_raw.shape[0], coarse_out)
-        num_filters  = biases_raw.shape[0]//coarse_out #/(groups*coarse_out))
-        #num_channels = int(weights_raw.shape[1]/coarse_in)
-        #k_size_x       = weights_raw.shape[2]
-        #k_size_y       = weights_raw.shape[3]
-        # correct output shape for biases
+        num_filters  = biases_raw.shape[0]//coarse_out
         biases = np.ndarray(
             shape=(
-                #wr_factor,
-                #coarse_group,
-                #coarse_in,
                 coarse_out,
-                #int(groups/coarse_group),
-                #num_channels,
-                num_filters#,
-                #k_size_x,k_size_y
+                num_filters
                 ), dtype=float, order='C')#order is row major
 
-        #print(weights_raw)
-        # transform weights raw shape
-        #i=0
+        # transform biases raw shape
         for index,_ in np.ndenumerate(biases):
-            #print("index:",index, ": " , index[0]+(2*index[1]), " : ",index[1]+index[0])
             biases[index] = biases_raw[coarse_out*index[1]+index[0]]
-                            #biases_raw[
-                            ## only one index for the number of filters
-                            #(num_filters*index[1])+index[0]
-                            #  #index[4]*coarse_group*num_filters*wr_factor*coarse_out+\
-                            #  #  index[1]*num_filters*wr_factor*coarse_out+index[6]*wr_factor*coarse_out+\
-                            #  #  index[0]*coarse_out+index[3],
-                            #  #index[5]*coarse_in+index[2],
-                            #  #index[7],
-                            #  #index[8]
-                            #]
-            #i+=1
-
             #print(index,biases[index])
 
-        # merge channel and filter dimensions NOTE shouldn't have to do this for bias
-        #weights = np.reshape(weights,[wr_factor,coarse_in*coarse_group,coarse_out,int(groups/coarse_group)*num_channels*num_filters,k_size_x,k_size_y])
-
-        print("REFINED BIASES")
-        print(biases)
+        #print("REFINED BIASES")
+        #print(biases)
 
         # return transformed biases
-
-        return biases#_raw
+        return biases

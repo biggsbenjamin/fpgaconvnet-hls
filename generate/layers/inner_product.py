@@ -93,8 +93,6 @@ typedef ap_fixed<{biases_width},{biases_int_width},AP_RND>  {name}_biases_t;
 #define {NAME}_BIAS_BATCH_SIZE   {batch_size}
 #define {NAME}_BIAS_ROWS         1
 #define {NAME}_BIAS_COLS         1
-//#define {NAME}_BIAS_ROWS         {rows_out}
-//#define {NAME}_BIAS_COLS         {cols_out}
 #define {NAME}_BIAS_FILTERS      {filters_per_module}
 
 /**
@@ -157,10 +155,8 @@ void {name}(
 
     {glue}
 #if ({NAME}_HAS_BIAS == 1)
-    std::cout << "made it to bias" << std::endl;
     for(unsigned int j=0;j<{NAME}_COARSE_OUT;j++) {{
         #pragma HLS unroll
-
         {bias}
     }}
 #endif

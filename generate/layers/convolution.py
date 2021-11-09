@@ -178,7 +178,6 @@ void {name}(
 #if ({NAME}_HAS_BIAS == 1)
     for(unsigned int j=0;j<{NAME}_COARSE_OUT;j++) {{
         #pragma HLS unroll
-
         {bias}
     }}
 #endif
