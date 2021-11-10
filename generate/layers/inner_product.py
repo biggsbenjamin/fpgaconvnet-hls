@@ -33,6 +33,7 @@ inner_product_layer_template_header = """#ifndef {NAME}_HPP_
 #define {NAME}_KERNEL_SIZE_X 1
 #define {NAME}_KERNEL_SIZE_Y 1
 #define {NAME}_HAS_BIAS      {has_bias}
+#define {NAME}_WR_FACTOR     {wr_factor}
 
 // coefficients
 #define {NAME}_WEIGHTS {NAME}_ROWS*{NAME}_COLS*{NAME}_CHANNELS*{NAME}_FILTERS
@@ -93,7 +94,7 @@ typedef ap_fixed<{biases_width},{biases_int_width},AP_RND>  {name}_biases_t;
 #define {NAME}_BIAS_BATCH_SIZE   {batch_size}
 #define {NAME}_BIAS_ROWS         1
 #define {NAME}_BIAS_COLS         1
-#define {NAME}_BIAS_FILTERS      {filters_per_module}
+#define {NAME}_BIAS_FILTERS      DIVIDE({NAME}_FILTERS,{NAME}_COARSE_OUT*{NAME}_WR_FACTOR)
 
 /**
  * FUNCTION DEFINITION
@@ -102,7 +103,7 @@ typedef ap_fixed<{biases_width},{biases_int_width},AP_RND>  {name}_biases_t;
 void {name}(
     const {name}_weight_t weights[{NAME}_COARSE_IN][{NAME}_COARSE_OUT][CHANNELS_3D({NAME}_ROWS*{NAME}_COLS*{NAME}_CHANNELS,{NAME}_COARSE_IN)*CHANNELS_3D({NAME}_FILTERS,{NAME}_COARSE_OUT)][1][1],
 #if ({NAME}_HAS_BIAS == 1)
-    const {name}_biases_t biases[{NAME}_COARSE_OUT][DIVIDE({NAME}_FILTERS,{NAME}_COARSE_OUT)],
+    const {name}_biases_t biases[{NAME}_COARSE_OUT][DIVIDE({NAME}_FILTERS,{NAME}_COARSE_OUT*{NAME}_WR_FACTOR)],
 #endif
     stream_t({name}_input_t) in[{NAME}_COARSE_IN],
     stream_t({name}_output_t) out[{NAME}_COARSE_OUT],
@@ -119,7 +120,7 @@ inner_product_layer_template_src = """#include "{name}.hpp"
 void {name}(
     const {name}_weight_t weights[{NAME}_COARSE_IN][{NAME}_COARSE_OUT][CHANNELS_3D({NAME}_ROWS*{NAME}_COLS*{NAME}_CHANNELS,{NAME}_COARSE_IN)*CHANNELS_3D({NAME}_FILTERS,{NAME}_COARSE_OUT)][1][1],
 #if ({NAME}_HAS_BIAS == 1)
-    const {name}_biases_t biases[{NAME}_COARSE_OUT][DIVIDE({NAME}_FILTERS,{NAME}_COARSE_OUT)],
+    const {name}_biases_t biases[{NAME}_COARSE_OUT][DIVIDE({NAME}_FILTERS,{NAME}_COARSE_OUT*{NAME}_WR_FACTOR)],
 #endif
     stream_t({name}_input_t) in[{NAME}_COARSE_IN],
     stream_t({name}_output_t) out[{NAME}_COARSE_OUT],
@@ -164,7 +165,7 @@ void {name}(
 
 """
 
-def gen_inner_product_layer(name,param,src_path,header_path):
+def gen_inner_product_layer(name,param,src_path,header_path,wr_factor=1):
 
     # get sliding window type
     channels_per_module =int(param['channels_in']*param['rows_in']*param['cols_in']/param['coarse_in'])
@@ -333,7 +334,8 @@ def gen_inner_product_layer(name,param,src_path,header_path):
         weight_int_width    =param['weight_width']//2,
         has_bias            =param['has_bias'],
         biases_width        =param['biases_width'],
-        biases_int_width    =param['biases_width']//2
+        biases_int_width    =param['biases_width']//2,
+        wr_factor           =wr_factor
     )
 
     # write source file

@@ -87,17 +87,12 @@ class ConvolutionLayerTB(Layer):
             self.param['groups']
         )
         #print(weights)
-        #with open('data/weights.csv', 'w') as f:
-        #    f.write(array_init(weights[0]))
 
         biases = ONNXData._transform_biases(
             biases,
             self.param['filters'],
             self.param['coarse_out']
         )
-        #if self.param['has_bias'] == 1:
-        #    with open('data/biases.csv', 'w') as f:
-        #        f.write(array_init(biases))#[0]))
 
         # add output dimensions
         self.param['rows_out']      = layer.rows_out()

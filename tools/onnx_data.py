@@ -59,6 +59,8 @@ class ONNXData:
             layer_info = onnx.helper.ValueInfoProto()
             layer_info.name = self.model.graph.input[0].name
             self.model.graph.output.append(layer_info)
+
+            #onnx.save_model(self.model, "TEMP_MODEL.onnx")
             # remove bias
             self.remove_initializer_from_input()
             self.remove_bias()
@@ -107,13 +109,15 @@ class ONNXData:
         name_to_input = {}
         for input in inputs:
             name_to_input[input.name] = input
+            #print("INPUT:",input)
         for initializer in self.model.graph.initializer:
             if initializer.name in name_to_input:
+                print("REMOVING:",name_to_input[initializer.name])
                 inputs.remove(name_to_input[initializer.name])
 
     def remove_bias(self):
         for layer in self.partition.layers:
-            if layer.bias_path:
+            if layer.bias_path and layer.parameters.has_bias==0:
                 initializer = onnx_helper.get_model_initializer(self.model, layer.bias_path, to_tensor=False)
                 # TODO: seems like theres no bias initializer for inner product layer
                 if not initializer:
@@ -287,6 +291,7 @@ class ONNXData:
     def get_weights_convolution(self, layer, wr_factor=1):
         # get weights
         if self.model:
+            print("weights path:",layer.weights_path)
             weights_raw = onnx_helper.get_model_initializer(self.model, layer.weights_path)
         else:
             print(f"WARNING: no initializer found for {layer.name}, creating a random initializer")
@@ -328,9 +333,9 @@ class ONNXData:
 
     def save_weights_layer(self,layer,wr_factor=1,output_path=None,to_yaml=False,to_bin=False,to_csv=False,to_dat=False):
         # get transformed weights
-        if layer_enum.from_protofrom_onnx_op_type(layer.type) == layer_enum.LAYER_TYPE.Convolution:
+        if layer_enum.from_proto_layer_type(layer.type) == layer_enum.LAYER_TYPE.Convolution:
             transformed_weights = self.get_weights_convolution(layer, wr_factor=wr_factor)
-        elif layer_enum.from_protofrom_onnx_op_type(layer.type) == layer_enum.LAYER_TYPE.InnerProduct:
+        elif layer_enum.from_proto_layer_type(layer.type) == layer_enum.LAYER_TYPE.InnerProduct:
             transformed_weights = self.get_weights_inner_product(layer, wr_factor=wr_factor)
         else:
             raise TypeError
@@ -371,7 +376,7 @@ class ONNXData:
             layer_type_str = str(fpgaconvnet_pb2.layer.layer_type.Name(layer.type)) # REQUIRED EDIT
             layer_name = gen_layer_name(layer) # REQUIRED EDIT
             # skip weights outside of partition
-            if layer_enum.from_protofrom_onnx_op_type(layer.type) in [ layer_enum.LAYER_TYPE.Convolution, layer_enum.LAYER_TYPE.InnerProduct ]:
+            if layer_enum.from_proto_layer_type(layer.type) in [ layer_enum.LAYER_TYPE.Convolution, layer_enum.LAYER_TYPE.InnerProduct ]:
                 # get weights reloading factor
                 if layer.name == self.partition.weights_reloading_layer:
                     wr_factor = self.partition.weights_reloading_factor
@@ -403,26 +408,125 @@ class ONNXData:
     """
 
     @staticmethod
-    def _transform_biases(biases_raw, filters, coarse_out):
+    def _transform_biases(biases_raw, filters, coarse_out,wr_factor):
         #print("PRINTING RAW BIASES")
         #print(biases_raw)
+        #print("params:",biases_raw.shape[0],"co:",coarse_out,"wr_f:", wr_factor)
 
-        #print(biases_raw.shape[0], coarse_out)
         # parameters
-        num_filters  = biases_raw.shape[0]//coarse_out
+        num_filters  = biases_raw.shape[0]//(coarse_out*wr_factor)
         biases = np.ndarray(
             shape=(
+                wr_factor,
                 coarse_out,
                 num_filters
                 ), dtype=float, order='C')#order is row major
 
         # transform biases raw shape
         for index,_ in np.ndenumerate(biases):
-            biases[index] = biases_raw[coarse_out*index[1]+index[0]]
+            biases[index] = biases_raw[coarse_out*wr_factor*index[2]+index[1]+index[0]]
             #print(index,biases[index])
 
         #print("REFINED BIASES")
         #print(biases)
-
         # return transformed biases
+        return biases
+
+    def get_biases_convolution(self, layer, wr_factor=1):
+        # get biases
+        if self.model:
+            print("bias path:",layer.bias_path)
+            biases_raw = onnx_helper.get_model_initializer(self.model, layer.bias_path)
+        else:
+            print(f"WARNING: no initializer found for {layer.name}")
+            #, creating a random initializer") # FIXME - see get weights conv
+
+        # transform parameters
+        coarse_out  = layer.parameters.coarse_out
+        filters = layer.parameters.filters
+        # return transformed biases
+        return self._transform_biases(biases_raw,filters,coarse_out,wr_factor)
+
+    def get_biases_inner_product(self, layer,wr_factor=1):
+        # get biases
+        biases_raw = onnx_helper.get_model_initializer(self.model, layer.bias_path)
+        # transform parameters
+        coarse_out  = layer.parameters.coarse_out
+        filters     = layer.parameters.filters
+        channels    = layer.parameters.channels_in
+        rows        = layer.parameters.rows_in
+        cols        = layer.parameters.cols_in
+        return self._transform_biases(biases_raw,filters,coarse_out,wr_factor)
+
+    def save_biases_layer(self,layer,wr_factor=1,output_path=None,to_yaml=False,to_bin=False,to_csv=False,
+                            to_dat=False):
+        # get transformed biases
+        if layer_enum.from_proto_layer_type(layer.type) == layer_enum.LAYER_TYPE.Convolution:
+            transformed_biases = self.get_biases_convolution(layer,wr_factor)
+        elif layer_enum.from_proto_layer_type(layer.type) == layer_enum.LAYER_TYPE.InnerProduct:
+            transformed_biases = self.get_biases_inner_product(layer,wr_factor)
+        else:
+            raise TypeError
+        # save biases
+        if output_path:
+            # csv format
+            if to_csv:
+                # get filepath name
+                filepath = f'{output_path}.csv'
+                # save to csv file
+                with open(filepath, 'w') as f:
+                    f.write(array_init(transformed_biases))
+
+            # get the bitwidth for the biases
+            bitwidth = layer.parameters.biases_width
+            # flatten the biases for binary and data formats
+            biases_stream =  self._convert_fixed_port_stream(transformed_biases.reshape(-1), total_width=bitwidth, int_width=bitwidth//2)
+            # bin format
+            if to_bin:
+                self._fixed_point_stream_to_bin(biases_stream, output_path=output_path, streams=1, port_width=64, ports=1)
+            # dat format
+            if to_dat:
+                self._fixed_point_stream_to_dat(biases_stream, output_path=output_path, streams=1, port_width=64, ports=1)
+        # return transformed biases
+        return transformed_biases
+    def save_biases_partition(self,output_path,to_yaml=False,to_bin=False,to_csv=False,
+                                to_dat=False):
+
+        def _fix_identifier(name):
+            if name[0].isdigit():
+                return "n" + name
+            else:
+                return name
+        biases = {}
+        # iterate over layers in network
+        for layer in self.partition.layers: # skip biases outside of partition
+            layer_type_str = str(fpgaconvnet_pb2.layer.layer_type.Name(layer.type)) # REQUIRED EDIT
+            layer_name = gen_layer_name(layer) # REQUIRED EDIT
+            if layer_enum.from_proto_layer_type(layer.type) in \
+                    [ layer_enum.LAYER_TYPE.Convolution, layer_enum.LAYER_TYPE.InnerProduct ]:
+                # get weights reloading factor
+                if layer.name == self.partition.weights_reloading_layer:
+                    wr_factor = self.partition.weights_reloading_factor
+                else:
+                    wr_factor = 1
+                # get output path
+                output_path_layer = None
+                if output_path:
+                    layer_identifier = _fix_identifier(layer.name)
+                    output_path_layer = os.path.join(output_path,f"{layer_identifier}_biases")
+                if layer.parameters.has_bias: # skip layers with no bias
+                    # get layer info
+                    biases[layer.name] = self.save_biases_layer(layer,wr_factor,
+                                                                output_path=output_path_layer,
+                                                                to_bin=to_bin,to_csv=to_csv,
+                                                                to_dat=to_dat)
+        # yaml format
+        if to_yaml:
+            # save data as .dat files
+            print("YAML file usage deprecated, creating .dat files instead")
+            for layer in biases:
+                bias_list = biases[layer].reshape(-1).tolist()
+                with open(os.path.join(output_path,layer+".dat"), 'w') as f:
+                    f.write("\n".join([str(i) for i in bias_list]))
+
         return biases

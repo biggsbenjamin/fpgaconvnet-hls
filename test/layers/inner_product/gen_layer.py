@@ -74,8 +74,6 @@ class InnerProductLayerTB(Layer):
             1,
             1
         )
-        #with open('data/weights.csv', 'w') as f:
-        #    f.write(array_init(weights[0]))
 
         # save biases
         biases = ONNXData._transform_biases(
@@ -83,10 +81,6 @@ class InnerProductLayerTB(Layer):
             self.param['filters'],
             self.param['coarse_out']
         )
-
-        #if self.param['has_bias'] == 1:
-            #with open('data/biases.csv', 'w') as f:
-            #    f.write(array_init(biases))
 
         # add output dimensions
         self.param['rows_out']      = layer.rows_out()

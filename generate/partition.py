@@ -59,6 +59,32 @@ class generate_weight_init():
 
 """.format(name=self.name,bram_type=self.bram_type)
 
+######## Generating biases #########
+def generate_bias_def(name, partition_name, wr=False):
+    wr = "[{PNAME}_WEIGHTS_RELOADING_FACTOR]".format(PNAME=partition_name.upper()) if wr else ""
+    div = "{NAME}_COARSE_OUT".format(NAME=name.upper())
+    div += "*{PNAME}_WEIGHTS_RELOADING_FACTOR".format(PNAME=partition_name.upper()) if wr else ""
+    return """
+const static {name}_biases_t {name}_biases{wr}[{NAME}_COARSE_OUT][DIVIDE({NAME}_FILTERS,{div})] = {{
+#include "{name}_biases.csv"
+}};
+""".format(NAME=name.upper(), name=name, wr=wr, div=div)
+
+def generate_bias_init(name, wr=False):
+    bi = """
+#pragma HLS ARRAY_PARTITION variable={name}_biases complete dim=1
+"""
+    if wr:
+        bi += """
+#pragma HLS ARRAY_PARTITION variable={name}_biases complete dim=2
+""".format(name=name)
+    bi +="""
+#pragma HLS RESOURCE variable={name}_biases core=ROM
+#pragma HLS STABLE variable={name}_biases
+
+""".format(name=name)
+    return bi
+
 ## class for stream initialisation
 #class generate_stream_init():
 #    # initialise class
@@ -119,6 +145,9 @@ def gen_network(name,partition,output_path):
     # weight information
     weights = ""
     weights_init = ""
+    # bias information
+    biases = ""
+    biases_init = ""
 
     # layers initialisation
     layers = ""
@@ -140,7 +169,16 @@ def gen_network(name,partition,output_path):
         if layer.type == fpgaconvnet_pb2.layer.layer_type.CONVOLUTION:
             # add weights to function arguments
             fn_args.append(f"{layer_name}_weights")
+            if layer.parameters.has_bias:
+                # add bias to arguments
+                if layer_name == wr_layer:
+                    fn_args.append(f"{layer_name}_biases[weights_reloading_index]")
+                else:
+                    fn_args.append(f"{layer_name}_biases")
             # generate hardware
+            if layer.name == wr_layer:
+                print("WR ADDED")
+                args.append(partition.weights_reloading_factor)
             gen_convolution_layer(*args)
             # create weights
             weights += str(generate_weight_def(
@@ -153,6 +191,11 @@ def gen_network(name,partition,output_path):
                 layer_name,
                 wr=True if layer_name == wr_layer else False
             ))
+            # create biases
+            biases += generate_bias_def(layer.name, name,
+                    wr=True if layer_name == wr_layer else False)
+            biases_init += generate_bias_init(layer_name,
+                    wr=True if layer_name == wr_layer else False)
         if layer.type == fpgaconvnet_pb2.layer.layer_type.POOLING:
             gen_pooling_layer(*args)
         if layer.type == fpgaconvnet_pb2.layer.layer_type.CONCAT:
@@ -164,7 +207,15 @@ def gen_network(name,partition,output_path):
         if layer.type == fpgaconvnet_pb2.layer.layer_type.INNER_PRODUCT:
             # add weights to function arguments
             fn_args.append(f"{layer_name}_weights")
+            if layer.parameters.has_bias:
+                # add bias to arguments
+                if layer_name == wr_layer:
+                    fn_args.append(f"{layer_name}_biases[weights_reloading_index]")
+                else:
+                    fn_args.append(f"{layer_name}_biases")
             # generate hardware
+            if layer.name == wr_layer:
+                args.append(partition.weights_reloading_factor)
             gen_inner_product_layer(*args)
             # create weights
             weights += str(generate_weight_def(
@@ -177,6 +228,11 @@ def gen_network(name,partition,output_path):
                 layer_name,
                 wr=True if layer_name == wr_layer else False
             ))
+            # create biases
+            biases += generate_bias_def(layer.name, name,
+                    wr=True if layer_name == wr_layer else False)
+            biases_init += generate_bias_init(layer_name,
+                    wr=True if layer_name == wr_layer else False)
         if layer.type == fpgaconvnet_pb2.layer.layer_type.SQUEEZE:
             gen_squeeze_layer(*args)
         # add layer function
@@ -223,6 +279,8 @@ def gen_network(name,partition,output_path):
         wr_layer    =wr_layer,
         weights     =weights,
         weights_init=weights_init,
+        biases      =biases,
+        biases_init =biases_init,
         streams_init=streams_init,
         layers      =layers
     )

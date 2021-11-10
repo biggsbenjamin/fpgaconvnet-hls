@@ -39,6 +39,7 @@ convolution_layer_template_header = """#ifndef {NAME}_HPP_
 #define {NAME}_STRIDE_X      {stride_x}
 #define {NAME}_STRIDE_Y      {stride_y}
 #define {NAME}_HAS_BIAS      {has_bias}
+#define {NAME}_WR_FACTOR     {wr_factor}
 
 // coefficients
 #define {NAME}_WEIGHTS {NAME}_FILTERS*DIVIDE({NAME}_CHANNELS,{NAME}_GROUPS)*{NAME}_KERNEL_SIZE_X*{NAME}_KERNEL_SIZE_Y
@@ -112,7 +113,7 @@ typedef ap_fixed<{biases_width},{biases_int_width},AP_RND>  {name}_biases_t;
 #define {NAME}_BIAS_BATCH_SIZE   {batch_size}
 #define {NAME}_BIAS_ROWS         {rows_out}
 #define {NAME}_BIAS_COLS         {cols_out}
-#define {NAME}_BIAS_FILTERS      {filters_per_module}
+#define {NAME}_BIAS_FILTERS      DIVIDE({NAME}_FILTERS,{NAME}_COARSE_OUT*{NAME}_WR_FACTOR)
 
 /**
  * FUNCTION DEFINITION
@@ -121,7 +122,7 @@ typedef ap_fixed<{biases_width},{biases_int_width},AP_RND>  {name}_biases_t;
 void {name}(
     const {name}_weight_t weights[{NAME}_COARSE_IN*{NAME}_COARSE_GROUP][{NAME}_COARSE_OUT][DIVIDE({NAME}_WEIGHTS,{NAME}_COARSE_IN*{NAME}_COARSE_GROUP*{NAME}_COARSE_OUT*{NAME}_KERNEL_SIZE_X*{NAME}_KERNEL_SIZE_Y)][{NAME}_KERNEL_SIZE_X][{NAME}_KERNEL_SIZE_Y],
 #if ({NAME}_HAS_BIAS == 1)
-    const {name}_biases_t biases[{NAME}_COARSE_OUT][DIVIDE({NAME}_FILTERS,{NAME}_COARSE_OUT)],
+    const {name}_biases_t biases[{NAME}_COARSE_OUT][DIVIDE({NAME}_FILTERS,{NAME}_COARSE_OUT*{NAME}_WR_FACTOR)],
 #endif
     stream_t({name}_input_t)  in[{NAME}_COARSE_IN*{NAME}_COARSE_GROUP],
     stream_t({name}_output_t) out[{NAME}_COARSE_OUT*{NAME}_COARSE_GROUP],
@@ -138,7 +139,7 @@ convolution_layer_template_src = """#include "{name}.hpp"
 void {name}(
     const {name}_weight_t weights[{NAME}_COARSE_IN*{NAME}_COARSE_GROUP][{NAME}_COARSE_OUT][DIVIDE({NAME}_WEIGHTS,{NAME}_COARSE_IN*{NAME}_COARSE_GROUP*{NAME}_COARSE_OUT*{NAME}_KERNEL_SIZE_X*{NAME}_KERNEL_SIZE_Y)][{NAME}_KERNEL_SIZE_X][{NAME}_KERNEL_SIZE_Y],
 #if ({NAME}_HAS_BIAS == 1)
-    const {name}_biases_t biases[{NAME}_COARSE_OUT][DIVIDE({NAME}_FILTERS,{NAME}_COARSE_OUT)],
+    const {name}_biases_t biases[{NAME}_COARSE_OUT][DIVIDE({NAME}_FILTERS,{NAME}_COARSE_OUT*{NAME}_WR_FACTOR)],
 #endif
     stream_t({name}_input_t)  in[{NAME}_COARSE_IN*{NAME}_COARSE_GROUP],
     stream_t({name}_output_t) out[{NAME}_COARSE_OUT*{NAME}_COARSE_GROUP],
@@ -185,7 +186,7 @@ void {name}(
 
 """
 
-def gen_convolution_layer(name,param,src_path,header_path):
+def gen_convolution_layer(name,param,src_path,header_path,wr_factor=1):
 
     # get sliding window type
     single_channel  = True if param['channels_in'] == 1 else False
@@ -390,7 +391,8 @@ def gen_convolution_layer(name,param,src_path,header_path):
         weight_int_width    =param['weight_width']//2,
         has_bias            =param['has_bias'],
         biases_width        =param['biases_width'],
-        biases_int_width    =param['biases_width']//2
+        biases_int_width    =param['biases_width']//2,
+        wr_factor           =wr_factor
     )
 
     # write source file

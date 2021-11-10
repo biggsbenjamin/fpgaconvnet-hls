@@ -485,7 +485,7 @@ int check_array_equal(
                 (tmp.to_float() < tmp_valid.to_float()-ERROR_TOLERANCE)
             ){
                 err += 1;
-                printf("ERROR (%d,%d): %f, %f\n",i,j,tmp.to_float(),tmp_valid.to_float());
+                printf("ERROR (%d,%d): recorded:%f, expected:%f\n",i,j,tmp.to_float(),tmp_valid.to_float());
             }
         }
     }

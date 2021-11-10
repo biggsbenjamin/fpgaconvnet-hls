@@ -19,7 +19,7 @@ import fpgaconvnet_optimiser.tools.onnx_helper as onnx_helper
 from tools.onnx_data import ONNXData
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Weights Formatting Script")
+    parser = argparse.ArgumentParser(description="Weights & Biases Formatting Script")
     parser.add_argument('-p','--partition_path',metavar='PATH',required=True,
         help='Path to partition info (.pb.bin)')
     parser.add_argument('-m','--onnx_path',metavar='PATH',required=False,
@@ -40,6 +40,14 @@ if __name__ == "__main__":
 
     ## save weight coefficients ##
     onnx_data.save_weights_partition(
+        f'partition_{args.partition_index}/data',
+        to_yaml=True,
+        to_csv=True,
+        to_bin=True,
+        to_dat=True)
+
+    ## save bias terms ## FIXME this will be run regardless of presence of biases
+    onnx_data.save_biases_partition(
         f'partition_{args.partition_index}/data',
         to_yaml=True,
         to_csv=True,
