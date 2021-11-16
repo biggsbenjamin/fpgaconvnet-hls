@@ -99,7 +99,6 @@ def gen_relu_layer(name,param,src_path,header_path):
     )
 
     # header
-    print(param)
     relu_layer_header = relu_layer_template_header.format(
         name                =name,
         NAME                =name.upper(),
