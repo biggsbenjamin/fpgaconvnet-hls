@@ -36,12 +36,6 @@ void bias(
         filter_loop: for(unsigned int filter_index=0;filter_index<filters;filter_index++) {
             #pragma HLS PIPELINE II=1 rewind
             #pragma HLS loop_flatten
-            //temporary prints for debug
-            //bias_data_t rin, wout, b;
-            //rin = in.read();
-            //b = bias[filter_index];
-            //wout = rin + b;
-            //std::cout << rin << " + " << b << " = " << wout << " b idx:"<<filter_index<< std::endl;
             out.write(in.read() + bias[filter_index]);
 	    }
     }

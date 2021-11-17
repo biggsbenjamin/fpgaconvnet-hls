@@ -72,16 +72,13 @@ const static {name}_biases_t {name}_biases{wr}[{NAME}_COARSE_OUT][DIVIDE({NAME}_
 
 def generate_bias_init(name, wr=False):
     bi = """
-#pragma HLS ARRAY_PARTITION variable={name}_biases complete dim=1
-"""
+#pragma HLS ARRAY_PARTITION variable={name}_biases complete dim=1""".format(name=name)
     if wr:
         bi += """
-#pragma HLS ARRAY_PARTITION variable={name}_biases complete dim=2
-""".format(name=name)
+#pragma HLS ARRAY_PARTITION variable={name}_biases complete dim=2""".format(name=name)
     bi +="""
 #pragma HLS RESOURCE variable={name}_biases core=ROM
 #pragma HLS STABLE variable={name}_biases
-
 """.format(name=name)
     return bi
 
@@ -192,10 +189,11 @@ def gen_network(name,partition,output_path):
                 wr=True if layer_name == wr_layer else False
             ))
             # create biases
-            biases += generate_bias_def(layer.name, name,
-                    wr=True if layer_name == wr_layer else False)
-            biases_init += generate_bias_init(layer_name,
-                    wr=True if layer_name == wr_layer else False)
+            if layer.parameters.has_bias:
+                biases += generate_bias_def(layer.name, name,
+                        wr=True if layer_name == wr_layer else False)
+                biases_init += generate_bias_init(layer_name,
+                        wr=True if layer_name == wr_layer else False)
         if layer.type == fpgaconvnet_pb2.layer.layer_type.POOLING:
             gen_pooling_layer(*args)
         if layer.type == fpgaconvnet_pb2.layer.layer_type.CONCAT:
@@ -229,10 +227,11 @@ def gen_network(name,partition,output_path):
                 wr=True if layer_name == wr_layer else False
             ))
             # create biases
-            biases += generate_bias_def(layer.name, name,
-                    wr=True if layer_name == wr_layer else False)
-            biases_init += generate_bias_init(layer_name,
-                    wr=True if layer_name == wr_layer else False)
+            if layer.parameters.has_bias:
+                biases += generate_bias_def(layer.name, name,
+                        wr=True if layer_name == wr_layer else False)
+                biases_init += generate_bias_init(layer_name,
+                        wr=True if layer_name == wr_layer else False)
         if layer.type == fpgaconvnet_pb2.layer.layer_type.SQUEEZE:
             gen_squeeze_layer(*args)
         # add layer function
@@ -243,6 +242,7 @@ def gen_network(name,partition,output_path):
         fn_args.append("mode")
         fn_args = ", ".join(fn_args)
         layers += f"    {layer_name}({fn_args});\n"
+        #layers += f"    printf(\"{layer_name} done\\n\");\n"
 
     # include generation
     include = ""

@@ -59,8 +59,6 @@ class ONNXData:
             layer_info = onnx.helper.ValueInfoProto()
             layer_info.name = self.model.graph.input[0].name
             self.model.graph.output.append(layer_info)
-
-            #onnx.save_model(self.model, "TEMP_MODEL.onnx")
             # remove bias
             self.remove_initializer_from_input()
             self.remove_bias()
@@ -109,10 +107,8 @@ class ONNXData:
         name_to_input = {}
         for input in inputs:
             name_to_input[input.name] = input
-            #print("INPUT:",input)
         for initializer in self.model.graph.initializer:
             if initializer.name in name_to_input:
-                print("REMOVING:",name_to_input[initializer.name])
                 inputs.remove(name_to_input[initializer.name])
 
     def remove_bias(self):
@@ -217,6 +213,7 @@ class ONNXData:
         if to_yaml:
             # save to yaml file
             with open(output_path+'.yaml', 'w') as f:
+                print("fm shape:",featuremap.shape)
                 yaml.dump({
                     "batch_size": featuremap.shape[0],
                     "rows"      : featuremap.shape[1],
@@ -291,7 +288,6 @@ class ONNXData:
     def get_weights_convolution(self, layer, wr_factor=1):
         # get weights
         if self.model:
-            print("weights path:",layer.weights_path)
             weights_raw = onnx_helper.get_model_initializer(self.model, layer.weights_path)
         else:
             print(f"WARNING: no initializer found for {layer.name}, creating a random initializer")
@@ -390,15 +386,6 @@ class ONNXData:
                 # get layer info
                 weights[layer.name] = self.save_weights_layer(layer,wr_factor=wr_factor,
                         output_path=output_path_layer,to_bin=to_bin,to_csv=to_csv,to_dat=to_dat)
-        # yaml format
-        if to_yaml:
-            # save data as .dat files
-            print("YAML file usage deprecated, creating .dat files instead")
-            for layer in weights:
-                weight_list = weights[layer].reshape(-1).tolist()
-                with open(os.path.join(output_path,layer+".dat"), 'w') as f:
-                    f.write("\n".join([str(i) for i in weight_list]))
-
         return weights
 
     """
@@ -409,33 +396,37 @@ class ONNXData:
 
     @staticmethod
     def _transform_biases(biases_raw, filters, coarse_out,wr_factor):
-        #print("PRINTING RAW BIASES")
-        #print(biases_raw)
-        #print("params:",biases_raw.shape[0],"co:",coarse_out,"wr_f:", wr_factor)
-
         # parameters
-        num_filters  = biases_raw.shape[0]//(coarse_out*wr_factor)
-        biases = np.ndarray(
-            shape=(
-                wr_factor,
-                coarse_out,
-                num_filters
-                ), dtype=float, order='C')#order is row major
+        if wr_factor == -1:
+            num_filters  = biases_raw.shape[0]//(coarse_out)
+            biases = np.ndarray(
+                shape=(
+                    coarse_out,
+                    num_filters
+                    ), dtype=float, order='C')#order is row major
 
-        # transform biases raw shape
-        for index,_ in np.ndenumerate(biases):
-            biases[index] = biases_raw[coarse_out*wr_factor*index[2]+index[1]+index[0]]
-            #print(index,biases[index])
+            # transform biases raw shape
+            for index,_ in np.ndenumerate(biases):
+                biases[index] = biases_raw[coarse_out*index[1]+index[0]]
+        else:
+            num_filters  = biases_raw.shape[0]//(coarse_out*wr_factor)
+            biases = np.ndarray(
+                shape=(
+                    wr_factor,
+                    coarse_out,
+                    num_filters
+                    ), dtype=float, order='C')#order is row major
 
-        #print("REFINED BIASES")
-        #print(biases)
+            # transform biases raw shape
+            for index,_ in np.ndenumerate(biases):
+                biases[index] = biases_raw[coarse_out*wr_factor*index[2]+index[1]+index[0]]
+
         # return transformed biases
         return biases
 
-    def get_biases_convolution(self, layer, wr_factor=1):
+    def get_biases_convolution(self, layer, wr_factor=-1):
         # get biases
         if self.model:
-            print("bias path:",layer.bias_path)
             biases_raw = onnx_helper.get_model_initializer(self.model, layer.bias_path)
         else:
             print(f"WARNING: no initializer found for {layer.name}")
@@ -447,7 +438,7 @@ class ONNXData:
         # return transformed biases
         return self._transform_biases(biases_raw,filters,coarse_out,wr_factor)
 
-    def get_biases_inner_product(self, layer,wr_factor=1):
+    def get_biases_inner_product(self, layer,wr_factor=-1):
         # get biases
         biases_raw = onnx_helper.get_model_initializer(self.model, layer.bias_path)
         # transform parameters
@@ -458,7 +449,7 @@ class ONNXData:
         cols        = layer.parameters.cols_in
         return self._transform_biases(biases_raw,filters,coarse_out,wr_factor)
 
-    def save_biases_layer(self,layer,wr_factor=1,output_path=None,to_yaml=False,to_bin=False,to_csv=False,
+    def save_biases_layer(self,layer,wr_factor=-1,output_path=None,to_yaml=False,to_bin=False,to_csv=False,
                             to_dat=False):
         # get transformed biases
         if layer_enum.from_proto_layer_type(layer.type) == layer_enum.LAYER_TYPE.Convolution:
@@ -508,7 +499,7 @@ class ONNXData:
                 if layer.name == self.partition.weights_reloading_layer:
                     wr_factor = self.partition.weights_reloading_factor
                 else:
-                    wr_factor = 1
+                    wr_factor = -1
                 # get output path
                 output_path_layer = None
                 if output_path:
@@ -520,13 +511,4 @@ class ONNXData:
                                                                 output_path=output_path_layer,
                                                                 to_bin=to_bin,to_csv=to_csv,
                                                                 to_dat=to_dat)
-        # yaml format
-        if to_yaml:
-            # save data as .dat files
-            print("YAML file usage deprecated, creating .dat files instead")
-            for layer in biases:
-                bias_list = biases[layer].reshape(-1).tolist()
-                with open(os.path.join(output_path,layer+".dat"), 'w') as f:
-                    f.write("\n".join([str(i) for i in bias_list]))
-
         return biases

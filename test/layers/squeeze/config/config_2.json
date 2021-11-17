@@ -1,0 +1,13 @@
+{
+    "type": "SQUEEZE",
+    "rows_in": 1,
+    "cols_in": 1,
+    "channels_in": 10,
+    "coarse_in": 10,
+    "coarse_out": 1,
+    "batch_size": 1,
+    "buffer_depth": 0,
+    "data_width": 16,
+    "description": "test"
+}
+
