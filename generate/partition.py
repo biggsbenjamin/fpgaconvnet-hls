@@ -89,7 +89,7 @@ def gen_network(name,partition,output_path):
 
 
     wr_layer = partition.weights_reloading_layer
-    wr_layer_identifier = _fix_identifier(wr_layer)
+    wr_layer_identifier = _fix_identifier(wr_layer).replace("/", "_")
 
     batch_size = partition.batch_size
 
@@ -144,14 +144,14 @@ def gen_network(name,partition,output_path):
             gen_convolution_layer(*args)
             # create weights
             weights += str(generate_weight_def(
-                layer.name,
+                layer_name,
                 kernel_size_x=int(parameters["kernel_size"][0]),
                 kernel_size_y=int(parameters["kernel_size"][1]),
-                wr=True if layer.name == wr_layer else False
+                wr=True if layer_name == wr_layer_identifier else False
             ))
             weights_init += str(generate_weight_init(
                 layer_name,
-                wr=True if layer_name == wr_layer else False
+                wr=True if layer_name == wr_layer_identifier else False
             ))
         if layer.type == fpgaconvnet_pb2.layer.layer_type.POOLING:
             gen_pooling_layer(*args)
@@ -168,14 +168,14 @@ def gen_network(name,partition,output_path):
             gen_inner_product_layer(*args)
             # create weights
             weights += str(generate_weight_def(
-                layer.name,
+                layer_name,
                 kernel_size_x=1,
                 kernel_size_y=1,
-                wr=True if layer.name == wr_layer else False
+                wr=True if layer_name == wr_layer_identifier else False
             ))
             weights_init += str(generate_weight_init(
                 layer_name,
-                wr=True if layer_name == wr_layer else False
+                wr=True if layer_name == wr_layer_identifier else False
             ))
         if layer.type == fpgaconvnet_pb2.layer.layer_type.SQUEEZE:
             gen_squeeze_layer(*args)
@@ -210,8 +210,8 @@ def gen_network(name,partition,output_path):
         streams_out =partition.layers[-1].parameters.coarse_out, # TODO: change
         input_layer =partition.layers[0].name,
         output_layer=partition.layers[-1].name,
-        wr_layer    =wr_layer,
-        WR_LAYER    =wr_layer.upper(),
+        wr_layer    =wr_layer_identifier,
+        WR_LAYER    =wr_layer_identifier.upper(),
         wr_factor   =partition.weights_reloading_factor,
         wr_flag     =int(wr_layer != "None"),
         include     =include
@@ -220,14 +220,13 @@ def gen_network(name,partition,output_path):
     network_src = network_src_template.format(
         name        =name,
         NAME        =name.upper(),
-        wr_layer    =wr_layer,
+        wr_layer    =wr_layer_identifier,
         weights     =weights,
         weights_init=weights_init,
         streams_init=streams_init,
         layers      =layers
     )
     # TB
-    print(os.path.abspath(os.path.join(output_path,'data/')))
     network_tb_src = network_tb_src_template.format(
         name = name,
         NAME = name.upper(),
