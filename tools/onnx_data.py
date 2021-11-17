@@ -245,7 +245,7 @@ class ONNXData:
         output_data = self.transform_featuremap(output_data)
         output_streams = int(self.partition.layers[-1].parameters.coarse_out)
         self.save_featuremap(output_data, os.path.join(output_path, onnx_helper._format_name(output_node)),
-            parallel_streams=output_streams, to_yaml=True, to_bin=to_bin, to_csv=to_csv, to_dat=to_dat)
+            parallel_streams=output_streams, to_yaml=False, to_bin=to_bin, to_csv=to_csv, to_dat=to_dat)
 
     """
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
