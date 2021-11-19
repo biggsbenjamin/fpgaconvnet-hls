@@ -18,6 +18,8 @@
     "input_width": 16,
     "acc_width": 30,
     "weight_width": 16,
+    "has_bias": 0,
+    "biases_width": 16,
     "output_width": 16,
     "description": "layer name: res4f_branch2c, net name: resnet.prototxt"
 }

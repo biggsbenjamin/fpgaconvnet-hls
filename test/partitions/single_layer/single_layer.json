@@ -54,7 +54,9 @@
             "weight_width": 16,
             "acc_width": 32,
             "input_width": 16,
-            "output_width": 16
+            "output_width": 16,
+            "has_bias": 1,
+            "biases_width": 16
           },
           "node_in": "conv1",
           "node_out": "conv1_squeeze_pool1",

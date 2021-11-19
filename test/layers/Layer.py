@@ -87,8 +87,13 @@ class Layer:
 
         # save data as .dat files
         for filename in data:
-            with open(os.path.join(output_path,filename+".dat"), 'w') as f:
-                f.write("\n".join([str(i) for i in data[filename]]))
+            if filename in ['weights','biases']:
+                with open(os.path.join(output_path,filename+".csv"), 'w') as f:
+                    print("saving:",filename)
+                    f.write(data[filename])
+            else:
+                with open(os.path.join(output_path,filename+".dat"), 'w') as f:
+                    f.write("\n".join([str(i) for i in data[filename]]))
 
         # create layer
         self.gen_layer(src_path,header_path)

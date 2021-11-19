@@ -31,7 +31,9 @@ class InnerProductLayerTB(Layer):
             input_width=self.param["input_width"],
             output_width=self.param["output_width"],
             acc_width=self.param["acc_width"],
-            weight_width=self.param["weight_width"]
+            weight_width=self.param["weight_width"],
+            biases_width=self.param["biases_width"]
+
         )
 
         # data in
@@ -46,10 +48,16 @@ class InnerProductLayerTB(Layer):
             self.param['filters'],
             self.param['cols_in']*self.param['rows_in']*self.param['channels_in']
         ])
-        bias     = np.zeros(self.param['filters'])
+        biases     = np.zeros(self.param['filters'])
+        # biases
+        biases = np.zeros(self.param['filters'])
+        if self.param['has_bias'] == 1:
+            biases = self.gen_data([
+                self.param['filters']
+            ])
 
         # data out
-        data_out = layer.functional_model(copy.copy(data_in),weights,bias)[0]
+        data_out = layer.functional_model(copy.copy(data_in),weights,biases)[0]
         data_out = np.moveaxis(data_out,0,-1)
 
         # reshape weights
@@ -66,8 +74,13 @@ class InnerProductLayerTB(Layer):
             1,
             1
         )
-        with open('data/weights.csv', 'w') as f:
-            f.write(array_init(weights[0]))
+
+        # save biases
+        biases = ONNXData._transform_biases(
+            biases,
+            self.param['filters'],
+            self.param['coarse_out']
+        )
 
         # add output dimensions
         self.param['rows_out']      = layer.rows_out()
@@ -77,7 +90,9 @@ class InnerProductLayerTB(Layer):
         # return data
         data = {
             'input'  : data_in.reshape(-1).tolist(),
-            'output' : data_out.reshape(-1).tolist()
+            'output' : data_out.reshape(-1).tolist(),
+            'weights': array_init(weights[0]),
+            'biases' : array_init(biases)
         }
 
         # resource and latency model

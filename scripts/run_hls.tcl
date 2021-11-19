@@ -63,7 +63,7 @@ if          { $module_flag == 1     } {
 } elseif    { $layer_flag == 1      } {
     add_files src/${name}_layer.cpp         -cflags "-Wtautological-compare -Wno-parentheses-equality -std=c++11 -I../../../include -I./tb -I./include"
     #add_files src/${name}_layer_${name}.cpp -cflags "-Wtautological-compare -Wno-parentheses-equality -std=c++11 -I../../../include -I./tb -I./include"
-    add_files src/${name}_layer_top.cpp     -cflags "-Wtautological-compare -Wno-parentheses-equality -std=c++11 -I../../../include -I./tb -I./include -I./data"
+    add_files src/${name}_layer_top.cpp     -cflags "-Wtautological-compare -Wno-parentheses-equality -std=c++11 -I../../../include -I./tb -I./include -I./data -I./data/test_${test_num}"
     add_files -tb tb/${name}_layer_tb.cpp   -cflags "-Wtautological-compare -Wno-parentheses-equality -std=c++11 -I../../../include -I./tb -I./include"
 } elseif    { $network_flag == 1    } {
     add_files [ glob src/*.cpp ]            -cflags "-Wtautological-compare -Wno-parentheses-equality -std=c++11 -I${fpgaconvnet_root}/include -I./tb -I./include -I./data"
