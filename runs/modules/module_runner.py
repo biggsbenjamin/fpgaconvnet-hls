@@ -9,7 +9,7 @@ from functools import reduce
 class ModuleRunner(Runner):
 
     def __init__(self,name):
-        
+
         Runner.__init__(self)
 
         self.name = name
@@ -22,10 +22,10 @@ class ModuleRunner(Runner):
         self.resource_flag  = True
         self.power_flag     = False
 
-        self.max_runners = 50
+        self.max_runners = 3
 
     def get_factors(self, n):
-        return list(set(reduce(list.__add__, 
+        return list(set(reduce(list.__add__,
             ([i, n//i] for i in range(1, int(n**0.5) + 1) if n % i == 0))))
 
     def gen_parameters(self):
@@ -34,7 +34,7 @@ class ModuleRunner(Runner):
         self.parameters['rows']       = random.randint(1,128)
         self.parameters['cols']       = random.randint(1,128)
         self.parameters['channels']   = random.randint(1,96)
-        # basic 
+        # basic
         self.parameters['freq']       = random.randint(50,150)
 
     def get_param_string(self):
@@ -105,12 +105,15 @@ class ModuleRunner(Runner):
 
         # collect resources
         print("COLLECTING RESOURCES ... \n\n\n")
-        results['resources'] = self.get_resources()        
-        results['clk_impl'] = self.get_clk_impl()
+        try:
+            results['resources'] = self.get_resources()
+            results['clk_impl'] = self.get_clk_impl()
 
-        os.system(f"mkdir -p modules/{self.name}/logs")
-        with open("modules/{name}/logs/{param}.json".format(name=self.name,param=self.get_param_string()),"w") as f:
-            json.dump(results,f)
+            os.system(f"mkdir -p modules/{self.name}/logs")
+            with open("modules/{name}/logs/{param}.json".format(name=self.name,param=self.get_param_string()),"w") as f:
+                json.dump(results,f)
+        except:
+            print("Unable to collect resources")
 
         return results
 

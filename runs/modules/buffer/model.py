@@ -6,7 +6,7 @@ sys.path.append(os.environ.get("FPGACONVNET_HLS"))
 
 from modules.module_model import ModuleModel
 #from module_model import ModuleModel
-from fpgaconvnet_optimiser.models.modules import Accum
+from fpgaconvnet_optimiser.models.modules import Buffer
 
 MAX_RSC = {
     "LUT"   : 53200,
@@ -17,25 +17,27 @@ MAX_RSC = {
 
 # define resource model
 def build_module(parameter):
-    return Accum(
+    return Buffer(
         parameter['rows'],
         parameter['cols'],
         parameter['channels'],
-        parameter['filters'],
-        parameter['groups'],
-        # data_width=parameter['data_width']
+        0, #ctrledge
+        parameter['drop_mode'],
+        #parameter['filters'],
+        #parameter['groups'],
+        #data_width=parameter['data_width']
     )
 
-def model_accum():
-    # load accum model
+def model_buffer():
+    # load buffer model
     model = ModuleModel(build_module)
-    model.load_points("modules/accum/logs")
+    model.load_points("modules/buffer/logs")
 
     # fit model
     model.fit_model()
 
     # save coefficients
-    model.save_coefficients("coefficients/accum")
+    model.save_coefficients("coefficients/buffer")
 
     # plot error
     model.plot_error(MAX_RSC)
@@ -44,4 +46,4 @@ def model_accum():
     model.print_absolute_error()
 
 if __name__ == "__main__":
-    model_accum()
+    model_buffer()

@@ -62,7 +62,10 @@ class ModuleModel:
         # iterate over points
         for point in self.points:
             # get the resource model results
+
+            #NOTE change me to rsc for more accurate resource model???
             model  = self.module(point["parameters"]).utilisation_model()
+
             actual = point["resources"]
             for rsc_type in RSC_TYPES:
                 # get modelled resources
@@ -90,6 +93,7 @@ class ModuleModel:
         for point in self.points:
             # get utilisation model
             for (key,value) in model.items():
+                #print("key,val",key)
                 value.append(self.module(point["parameters"]).utilisation_model()[key])
             # get actual data
             actual["LUT"].append(point["resources"]["LUT"])
@@ -117,10 +121,23 @@ class ModuleModel:
     def print_absolute_error(self):
         # iterate over the different resource types
         rsc_types = ["FF", "LUT", "DSP", "BRAM"]
+        print("Printing Absolute Error")
         for rsc_type in rsc_types:
             # get the difference in resource usage
-            actual = np.array([ p["resources"][rsc_type] for p in self.points ])
-            predicted = np.array([ self.module(p["parameters"]).rsc(self.coef)[rsc_type] for p in self.points ])
+            actual_list=[]
+            pred_list = []
+            for point in self.points:
+                rsc_pnt = point["resources"][rsc_type]
+                pred_pnt = self.module(point["parameters"]).rsc(self.coef)[rsc_type]
+                actual_list.append(rsc_pnt)
+                pred_list.append(pred_pnt)
+                if rsc_type == "BRAM":
+                    print("~~BRAM~~ actual:",rsc_pnt,"pred:",pred_pnt)
+            #actual = np.array([ p["resources"][rsc_type] for p in self.points ])
+            #predicted = np.array([ self.module(p["parameters"]).rsc(self.coef)[rsc_type] for p in self.points ])
+            actual = np.array(actual_list)
+            predicted = np.array(pred_list)
+
             # get the mean absolute error
             err = np.average(np.absolute(actual - predicted))
             var = math.sqrt(np.var(np.absolute(actual - predicted)))
@@ -184,4 +201,6 @@ class ModuleModel:
         plt.ylabel("Actual")
 
         plt.show()
+
+        fig.savefig("OUT.png")
 
