@@ -131,8 +131,8 @@ class ModuleModel:
                 pred_pnt = self.module(point["parameters"]).rsc(self.coef)[rsc_type]
                 actual_list.append(rsc_pnt)
                 pred_list.append(pred_pnt)
-                if rsc_type == "BRAM":
-                    print("~~BRAM~~ actual:",rsc_pnt,"pred:",pred_pnt)
+                #if rsc_type == "BRAM":
+                    #print("~~BRAM~~ actual:",rsc_pnt,"pred:",pred_pnt)
             #actual = np.array([ p["resources"][rsc_type] for p in self.points ])
             #predicted = np.array([ self.module(p["parameters"]).rsc(self.coef)[rsc_type] for p in self.points ])
             actual = np.array(actual_list)
@@ -142,6 +142,7 @@ class ModuleModel:
             err = np.average(np.absolute(actual - predicted))
             var = math.sqrt(np.var(np.absolute(actual - predicted)))
             print(f"{rsc_type}: error = {err}, var = {var}")
+            print("Coefficients:",self.coef[rsc_type])
 
     def plot_error(self, max_rsc):
 

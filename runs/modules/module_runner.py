@@ -22,7 +22,7 @@ class ModuleRunner(Runner):
         self.resource_flag  = True
         self.power_flag     = False
 
-        self.max_runners = 3
+        self.max_runners = 1
 
     def get_factors(self, n):
         return list(set(reduce(list.__add__,

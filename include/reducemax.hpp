@@ -35,20 +35,20 @@ void reducemax(
     #pragma HLS DEPENDENCE variable=cache RAW intra true
 
     batch_loop: for(unsigned long batch_index=0;batch_index<batch_size;batch_index++) {
-        #pragma HLS PIPELINE II=1 rewind
+        //#pragma HLS PIPELINE II=1 rewind
         pixel_loop: for (unsigned long px_index = 0; px_index < rows*cols*channels; px_index++) {
                 if (px_index == 0) {
                     cache = in.read();
-                    std::cout<<"rdmx,in cache: "<<cache<<std::endl;
+                    //std::cout<<"rdmx,in cache: "<<cache<<std::endl;
                 }
                 else {
                     float tmp = in.read();
                     cache = (cache > tmp ) ? cache : tmp ;
-                    std::cout<<"rdmx,in cache: "<<cache<<std::endl;
+                    //std::cout<<"rdmx,in cache: "<<cache<<std::endl;
                 }
             }
         out.write(cache);
-        std::cout<<"rdmx,out cache: "<<cache<<std::endl;
+        //std::cout<<"rdmx,out cache: "<<cache<<std::endl;
     }
 }
 

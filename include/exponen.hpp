@@ -7,17 +7,18 @@
  * EXPONENTIAL FUNCTION
  */
 
-typedef ap_fixed<16,8> exp_t;
+//typedef ap_fixed<16,8> exp_t;
 
 template<
     unsigned int BATCH_SIZE,
     unsigned int ROWS,
     unsigned int COLS,
-    unsigned int CHANNELS
+    unsigned int CHANNELS,
+    typename exp_t
 >
 
 void exponen(
-    stream_t(data_t) &in,
+    stream_t(exp_t) &in,
     //stream_t(data_t) &out
     hls::stream<float> &out
     //stream_t(bdata_t) &out
@@ -30,8 +31,11 @@ void exponen(
     const unsigned int rows         = ROWS;
     const unsigned int cols         = COLS;
     const unsigned int channels     = CHANNELS;
-    const data_t exp_max_in         = 4.84375;
-    const data_t data_max           = 127.99609375;
+    //const data_t exp_max_in         = 4.84375;
+    //const data_t data_max           = 127.99609375;
+    //might not need these constants?
+    const exp_t exp_max_in         = 4.84375;
+    const exp_t data_max           = 127.99609375;
  
 #pragma HLS STREAM variable=in 
 #pragma HLS STREAM variable=out //sets up streaming data type
@@ -50,7 +54,7 @@ void exponen(
 
         //data_t tmp = in.read();
         float tmp = in.read().to_float();
-        std::cout<<"exponen tmp: "<<tmp<<std::endl;
+        //std::cout<<"exponen tmp: "<<tmp<<std::endl;
         //bdata_t tmp = bdata_t{in.read()};
         //exponential function options: cordic, lookup table, something else?
         
@@ -59,7 +63,7 @@ void exponen(
         //out.write( hls::exp(tmp.to_float()) );
         float tmp_out = hls::exp(tmp);
         out.write( tmp_out);//hls::exp(tmp) );
-        std::cout<<"exponen out: "<<tmp_out<<std::endl;
+        //std::cout<<"exponen out: "<<tmp_out<<std::endl;
     }
 }
 

@@ -8,12 +8,13 @@ template<
     unsigned int ROWS,
     unsigned int COLS,
     unsigned int CHANNELS,
-    bool         DROP_MODE //true = drop on 1, false = drop on 0
+    bool         DROP_MODE, //true = drop on 1, false = drop on 0
+    typename     buffer_t
 >
 void buffer(
-    stream_t(data_t) &in, //might need a float version too
-    stream_t(data_t) &ctrl_drop, 
-    stream_t(data_t) &out
+    stream_t(buffer_t) &in, //might need a float version too
+    stream_t(buffer_t) &ctrl_drop, 
+    stream_t(buffer_t) &out
 )
 {
     #pragma HLS INLINE OFF
@@ -30,9 +31,9 @@ void buffer(
     #pragma HLS STREAM variable=in
     #pragma HLS STREAM variable=out
 
-    data_t buff[buff_size];
+    buffer_t buff[buff_size];
     #pragma HLS resource variable=buff core=RAM_2P_BRAM
-    data_t drop_tmp;
+    buffer_t drop_tmp;
     
     batch_loop: for(unsigned long b_index=0;b_index<batch_size;b_index++) {
         samp_in_loop: for(unsigned long pxi_index=0;pxi_index<buff_size;pxi_index++) {
