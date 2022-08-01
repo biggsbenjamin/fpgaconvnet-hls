@@ -60,7 +60,7 @@ void mem_read(
     }
 }
 
-template<
+/*template<
     unsigned int BATCH_SIZE,
     unsigned int ROWS,
     unsigned int COLS,
@@ -126,4 +126,5 @@ void mem_read(
         }
     }
 }
+*/
 #endif

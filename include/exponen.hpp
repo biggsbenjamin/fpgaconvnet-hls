@@ -37,11 +37,12 @@ void exponen(
     const exp_t exp_max_in         = 4.84375;
     const exp_t data_max           = 127.99609375;
  
-#pragma HLS STREAM variable=in 
+    const unsigned int depth_in= rows*cols*channels+15;
+#pragma HLS STREAM variable=in depth=depth_in
 #pragma HLS STREAM variable=out //sets up streaming data type
 
     for(unsigned long pixel_index=0 ; pixel_index < batch_size*rows*cols*channels ; pixel_index++) {
-        #pragma HLS PIPELINE II=1 rewind 
+#pragma HLS PIPELINE II=1 rewind 
         /*exp_t tmp, res;
         tmp = exp_t{ in.read() };
         

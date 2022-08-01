@@ -11,7 +11,7 @@ template<
     unsigned int BATCH_SIZE,
     unsigned int ROWS,
     unsigned int COLS,
-    unsigned int CHANNELS,
+    const unsigned int CHANNELS,
     unsigned int FILTERS,
     unsigned int GROUPS,
     unsigned int FINE,
@@ -28,7 +28,7 @@ void conv_intr(
 )
 {
 
-#pragma HLS INLINE OFF
+//#pragma HLS INLINE OFF
 
     const unsigned int batch_size    = BATCH_SIZE;
     const unsigned int rows          = ROWS;
@@ -63,34 +63,39 @@ DO_PRAGMA(HLS ARRAY_PARTITION variable=weights block factor=weights_partition_fa
     conv_data_t window_cache[kernel_size_x][kernel_size_y];
     #pragma HLS ARRAY_PARTITION variable=window_cache complete dim=0
 
-    intr_pixel_loop: for(unsigned int pixel_index=0;pixel_index<batch_size*rows*cols;pixel_index++) {
-        unsigned int weight_index = 0;
-        intr_channel_loop: for(unsigned int channel_index=0;channel_index<channels_per_group;channel_index++) {
-            intr_filter_loop: for(unsigned int filter_index=0;filter_index<filters;filter_index++) {
-
-                #pragma HLS loop_flatten
-                #pragma HLS dependence variable=window_cache intra RAW true
-                DO_PRAGMA( HLS dependence variable=window_cache inter WAW true distance=batch_size*rows*cols*channels )
-                DO_PRAGMA( HLS PIPELINE II=interval )
-
-                unsigned char fine_index = 0;
-
-                intr_k2_loop: for(unsigned char k2=0;k2<kernel_size_y;k2++) {
-                    intr_k1_loop: for(unsigned char k1=0;k1<kernel_size_x;k1++) {
-                        if(filter_index%filters_per_group == 0) {
-                            DO_PRAGMA(HLS occurrence cycle=batch_size*rows*cols*channels)
-                            window_cache[k1][k2] = in[k1][k2].read();
-                        }
-                        /* printf("%f,%f\n", window_cache[k1][k2].to_float(), weights[weight_index][k1][k2].to_float()); */
-                        window_stream[fine_index].write(window_cache[k1][k2]);
-                        weight_stream[fine_index].write(weights[weight_index][k1][k2]);
-
-                        fine_index = ( fine_index + 1 ) % fine;
-                    }
-                }
-                weight_index++;
-            }
+    const unsigned int px_bnd = batch_size*rows*cols*channels_per_group;
+    unsigned int weight_index = 0;
+    
+    intr_pixel_loop: for(unsigned int pixel_index=0;pixel_index<px_bnd;pixel_index++) {
+        if (pixel_index%channels_per_group == 0) {
+            weight_index = 0;
         }
+        //intr_channel_loop: for(unsigned int channel_index=0;channel_index<channels_per_group;channel_index++) {
+        intr_filter_loop: for(unsigned int filter_index=0;filter_index<filters;filter_index++) {
+
+            #pragma HLS loop_flatten
+            #pragma HLS dependence variable=window_cache intra RAW true
+            DO_PRAGMA( HLS dependence variable=window_cache inter WAW true distance=batch_size*rows*cols*channels )
+            DO_PRAGMA( HLS PIPELINE II=interval )
+
+            unsigned char fine_index = 0;
+
+            intr_k2_loop: for(unsigned char k2=0;k2<kernel_size_y;k2++) {
+                intr_k1_loop: for(unsigned char k1=0;k1<kernel_size_x;k1++) {
+                    if(filter_index%filters_per_group == 0) {
+                        DO_PRAGMA(HLS occurrence cycle=batch_size*rows*cols*channels)
+                        window_cache[k1][k2] = in[k1][k2].read();
+                    }
+                    /* printf("%f,%f\n", window_cache[k1][k2].to_float(), weights[weight_index][k1][k2].to_float()); */
+                    window_stream[fine_index].write(window_cache[k1][k2]);
+                    weight_stream[fine_index].write(weights[weight_index][k1][k2]);
+
+                    fine_index = ( fine_index + 1 ) % fine;
+                }
+            }
+            weight_index++;
+        }
+        //}
     }
 }
 
@@ -115,7 +120,7 @@ void conv_mul(
 )
 {
 
-#pragma HLS INLINE OFF
+//#pragma HLS INLINE OFF
 
 #pragma HLS STREAM variable=window_stream
 #pragma HLS STREAM variable=weight_stream
@@ -178,7 +183,7 @@ void conv_acc(
 )
 {
 
-    #pragma HLS INLINE OFF
+//    #pragma HLS INLINE OFF
 
     #pragma HLS STREAM variable=acc_stream
     #pragma HLS ARRAY_PARTITION variable=acc_stream complete dim=0
@@ -232,7 +237,7 @@ void conv(
 )
 {
 
-#pragma HLS INLINE OFF
+//#pragma HLS INLINE OFF
 #pragma HLS DATAFLOW
 
 //#pragma HLS stable variable=weights
@@ -300,7 +305,7 @@ void conv(
 /**
  *  POINTWISE CONVOLUTION FUNCTION
  */
-template<
+/*template<
     unsigned int BATCH_SIZE,
     unsigned int ROWS,
     unsigned int COLS,
@@ -318,7 +323,7 @@ void conv(
 )
 {
 
-#pragma HLS INLINE OFF
+//#pragma HLS INLINE OFF
 
     const unsigned batch_size   = BATCH_SIZE;
     const unsigned rows         = ROWS;
@@ -341,7 +346,7 @@ void conv(
             filter_loop: for(unsigned int filter_index=0;filter_index<filters;filter_index++) {
                 #pragma HLS loop_flatten
                 #pragma HLS PIPELINE II=1
-                /* #pragma HLS dependence variable=windowCache intra RAW true */
+                // #pragma HLS dependence variable=windowCache intra RAW true
                 if(filter_index%filters_per_group == 0) {
                     DO_PRAGMA(HLS occurrence cycle=batch_size*rows*cols*channels)
                     window_cache = in.read();
@@ -354,6 +359,6 @@ void conv(
             }
         }
     }
-}
+}*/
 
 #endif

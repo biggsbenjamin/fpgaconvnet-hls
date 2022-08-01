@@ -24,21 +24,27 @@ void softmax_sum(
     const unsigned int cols       = COLS;
     const unsigned int channels   = CHANNELS;
 
-    const unsigned int out_d = rows*cols*channels+1;
+    const unsigned int out_d = rows*cols*channels;
     //TODO coarse grain folding possibly    
 
-    #pragma HLS STREAM variable=in
+    #pragma HLS STREAM variable=in depth=out_d
     #pragma HLS STREAM variable=out
-    //DO_PRAGMA(HLS STREAM variable=out depth=out_d)
     
     //acc_t sum;
     float sum;
 
     batch_loop: for (unsigned long batch_index=0;batch_index<batch_size;batch_index++ ) {
-        sum=0;
-        stream_pixel_loop: for(unsigned long pixel_index=0;pixel_index<rows*cols*channels;pixel_index++) {
-            #pragma HLS PIPELINE II=1 rewind 
-            sum = sum + in.read();
+        stream_pixel_loop: for(unsigned long pixel_index=0;pixel_index<out_d;pixel_index++) {
+#pragma HLS PIPELINE II=1 rewind
+            if (pixel_index == 0){
+                //restart sum
+                sum = in.read();
+                //std::cout<<"at 0 sum: "<<sum<<std::endl;
+
+            } else {
+                sum = sum + in.read();
+                //std::cout<<"all other sum: "<<sum<<std::endl;
+            }
         }
         out.write(sum);
     }

@@ -23,7 +23,7 @@ void glue(
 )
 {
 
-#pragma HLS INLINE OFF
+//#pragma HLS INLINE OFF
 
     const unsigned int batch_size   = BATCH_SIZE;
     const unsigned int rows         = ROWS;
@@ -33,6 +33,7 @@ void glue(
     const unsigned int coarse_out   = COARSE_OUT;
     const unsigned int coarse_group = COARSE_GROUP;
     const unsigned int filters_per_coarse   = DIVIDE(filters,coarse_out*coarse_group);
+    const unsigned int px_lim = batch_size*rows*cols*filters_per_coarse;
 
 #pragma HLS STREAM variable=in
 #pragma HLS STREAM variable=out
@@ -43,8 +44,8 @@ void glue(
     glue_acc_t acc[coarse_out*coarse_group];
 #pragma HLS ARRAY_PARTITION variable=acc complete dim=0
 
-    pixel_loop: for(unsigned long pixel_index=0;pixel_index<batch_size*rows*cols;pixel_index++) {
-        filter_loop: for(unsigned int filter_index=0;filter_index<filters_per_coarse;filter_index++) {
+    pixel_loop: for(unsigned int pixel_index=0;pixel_index<px_lim;pixel_index++) {
+//        filter_loop: for(unsigned int filter_index=0;filter_index<filters_per_coarse;filter_index++) {
             #pragma HLS loop_flatten
             #pragma HLS pipeline II=1 rewind
             #pragma HLS unroll region
@@ -58,11 +59,11 @@ void glue(
                         // write to output stream
                         if( in_index == (coarse_in-1) ) {
                             out[group_index*coarse_out+out_index].write( glue_data_t(acc[group_index*coarse_out+out_index]) ) ;
+                        }
                     }
                 }
-            }
-	}
+	        }
+        //}
     }
 }
-
 #endif

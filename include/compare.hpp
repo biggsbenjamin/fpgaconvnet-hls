@@ -31,8 +31,8 @@ void compare(
     //const unsigned int channels     = CHANNELS;
     const float threshold = thr_val[0];
  
-#pragma HLS STREAM variable=max_in
-#pragma HLS STREAM variable=thr_in
+#pragma HLS STREAM variable=max_in depth=batch_size
+#pragma HLS STREAM variable=thr_in depth=batch_size
 #pragma HLS STREAM variable=ctrl_out
 
     //TODO:
@@ -46,8 +46,8 @@ void compare(
 
     float thr_mult, thr_res, cmp_max;
     
-    batch_loop: for(unsigned long b_index=0;b_index<batch_size;b_index++) 
-                {
+    batch_loop: for(unsigned long b_index=0;b_index<batch_size;b_index++) {
+#pragma HLS PIPELINE II=1 rewind 
         thr_mult = thr_in.read(); //this one will arrive later
         cmp_max = max_in.read();
         thr_res = thr_mult * threshold;

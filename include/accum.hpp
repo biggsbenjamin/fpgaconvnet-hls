@@ -18,7 +18,7 @@ void accum(
 )
 {
 
-    #pragma HLS INLINE OFF
+    //#pragma HLS INLINE OFF
 
     // get all constant parameters
     const unsigned int batch_size = BATCH_SIZE;

@@ -53,7 +53,7 @@ void mem_write(
     }
 }
 
-template<
+/*template<
     unsigned int BATCH_SIZE,
     unsigned int ROWS,
     unsigned int COLS,
@@ -125,4 +125,5 @@ void mem_write(
         }
     }
 }
+*/
 #endif

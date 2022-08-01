@@ -41,7 +41,7 @@ void load_data(
     fclose(fp);
 }
 
-
+/* STANDARD FOR TESTING LAYER INPUTS */
 template<int SIZE, int STREAMS, typename T>
 void to_stream(
     T in[SIZE][STREAMS],
@@ -49,8 +49,22 @@ void to_stream(
 ) {
     for(int i=0;i<SIZE;i++) {
         for(int j=0;j<STREAMS;j++) {
- 	    out[j].write(in[i][j]);
-	}
+ 	        out[j].write(in[i][j]);
+	    }
+    }
+}
+/* DEBUG VERSION */
+template<int SIZE, int STREAMS, bool debug, typename T>
+void to_stream(
+    T in[SIZE][STREAMS],
+    stream_t(T) out[STREAMS]
+) {
+    std::cout<<"WARNING: TO STREAM DEBUG VERSION, size:"<<SIZE<<std::endl;
+    for(int i=0;i<SIZE;i++) {
+        for(int j=0;j<STREAMS;j++) {
+            std::cout<<"to stream size idx:"<<i<<std::endl;
+ 	        out[j].write(in[i][j]);
+	    }
     }
 }
 
@@ -588,17 +602,27 @@ int checkStreamEqual(
         T tmp_valid;
         test.read_nb(tmp);
         valid.read_nb(tmp_valid);
+        //float conversion for visual comparison
+        float tmpf,tmpf_valid;
+        tmpf=tmp.to_float();
+        tmpf_valid=tmp_valid.to_float();
 
-		if(print_out) printf("%x,%x\n",tmp.range()&BIT_MASK,tmp_valid.range()&BIT_MASK);
-
+		if(print_out) {
+            //printf("%x,%x\n",tmp.range()&BIT_MASK,tmp_valid.range()&BIT_MASK);
+            //std::cout<<"Expected:"<<tmp.range()&BIT_MASK
+            //    <<" Actual:"<<tmp_valid.range()&BIT_MASK<<std::endl;    
+            std::cout<<"Expected:"<<tmpf
+                <<" Actual:"<<tmpf_valid<<std::endl;    
+        }
 		if(
 				(tmp.to_float() > tmp_valid.to_float()+ERROR_TOLERANCE) ||
 				(tmp.to_float() < tmp_valid.to_float()-ERROR_TOLERANCE)
 		)
 		{
 			//printf("ERROR: wrong value\n");
-			printf("ERROR: wrong value. Actual:%f, Expected:%f, Difference:%f\n",tmp.to_float(), tmp_valid.to_float(), tmp.to_float()-tmp_valid.to_float());
-			return 1;
+			printf("ERROR: wrong value. Actual:%f, Expected:%f, Difference:%f\n",
+                    tmp.to_float(), tmp_valid.to_float(), tmp.to_float()-tmp_valid.to_float());
+			//return 1;
 			err++;
 		}
 	}
@@ -612,43 +636,43 @@ int checkStreamEqual(
 	return err;
 }
 
-//template<>
-//int checkStreamEqual <float> (
-//		hls::stream <float> &test,
-//		hls::stream <float> &valid,
-//		bool print_out
-//)
-//{
-//	while(!valid.empty())
-//	{
-//		if(test.empty())
-//		{
-//			printf("ERROR: empty early\n");
-//			return 1;
-//		}
-//		float tmp = test.read();
-//		float tmp_valid = valid.read();
-//
-//		if(print_out) printf("%x,%x\n",tmp,tmp_valid);
-//
-//		if(
-//				(tmp > tmp_valid+ERROR_TOLERANCE) ||
-//				(tmp < tmp_valid-ERROR_TOLERANCE)
-//		)
-//		{
-//			//printf("ERROR: wrong value\n");
-//			printf("ERROR: wrong value %x, %x \n",tmp, tmp_valid);
-//			return 1;
-//		}
-//	}
-//
-//	if(!test.empty())
-//	{
-//		printf("ERROR: still data in stream\n");
-//		return 1;
-//	}
-//	return 0;
-//}
+template<>
+int checkStreamEqual <float> (
+		hls::stream <float> &test,
+		hls::stream <float> &valid,
+		bool print_out
+)
+{
+	while(!valid.empty())
+	{
+		if(test.empty())
+		{
+			printf("ERROR: empty early\n");
+			return 1;
+		}
+		float tmp = test.read();
+		float tmp_valid = valid.read();
+
+		if(print_out) printf("test:%f,valid:%f\n",tmp,tmp_valid);
+
+		if(
+				(tmp > tmp_valid+ERROR_TOLERANCE) ||
+				(tmp < tmp_valid-ERROR_TOLERANCE)
+		)
+		{
+			//printf("ERROR: wrong value\n");
+			printf("ERROR: wrong value %f, %f \n",tmp, tmp_valid);
+			return 1;
+		}
+	}
+
+	if(!test.empty())
+	{
+		printf("ERROR: still data in stream\n");
+		return 1;
+	}
+	return 0;
+}
 
 template<int SIZE>
 int check_array_equal(
