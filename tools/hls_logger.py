@@ -96,6 +96,7 @@ class hls_log():
         assert os.path.exists(self.synth_xml)
         latency = untangle.parse(self.synth_xml).profile.PerformanceEstimates.SummaryOfOverallLatency.Average_caseLatency.cdata
         if latency == "undef":
+            print("Latency undefined")
             return "N/A"
         else:
             return int(latency)

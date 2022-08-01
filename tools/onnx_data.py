@@ -36,6 +36,7 @@ def get_layer_from_partition(partition, layer_name): # Non ONNXData class versio
     for layer in partition.layers:
         if layer.name == layer_name:
             return layer
+    raise NameError("layer name not in partition")
 
 def gen_layer_name(layer): # layer in protobuf form
     #macro issue is that layers that have numerical names cause compiler to error
@@ -296,7 +297,7 @@ class ONNXData:
         output_node = self.partition.output_node
         output_data = np.array( self.sess.run([output_node], { self.input_name : self.data } )[0], dtype=np.float64) #making sure data type works
         output_data = self.transform_featuremap(output_data)
-        print("Output tensor:\n",output_data)
+        #print("Output tensor:\n",output_data)
         output_streams = int(self.partition.layers[-1].parameters.coarse_out)
         self.save_featuremap(output_data, os.path.join(output_path, onnx_helper._format_name(output_node)),
             parallel_streams=output_streams, to_yaml=False, to_bin=to_bin, to_csv=to_csv, to_dat=to_dat)
@@ -367,7 +368,9 @@ class ONNXData:
         # get weights
         weights_raw = onnx_helper.get_model_initializer(self.model, layer.weights_path)
         #print("weights reshape: ",weights_raw.shape)
-        if layer.parameters.matmul_flag:
+        #print("HAS BIAS",layer.parameters.has_bias)
+        if not (layer.parameters.has_bias == 1):
+        #if layer.parameters.matmul_flag:
             print("MatMul ONNX Operation used, transposing")
             weights_raw = np.matrix.transpose(weights_raw)
             print("weights transpose: ",weights_raw.shape)
@@ -456,7 +459,7 @@ class ONNXData:
     """
 
     @staticmethod
-    def _transform_biases(biases_raw, filters, coarse_out,wr_factor):
+    def _transform_biases(biases_raw, filters, coarse_out,wr_factor=1):
         # parameters
         if wr_factor == -1:
             num_filters  = biases_raw.shape[0]//(coarse_out)
