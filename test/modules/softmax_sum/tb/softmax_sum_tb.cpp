@@ -19,12 +19,12 @@ int main()
     // test inputs data
     //static data_t test_in[SOFTMAX_SUM_ROWS*SOFTMAX_SUM_COLS*SOFTMAX_SUM_CHANNELS];
     //static data_t test_out[SOFTMAX_SUM_ROWS*SOFTMAX_SUM_COLS*SOFTMAX_SUM_CHANNELS];
-    static float test_in[SOFTMAX_SUM_ROWS*SOFTMAX_SUM_COLS*SOFTMAX_SUM_CHANNELS];
+    static float test_in[SOFTMAX_SUM_BATCH_SIZE*SOFTMAX_SUM_ROWS*SOFTMAX_SUM_COLS*SOFTMAX_SUM_CHANNELS];
     static float test_out[SOFTMAX_SUM_BATCH_SIZE];
 
     // load data_in
     load_data<
-        SOFTMAX_SUM_ROWS*SOFTMAX_SUM_COLS*SOFTMAX_SUM_CHANNELS,
+        SOFTMAX_SUM_BATCH_SIZE*SOFTMAX_SUM_ROWS*SOFTMAX_SUM_COLS*SOFTMAX_SUM_CHANNELS,
         //data_t
         float
     >(input_path,test_in);
@@ -38,7 +38,7 @@ int main()
 
     // convert input stream
     to_stream<
-        SOFTMAX_SUM_ROWS*SOFTMAX_SUM_COLS*SOFTMAX_SUM_CHANNELS,
+        SOFTMAX_SUM_BATCH_SIZE*SOFTMAX_SUM_ROWS*SOFTMAX_SUM_COLS*SOFTMAX_SUM_CHANNELS,
         //data_t
         float
     >(test_in,in);

@@ -15,7 +15,7 @@ void bias_top(
         BIAS_BATCH_SIZE,
         BIAS_ROWS,
         BIAS_COLS,
-        BIAS_CHANNELS,
+        //BIAS_CHANNELS,
         BIAS_FILTERS,
         bias_data_t,
         bias_biases_t

@@ -1,5 +1,6 @@
 import os
 import sys
+import numpy as np
 
 sys.path.append('..')
 
@@ -19,22 +20,25 @@ class ReduceMaxTB(Data):
                 self.param['channels']
         )
         # data in
+        print("batch size:",self.param['batch_size'])
         data_in = self.gen_data([
+            self.param['batch_size'],
             self.param['rows'],
             self.param['cols'],
             self.param['channels']
         ])
         # data out
-        data_out = redmx.functional_model(data_in)
+        data_out = [redmx.functional_model(b) for b in data_in]
+        data_out = np.asarray(data_out)
         # return data
         data = {
             'input'     : data_in.reshape(-1).tolist(),
             'output'    : data_out.reshape(-1).tolist()
         }
         # resource and latency model
-        #TODO needs to be fixed on optimiser side
+        #TODO fix latency model
         model = {
-            'latency'   : redmx.get_latency(),
+            'latency'   : redmx.latency(),
             'resources' : redmx.rsc()
         }
         return data, model

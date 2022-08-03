@@ -45,7 +45,7 @@ class BufferTB(Data):
         }
         # resource and latency model
         model = {
-            'latency'   : buff.get_latency(),
+            'latency'   : buff.latency(),
             'resources' : buff.rsc()
         }
         return data, model

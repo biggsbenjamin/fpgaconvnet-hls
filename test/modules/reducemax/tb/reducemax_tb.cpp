@@ -19,12 +19,12 @@ int main()
     // test inputs data
     //static data_t test_in[REDUCEMAX_ROWS*REDUCEMAX_COLS*REDUCEMAX_CHANNELS];
     //static data_t test_out[REDUCEMAX_ROWS*REDUCEMAX_COLS*REDUCEMAX_CHANNELS];
-    static float test_in[REDUCEMAX_ROWS*REDUCEMAX_COLS*REDUCEMAX_CHANNELS];
+    static float test_in[REDUCEMAX_BATCH_SIZE*REDUCEMAX_ROWS*REDUCEMAX_COLS*REDUCEMAX_CHANNELS];
     static float test_out[REDUCEMAX_BATCH_SIZE];
 
     // load data_in
     load_data<
-        REDUCEMAX_ROWS*REDUCEMAX_COLS*REDUCEMAX_CHANNELS,
+        REDUCEMAX_BATCH_SIZE*REDUCEMAX_ROWS*REDUCEMAX_COLS*REDUCEMAX_CHANNELS,
         //data_t
         float
     >(input_path,test_in);
@@ -38,7 +38,7 @@ int main()
 
     // convert input stream
     to_stream<
-        REDUCEMAX_ROWS*REDUCEMAX_COLS*REDUCEMAX_CHANNELS,
+        REDUCEMAX_BATCH_SIZE*REDUCEMAX_ROWS*REDUCEMAX_COLS*REDUCEMAX_CHANNELS,
         //data_t
         float
     >(test_in,in);

@@ -32,9 +32,8 @@ class ExponenTB(Data):
             'output'    : data_out.reshape(-1).tolist()
         }
         # resource and latency model
-        #TODO needs to be fixed on optimiser side
         model = {
-            'latency'   : exponen.get_latency(),
+            'latency'   : exponen.latency(),
             'resources' : exponen.rsc()
         }
         return data, model

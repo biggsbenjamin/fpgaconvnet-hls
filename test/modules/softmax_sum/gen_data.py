@@ -1,5 +1,6 @@
 import os
 import sys
+import numpy as np
 
 sys.path.append('..')
 
@@ -19,13 +20,17 @@ class SoftMaxSumTB(Data):
                 self.param['channels']
         )
         # data in
+        print("batch size:",self.param['batch_size'])
         data_in = self.gen_data([
+            self.param['batch_size'],
             self.param['rows'],
             self.param['cols'],
             self.param['channels']
         ])
         # data out
-        data_out = sm_sum.functional_model(data_in)
+        #data_out = sm_sum.functional_model(data_in)
+        data_out = [sm_sum.functional_model(b) for b in data_in]
+        data_out = np.asarray(data_out)
         # return data
         data = {
             'input'     : data_in.reshape(-1).tolist(),
@@ -34,7 +39,7 @@ class SoftMaxSumTB(Data):
         # resource and latency model
         #TODO needs to be fixed on optimiser side
         model = {
-            'latency'   : sm_sum.get_latency(),
+            'latency'   : sm_sum.latency(),
             'resources' : sm_sum.rsc()
         }
         return data, model

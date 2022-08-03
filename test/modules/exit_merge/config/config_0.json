@@ -1,0 +1,9 @@
+{
+    "type": "EXIT_MERGE",
+    "batch_size": 5,
+    "rows" : 1, 
+    "cols" : 1,
+    "channels" : 10, 
+    "exits":2,
+    "description": "module name: exm, net name: any split network"
+}

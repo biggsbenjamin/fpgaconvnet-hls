@@ -1,0 +1,11 @@
+{
+    "batch_size": 1,
+    "rows": 32,
+    "cols": 32,
+    "channels":1,
+    "filters":5,
+    "groups": 1,
+    "fine": 25,
+    "kernel_size": [5,5],
+    "description": "brn padding variant"
+}

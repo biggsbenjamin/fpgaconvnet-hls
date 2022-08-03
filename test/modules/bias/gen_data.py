@@ -19,7 +19,7 @@ class BiasTB(Data):
             self.param['cols'],
             self.param['channels'],
             self.param['filters'],
-            self.param['groups'],
+            #self.param['groups'],
             #self.param['coarse_out']
         )
 

@@ -3,8 +3,8 @@
 
 void exponen_top(
     stream_t(data_t) &in,
-    stream_t(data_t) &out
-    //hls::stream<float> &out
+    //stream_t(data_t) &out
+    hls::stream<float> &out
     //stream_t(bdata_t) &out
 )
 {

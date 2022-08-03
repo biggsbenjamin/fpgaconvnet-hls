@@ -27,6 +27,7 @@ if __name__ == "__main__":
         test_pool = [config_file for config_file in os.listdir("config")]
     else:
         #do a single report
+        print("Single report")
         test_pool = [args.number]
 
     # iterate over tests
@@ -66,6 +67,7 @@ if __name__ == "__main__":
         try:
             results["latency"]["synth"] = module_test_log.get_synth_latency()
             results["resources"]["synth"] = module_test_log.get_synth_resources()
+            print("Got latency:",results["latency"]["synth"])
         except AssertionError:
             pass
         try:
