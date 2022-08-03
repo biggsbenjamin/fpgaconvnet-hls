@@ -22,6 +22,7 @@ IMAGE_PATH=input_example.png
 #IMAGE_PATH=pt_ip_ex.png
 ZYNQ_PART=xc7z020clg484-1
 ZYNQ_BOARD=xilinx.com:zc702:part0:1.4
+#THIS TEST TYPE IS COSIM
 TEST_TYPE=sim
 
 # move into network folder
@@ -38,7 +39,6 @@ for i in $( seq 1 ${NUM_PARTITIONS} ); do
 
     # get current partition index
     PARTITION_INDEX=$(( $i - 1 ))
-    #PARTITION_INDEX=1
 
     # create folders
     mkdir -p partition_${PARTITION_INDEX}
@@ -61,9 +61,10 @@ for i in $( seq 1 ${NUM_PARTITIONS} ); do
     #PORTS_OUT=$( jq .[$PARTITION_INDEX].partition_info.ports_out $PARTITION_INFO_PATH )
 
     # partition frequency
-    FREQ=100 # TODO: get from partition information file
+    FREQ=125 # TODO: get from partition information file
 
     # create hardware
+    # NOTE -eep is the command specifying ee partition usage
     python $FPGACONVNET_HLS/scripts/generate_hardware.py -n $NETWORK -m $MODEL_PATH -p $PARTITION_INFO_PATH -i $PARTITION_INDEX -eep
 
     # format weights
