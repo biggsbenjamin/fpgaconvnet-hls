@@ -209,8 +209,8 @@ def gen_softmax_cmp_layer(name, param, src_path, header_path):
         rows                =param['rows_in'],
         cols                =param['cols_in'],
         channels            =param['channels_in'],
-        channels_per_module =int(param['channels_in']/(param['coarse'])), #FIXME
-        coarse              =param['coarse'],
+        channels_per_module =int(param['channels_in']/(param['coarse_in'])), #FIXME
+        coarse              =param['coarse_in'],
         rows_out            =param['rows_out'],
         cols_out            =param['cols_out'],
         channels_out        =param['channels_out'],

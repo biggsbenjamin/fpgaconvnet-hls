@@ -31,7 +31,7 @@ buffer_layer_template_header = """#ifndef {NAME}_HPP_
 #define {NAME}_FORK_BATCH_SIZE    {batch_size}
 #define {NAME}_FORK_ROWS          1
 #define {NAME}_FORK_COLS          1
-#define {NAME}_FORK_CHANNELS      1
+#define {NAME}_FORK_CHANNELS      1 //1 ctrl signal per batch
 #define {NAME}_FORK_COARSE        {coarse}
 #define {NAME}_FORK_KERNEL_SIZE   1
 

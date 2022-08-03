@@ -57,3 +57,6 @@ yaml-cpp-release-0.5.3/*
 sd_card/
 partition_*/
 test/partitions/**/*.txt
+
+**/old/*
+**/new/*

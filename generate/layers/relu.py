@@ -79,7 +79,31 @@ void {name}(
 
 """
 
-def gen_relu_layer(name,param,src_path,header_path):
+relu_layer_top_template_src = """//auto generated
+#include "{name}.hpp"
+
+void {name}_top(
+    stream_t({name}_data_t) in[{NAME}_COARSE],
+    stream_t({name}_data_t) out[{NAME}_COARSE])
+{{
+#pragma HLS DATAFLOW
+
+
+#pragma HLS STREAM variable=in //depth={buffer_depth}
+#pragma HLS STREAM variable=out
+
+#pragma HLS INTERFACE s_axilite port=return                     bundle=ctrl
+#pragma HLS INTERFACE axis port=in
+#pragma HLS INTERFACE axis port=out
+    int mode=0;
+
+    {name}(in,out,mode);
+
+}}
+
+"""
+
+def gen_relu_layer(name,param,src_path,header_path,topless=True):
 
     # RELU MODULE INIT
     relu = generate.modules.relu.gen_relu_module(
@@ -116,9 +140,23 @@ def gen_relu_layer(name,param,src_path,header_path):
         data_int_width      =param['data_width']//2
     )
 
+    # top src
+    relu_layer_top_src = relu_layer_top_template_src.format(
+        name  =name,
+        NAME  =name.upper(),
+        buffer_depth=max(param['buffer_depth'],2),
+    )
+
     # write source file
     with open(src_path,'w') as src_file:
         src_file.write(relu_layer_src)
+
+    if not topless:
+        # write top source file
+        top_src_path = os.path.split(src_path)
+        top_src_path = os.path.join(top_src_path[0], f'{name}_top.cpp')
+        with open(top_src_path,'w') as src_file:
+            src_file.write(relu_layer_top_src)
 
     # write header file
     with open(header_path,'w') as header_file:

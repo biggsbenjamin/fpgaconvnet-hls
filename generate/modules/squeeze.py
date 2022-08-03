@@ -1,12 +1,22 @@
 squeeze_template = """
-{indent}squeeze<
+#if ( {NAME}_BATCH_SIZE*{NAME}_COLS*{NAME}_ROWS > 1 )
+{indent}squeeze_spatial<
 {indent}    {NAME}_BATCH_SIZE,
 {indent}    {NAME}_ROWS,
 {indent}    {NAME}_COLS,
+#else
+{indent}squeeze<
+#endif
 {indent}    {NAME}_CHANNELS,
 {indent}    {NAME}_COARSE_IN,
 {indent}    {NAME}_COARSE_OUT,
-{indent}    {NAME}_BUFFER_SIZE,
+#if {NAME}_CHANNELS_PER_COARSE_IN > 1
+{indent}    {NAME}_CHANNELS_PER_COARSE_IN,
+{indent}    {NAME}_CHANNELS_PER_COARSE_IN,
+#endif
+#if {NAME}_CHANNELS_PER_COARSE_OUT > 1
+{indent}    {NAME}_CHANNELS_PER_COARSE_OUT,
+#endif
 {indent}    {squeeze_t}
 {indent}>({input_stream},{output_stream});
 """

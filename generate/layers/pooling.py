@@ -1,9 +1,8 @@
-# import modules
 import os
 import shutil
 
-import generate.modules.sliding_window
-import generate.modules.pool
+import generate.modules.sliding_window as generate_sliding_window
+import generate.modules.pool as generate_pool
 
 pooling_layer_template_header = """#ifndef {NAME}_HPP_
 #define {NAME}_HPP_
@@ -78,6 +77,22 @@ void {name}(
 
 pooling_layer_template_src = """#include "{name}.hpp"
 
+void {name}_sliding_window(
+    stream_t({name}_data_t) &in,
+    stream_t({name}_data_t) out[{NAME}_KERNEL_SIZE_X][{NAME}_KERNEL_SIZE_Y]
+) {{
+#pragma HLS INLINE OFF
+{sliding_window}
+}}
+
+void {name}_pool(
+    stream_t({name}_data_t) in[{NAME}_KERNEL_SIZE_X][{NAME}_KERNEL_SIZE_Y],
+    stream_t({name}_data_t) &out
+) {{
+#pragma HLS INLINE OFF
+{pool}
+}}
+
 void {name}(
     stream_t({name}_data_t) in[{NAME}_COARSE],
     stream_t({name}_data_t) out[{NAME}_COARSE],
@@ -88,7 +103,7 @@ void {name}(
 #pragma HLS INLINE OFF
 #pragma HLS DATAFLOW
 
-#pragma HLS STREAM variable=in depth={buffer_depth}
+#pragma HLS STREAM variable=in //depth={buffer_depth}
 #pragma HLS STREAM variable=out
 
 #pragma HLS ARRAY_PARTITION variable=in  complete dim=0
@@ -99,38 +114,62 @@ void {name}(
 #pragma HLS STREAM variable=sw_out
 #pragma HLS ARRAY_PARTITION variable=sw_out complete dim=0
 
-    for(unsigned int coarseIndex=0;coarseIndex<{NAME}_COARSE;coarseIndex++)
+    for(unsigned int coarse_index=0; coarse_index<{NAME}_COARSE; coarse_index++)
     {{
 #pragma HLS UNROLL
-{sliding_window}
-{pool}
+        {name}_sliding_window(in[coarse_index], sw_out[coarse_index]);
+        {name}_pool(sw_out[coarse_index], out[coarse_index]);
     }}
 }}
 
 """
 
-def gen_pooling_layer(name,param,src_path,header_path):
+pooling_layer_top_template_src = """//auto generated
+#include "{name}.hpp"
+
+void {name}_top(
+    stream_t({name}_data_t) in[{NAME}_COARSE],
+    stream_t({name}_data_t) out[{NAME}_COARSE])
+{{
+
+#pragma HLS DATAFLOW
+
+#pragma HLS INTERFACE s_axilite port=return                     bundle=ctrl
+//#pragma HLS INTERFACE ap_ctrl_none port=return //seeing what default is, should be hs
+#pragma HLS INTERFACE axis port=in
+#pragma HLS INTERFACE axis port=out
+
+#pragma HLS STREAM variable=in //depth={buffer_depth}
+#pragma HLS STREAM variable=out
+    int mode=0;
+
+    {name}(in,out,mode);
+
+}}
+
+"""
+
+def gen_pooling_layer(name,param,src_path,header_path, topless=True):
 
     # get sliding window type
-    #single_channel = True if param['channels'] == 1 else False
     single_channel = True if param['channels_in'] == 1 else False
 
     # SLIDING WINDOW MODULE INIT
-    sliding_window = generate.modules.sliding_window.gen_sliding_window_module(
+    sliding_window = generate_sliding_window.gen_sliding_window_module(
         name+"_sliding_window",
-        "in[coarseIndex]",
-        "sw_out[coarseIndex]",
+        "in",
+        "out",
         sliding_window_t=f"{name}_data_t",
-        indent=8
+        indent=4
     )
 
     # POOL MODULE INIT
-    pool = generate.modules.pool.gen_pool_module(
+    pool = generate_pool.gen_pool_module(
         name+"_pool",
-        "sw_out[coarseIndex]",
-        "out[coarseIndex]",
+        "in",
+        "out",
         pool_t=f"{name}_data_t",
-        indent=8
+        indent=4
     )
 
     # src
@@ -169,9 +208,23 @@ def gen_pooling_layer(name,param,src_path,header_path):
         data_int_width      =param['data_width']//2,
     )
 
+    # top src
+    pooling_layer_top_src = pooling_layer_top_template_src.format(
+        name            =name,
+        NAME            =name.upper(),
+        buffer_depth=max(param['buffer_depth'],2),
+    )
+
     # write source file
     with open(src_path,'w') as src_file:
         src_file.write(pooling_layer_src)
+
+    # write top source file
+    if not topless:
+        top_src_path = os.path.split(src_path)
+        top_src_path = os.path.join(top_src_path[0], f'{name}_top.cpp')
+        with open(top_src_path,'w') as src_file:
+            src_file.write(pooling_layer_top_src)
 
     # write header file
     with open(header_path,'w') as header_file:

@@ -1,4 +1,5 @@
 bias_template = """
+//auto generated
 {indent}bias<
 {indent}    {NAME}_BATCH_SIZE,
 {indent}    {NAME}_ROWS,

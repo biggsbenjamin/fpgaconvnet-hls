@@ -9,7 +9,8 @@ import generate.modules.accum
 import generate.modules.glue
 import generate.modules.bias
 
-convolution_layer_template_header = """#ifndef {NAME}_HPP_
+convolution_layer_template_header = """//auto generated file
+#ifndef {NAME}_HPP_
 #define {NAME}_HPP_
 
 #include "sliding_window.hpp"
@@ -134,7 +135,8 @@ void {name}(
 #endif
 """
 
-convolution_layer_template_src = """#include "{name}.hpp"
+convolution_layer_template_src = """//auto generated file
+#include "{name}.hpp"
 
 void {name}(
     const {name}_weight_t weights[{NAME}_COARSE_IN*{NAME}_COARSE_GROUP][{NAME}_COARSE_OUT][DIVIDE({NAME}_WEIGHTS,{NAME}_COARSE_IN*{NAME}_COARSE_GROUP*{NAME}_COARSE_OUT*{NAME}_KERNEL_SIZE_X*{NAME}_KERNEL_SIZE_Y)][{NAME}_KERNEL_SIZE_X][{NAME}_KERNEL_SIZE_Y],
@@ -147,9 +149,9 @@ void {name}(
 )
 {{
 
-#pragma HLS INLINE OFF
+//#pragma HLS INLINE OFF
 
-#pragma HLS STREAM variable=in depth={buffer_depth}
+#pragma HLS STREAM variable=in //depth={buffer_depth}
 #pragma HLS STREAM variable=out
 
 #pragma HLS ARRAY_PARTITION variable=in  complete dim=0
@@ -186,7 +188,44 @@ void {name}(
 
 """
 
-def gen_convolution_layer(name,param,src_path,header_path,wr_factor=1):
+convolution_layer_top_template_src = """//auto generated
+#include "{name}.hpp"
+
+{weights}
+{biases}
+
+void {name}_top(
+    stream_t({name}_input_t)  in[{NAME}_COARSE_IN*{NAME}_COARSE_GROUP],
+    stream_t({name}_output_t) out[{NAME}_COARSE_OUT*{NAME}_COARSE_GROUP]
+)
+{{
+
+#pragma HLS DATAFLOW
+
+#pragma HLS INTERFACE s_axilite port=return                     bundle=ctrl
+#pragma HLS INTERFACE axis port=in
+#pragma HLS INTERFACE axis port=out
+
+#pragma HLS STREAM variable=in //depth={buffer_depth}
+#pragma HLS STREAM variable=out
+
+{weights_init}
+{biases_init}
+
+    int mode=0;
+
+    {name}({name}_weights,
+#if ({NAME}_HAS_BIAS == 1)
+        {name}_biases,
+#endif
+        in,out,mode);
+
+}}
+
+"""
+
+
+def gen_convolution_layer(name,param,src_path,header_path,topless=True,wr_factor=1):
 
     # get sliding window type
     single_channel  = True if param['channels_in'] == 1 else False
@@ -395,12 +434,107 @@ def gen_convolution_layer(name,param,src_path,header_path,wr_factor=1):
         wr_factor           =wr_factor
     )
 
+    ############ including weights in top file ##############
+
+    weights = str(generate_weight_def(
+        name,
+        kernel_size_x=int(param["kernel_size"][0]),
+        kernel_size_y=int(param["kernel_size"][1]),
+        wr=False
+    ))
+    weights_init = str(generate_weight_init(
+        name,
+        wr=False
+    ))
+    biases=''
+    biases_init=''
+    if has_bias:
+        biases += generate_bias_def(name)
+        biases_init += generate_bias_init(name)
+
+    # top src
+    convolution_layer_top_src = convolution_layer_top_template_src.format(
+        name            =name,
+        NAME            =name.upper(),
+        buffer_depth    =max(param['buffer_depth'],2),
+        weights=weights,
+        weights_init=weights_init,
+        biases=biases,
+        biases_init=biases_init,
+    )
+
     # write source file
     with open(src_path,'w') as src_file:
         src_file.write(convolution_layer_src)
+
+    # write top source file
+    if not topless:
+        top_src_path = os.path.split(src_path)
+        top_src_path = os.path.join(top_src_path[0], f'{name}_top.cpp')
+        with open(top_src_path,'w') as src_file:
+            src_file.write(convolution_layer_top_src)
 
     # write header file
     with open(header_path,'w') as header_file:
         header_file.write(convolution_layer_header)
 
     return
+
+
+
+######################## copied from partition.py ####################
+
+class generate_weight_def:
+    # initialise class
+    def __init__(self, name, kernel_size_x=1, kernel_size_y=1, wr=False):
+        self.name       = name
+        self.type       = "static" if wr else "const static"
+        self.kernel_dim = "[{NAME}_KERNEL_SIZE_X][{NAME}_KERNEL_SIZE_Y]".format(NAME=self.name.upper())
+
+    def __str__(self):
+        return """
+{type} {name}_weight_t {name}_weights[{NAME}_COARSE_IN*{NAME}_COARSE_GROUP][{NAME}_COARSE_OUT][DIVIDE({NAME}_WEIGHTS,{NAME}_COARSE_IN*{NAME}_COARSE_GROUP*{NAME}_COARSE_OUT*{NAME}_KERNEL_SIZE_X*{NAME}_KERNEL_SIZE_Y)]{kernel_dim} = {{
+#include "{name}_weights_0.csv"
+}};
+""".format(
+        NAME=self.name.upper(),
+        name=self.name,
+        type=self.type,
+        kernel_dim=self.kernel_dim
+    )
+
+# class for weight initialisation
+class generate_weight_init():
+    # initialise class
+    def __init__(self, name, wr=False):
+        self.name = name
+        self.bram_type = "RAM" if wr else "ROM"
+        #FIXME core resource specification gets errors
+
+    def __str__(self):
+        return """
+#pragma HLS ARRAY_PARTITION variable={name}_weights complete dim=1
+#pragma HLS ARRAY_PARTITION variable={name}_weights complete dim=2
+#pragma HLS RESOURCE variable={name}_weights //core={bram_type}
+//#pragma HLS STREAM variable={name}_weights off
+#pragma HLS STABLE variable={name}_weights
+
+""".format(name=self.name,bram_type=self.bram_type)
+
+######## Generating biases #########
+def generate_bias_def(name):
+    div = "{NAME}_COARSE_OUT".format(NAME=name.upper())
+    return """
+const static {name}_biases_t {name}_biases[{NAME}_COARSE_OUT][DIVIDE({NAME}_FILTERS,{div})] = {{
+#include "{name}_biases.csv"
+}};
+""".format(NAME=name.upper(), name=name, div=div)
+
+def generate_bias_init(name):
+    #FIXME core resource specification gets errors
+    bi = """
+#pragma HLS ARRAY_PARTITION variable={name}_biases complete dim=1
+#pragma HLS RESOURCE variable={name}_biases //core=ROM
+#pragma HLS STABLE variable={name}_biases
+""".format(name=name)
+    return bi

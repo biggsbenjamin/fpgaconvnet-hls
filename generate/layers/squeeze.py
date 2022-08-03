@@ -2,6 +2,7 @@
 import os
 import math
 import shutil
+#import fpgaconvnet.hls.generate.modules.squeeze as generate_squeeze
 import generate.modules.squeeze
 
 squeeze_layer_template_header = """#ifndef {NAME}_HPP_
@@ -25,6 +26,8 @@ squeeze_layer_template_header = """#ifndef {NAME}_HPP_
 #define {NAME}_SQUEEZE_ROWS         {rows_in}
 #define {NAME}_SQUEEZE_COLS         {cols_in}
 #define {NAME}_SQUEEZE_CHANNELS     {channels_in}
+#define {NAME}_SQUEEZE_CHANNELS_PER_COARSE_IN     {channels_per_coarse_in}
+#define {NAME}_SQUEEZE_CHANNELS_PER_COARSE_OUT    {channels_per_coarse_out}
 #define {NAME}_SQUEEZE_COARSE_IN    {coarse_in}
 #define {NAME}_SQUEEZE_COARSE_OUT   {coarse_out}
 #define {NAME}_SQUEEZE_BUFFER_SIZE  {buffer_size}
@@ -71,12 +74,38 @@ void {name}(
 
 """
 
+squeeze_layer_top_template_src = """//auto generated
+#include "{name}.hpp"
+
+void {name}_top(
+    stream_t({name}_data_t) in[{NAME}_COARSE_IN],
+    stream_t({name}_data_t) out[{NAME}_COARSE_OUT]
+)
+{{
+#pragma HLS DATAFLOW
+
+
+#pragma HLS STREAM variable=in //depth={buffer_depth}
+#pragma HLS STREAM variable=out
+
+#pragma HLS INTERFACE s_axilite port=return                     bundle=ctrl
+#pragma HLS INTERFACE axis port=in
+#pragma HLS INTERFACE axis port=out
+
+    int mode=0;
+    {name}(in,out,mode);
+
+}}
+
+"""
+
 def lcm(a, b):
     return abs(a*b) // math.gcd(a, b)
 
-def gen_squeeze_layer(name,param,src_path,header_path):
+def gen_squeeze_layer(name,param,src_path,header_path,topless=True):
 
     # BATCH NORM MODULE INIT
+    #squeeze = generate_squeeze.gen_squeeze_module(
     squeeze = generate.modules.squeeze.gen_squeeze_module(
         name+"_squeeze",
         "in",
@@ -102,6 +131,8 @@ def gen_squeeze_layer(name,param,src_path,header_path):
         rows_in             =param['rows_in'],
         cols_in             =param['cols_in'],
         channels_in         =param['channels_in'],
+        channels_per_coarse_in  =param['channels_in']//param["coarse_in"],
+        channels_per_coarse_out =param['channels_in']//param["coarse_out"],
         coarse_in           =param['coarse_in'],
         coarse_out          =param['coarse_out'],
         rows_out            =param['rows_out'],
@@ -112,9 +143,23 @@ def gen_squeeze_layer(name,param,src_path,header_path):
         buffer_size         =lcm(param['coarse_in'],param['coarse_out']),
     )
 
+    # top src
+    squeeze_layer_top_src = squeeze_layer_top_template_src.format(
+        name  =name,
+        NAME  =name.upper(),
+        buffer_depth=max(param['buffer_depth'],2),
+    )
+
     # write source file
     with open(src_path,'w') as src_file:
         src_file.write(squeeze_layer_src)
+
+    if not topless:
+        # write top source file
+        top_src_path = os.path.split(src_path)
+        top_src_path = os.path.join(top_src_path[0], f'{name}_top.cpp')
+        with open(top_src_path,'w') as src_file:
+            src_file.write(squeeze_layer_top_src)
 
     # write header file
     with open(header_path,'w') as header_file:

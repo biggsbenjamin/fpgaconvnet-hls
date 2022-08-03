@@ -195,9 +195,9 @@ void fpgaconvnet_ip(
 #pragma HLS INTERFACE m_axi port=wr_hw  offset=slave depth=size_wr  num_read_outstanding=1 num_write_outstanding=1 max_read_burst_length=256 max_write_burst_length=256 name=fpgaconvnet_wr  bundle=fpgaconvnet_port_wr
 #endif
 
-#pragma HLS INTERFACE m_axi port=in_hw  offset=slave depth=size_in  num_read_outstanding=1 num_write_outstanding=1 max_read_burst_length=256 max_write_burst_length=256 name=fpgaconvnet_in  bundle=fpgaconvnet_port_in
+#pragma HLS INTERFACE m_axi port=in_hw  offset=slave  num_read_outstanding=1 num_write_outstanding=1 max_read_burst_length=256 max_write_burst_length=2 name=fpgaconvnet_in  bundle=fpgaconvnet_port_in // depth=size_in
 
-#pragma HLS INTERFACE m_axi port=out_hw offset=slave depth=size_out num_read_outstanding=1 num_write_outstanding=1 max_read_burst_length=256 max_write_burst_length=256 name=fpgaconvnet_out bundle=fpgaconvnet_port_out
+#pragma HLS INTERFACE m_axi port=out_hw offset=slave num_read_outstanding=1 num_write_outstanding=16 max_read_burst_length=2 max_write_burst_length=256 name=fpgaconvnet_out bundle=fpgaconvnet_port_out // depth=size_out
 
 
     #pragma HLS DATAFLOW
@@ -246,7 +246,7 @@ int main()
             {NAME}_SIZE_WR,
             {NAME}_WEIGHTS_RELOADING_FACTOR
         >("{weights_reloading_path}", weights, wr_index);
->>>>>>> 448ba54... fixing test input scaling, fixing IP weights reshaping
+#endif
 
         // load valid output
         load_net_data<
@@ -261,6 +261,7 @@ int main()
 
         printf("RUNNING NETWORK \\n");
 
+#if {NAME}_WEIGHTS_RELOADING_FLAG
         // perform weights reloading
         if( wr_index > 0 ) {{
             fpgaconvnet_ip(1,wr_index,weights,test_in,test_out);
@@ -268,6 +269,10 @@ int main()
 
         // run the network
         fpgaconvnet_ip(0,wr_index,weights,test_in,test_out);
+#else
+        // run the network
+        fpgaconvnet_ip(0,wr_index,test_in,test_out);
+#endif
 
         // check array is correct
         for(int i=0; i<{NAME}_PORTS_OUT;i++) {{
