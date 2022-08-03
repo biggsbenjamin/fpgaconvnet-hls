@@ -19,9 +19,9 @@
     "data_width": 16,
     "acc_width": 30,
     "weight_width": 16,
-    "has_bias": 0,
+    "has_bias": 1,
     "biases_width": 16,
     "output_width": 16,
-    "description": "layer name: conv1, net name: brchy lenet bb, NO BIAS"
+    "description": "layer name: conv1, net name: brchy lenet bb"
 }
 

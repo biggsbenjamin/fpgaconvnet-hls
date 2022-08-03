@@ -1,10 +1,10 @@
 {
     "type": "CONVOLUTION",
     "buffer_depth": 0,
-    "rows_in": 28,
-    "cols_in": 28,
-    "channels_in": 1,
-    "filters": 5,
+    "rows_in": 16,
+    "cols_in": 16,
+    "channels_in": 5,
+    "filters": 10,
     "kernel_size": [5,5],
     "stride": [1,1],
     "groups": 1,
@@ -22,6 +22,6 @@
     "has_bias": 0,
     "biases_width": 16,
     "output_width": 16,
-    "description": "layer name: conv1, net name: brchy lenet bb, NO BIAS"
+    "description": "layer name: conv2, net name: brchy lenet bb"
 }
 

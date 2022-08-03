@@ -8,12 +8,13 @@ void pooling_layer_top(
 )
 {
 #pragma HLS DATAFLOW
-#pragma HLS INTERFACE ap_ctrl_chain port=return
+#pragma HLS INTERFACE ap_ctrl_hs port=return
+//#pragma HLS INTERFACE ap_ctrl_chain port=return
 
-//#pragma HLS INTERFACE axis port=in
-//#pragma HLS INTERFACE axis port=out
-#pragma HLS STREAM variable=in
-#pragma HLS STREAM variable=out
+#pragma HLS INTERFACE axis port=in
+#pragma HLS INTERFACE axis port=out
+//#pragma HLS STREAM variable=in
+//#pragma HLS STREAM variable=out
 
     pooling_layer(in,out,mode);
 

@@ -52,10 +52,9 @@ class PoolingLayerTB(Layer):
         data_out = np.moveaxis(data_out,0,-1)
 
         # add output dimensions
-        self.param['rows_out']      = layer.rows_out(0)
-        self.param['cols_out']      = layer.cols_out(0)
-        self.param['channels_out']  = layer.channels_out(0)
-
+        self.param['rows_out']      = layer.rows_out()#0)
+        self.param['cols_out']      = layer.cols_out()#0)
+        self.param['channels_out']  = layer.channels_out()#0)
         # return data
         data = {
             'input'  : data_in.reshape(-1).tolist(),

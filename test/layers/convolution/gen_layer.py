@@ -98,7 +98,10 @@ class ConvolutionLayerTB(Layer):
         self.param['rows_out']      = layer.rows_out()
         self.param['cols_out']      = layer.cols_out()
         self.param['channels_out']  = layer.channels_out()
-
+        print('out sizes, rows:{} cols:{} chans:{}'.format(
+                self.param['rows_out'],
+                self.param['cols_out'],
+                self.param['channels_out']))
         data_in = data_in.reshape(
             self.param['rows_in'],
             self.param['cols_in'],
@@ -125,7 +128,7 @@ class ConvolutionLayerTB(Layer):
             'input'  : data_in.reshape(-1).tolist(),
             'output' : data_out.reshape(-1).tolist(),
             'weights': array_init(weights[0]),
-            'biases' : array_init(biases)
+            'biases' : array_init(biases[0])
         }
         # resource and latency model
         model = {
@@ -140,7 +143,8 @@ class ConvolutionLayerTB(Layer):
             self.name,
             self.param,
             os.path.join(src_path,'{}.cpp'.format(self.name)),
-            os.path.join(header_path,'{}.hpp'.format(self.name))
+            os.path.join(header_path,'{}.hpp'.format(self.name)),
+            topless=True
         )
 
 if __name__ == '__main__':

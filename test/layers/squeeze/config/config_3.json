@@ -1,0 +1,12 @@
+{
+    "type": "SQUEEZE",
+    "rows_in": 16,
+    "cols_in": 16,
+    "channels_in": 5,
+    "coarse_in": 5,
+    "coarse_out": 1,
+    "batch_size": 1,
+    "buffer_depth": 0,
+    "data_width": 16,
+    "description": "branchynet"
+}

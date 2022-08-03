@@ -1,0 +1,17 @@
+{
+    "type": "POOLING",
+    "buffer_depth" : 0,
+    "rows_in": 32,
+    "cols_in": 32,
+    "channels_in": 5,
+    "kernel_size": [2,2],
+    "stride": [2,2],
+    "pad": 0,
+    "coarse": 5,
+    "coarse_in": 5,
+    "coarse_out": 5,
+    "pool_type": "max",
+    "batch_size": 1,
+    "data_width": 16,
+    "description": "branchynet"
+}

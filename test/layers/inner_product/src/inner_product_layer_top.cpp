@@ -12,7 +12,7 @@ void inner_product_layer_top(
 #pragma HLS STREAM variable=in
 #pragma HLS STREAM variable=out
 
-    const static inner_product_layer_weight_t weights[INNER_PRODUCT_LAYER_COARSE_IN][INNER_PRODUCT_LAYER_COARSE_OUT][CHANNELS_3D(INNER_PRODUCT_LAYER_ROWS*INNER_PRODUCT_LAYER_COLS*INNER_PRODUCT_LAYER_CHANNELS,INNER_PRODUCT_LAYER_COARSE_IN)*CHANNELS_3D(INNER_PRODUCT_LAYER_FILTERS,INNER_PRODUCT_LAYER_COARSE_OUT)][1][1] = {
+    const static inner_product_layer_weight_t weights[INNER_PRODUCT_LAYER_COARSE_IN][INNER_PRODUCT_LAYER_COARSE_OUT][DIVIDE(INNER_PRODUCT_LAYER_WEIGHTS,INNER_PRODUCT_LAYER_COARSE_IN*INNER_PRODUCT_LAYER_COARSE_OUT)][1][1] = {
 #include "weights.csv"
     };
 
@@ -20,9 +20,9 @@ void inner_product_layer_top(
 #pragma HLS ARRAY_PARTITION variable=weights complete dim=2
 #pragma HLS RESOURCE variable=weights core=RAM_2P_BRAM
 
-#if (INNER_PRODUCT_LAYER_HAS_BIAS == 1)
+#if INNER_PRODUCT_LAYER_HAS_BIAS == 1
  
-    const static inner_product_layer_biases_t biases[INNER_PRODUCT_LAYER_COARSE_OUT][DIVIDE(INNER_PRODUCT_LAYER_FILTERS,INNER_PRODUCT_LAYER_COARSE_OUT)] = {
+    const static inner_product_layer_biases_t biases[INNER_PRODUCT_LAYER_COARSE_OUT][INNER_PRODUCT_LAYER_BIAS_FILTERS] = {
         #include "biases.csv"
     };
 
@@ -34,7 +34,7 @@ void inner_product_layer_top(
 #endif
 
     inner_product_layer(weights,
-#if (INNER_PRODUCT_LAYER_HAS_BIAS == 1)
+#if INNER_PRODUCT_LAYER_HAS_BIAS == 1
                         biases,
 #endif
             in,out,mode);

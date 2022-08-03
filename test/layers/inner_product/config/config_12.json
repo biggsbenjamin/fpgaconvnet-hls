@@ -1,18 +1,18 @@
 {
     "type": "INNER_PRODUCT",
     "buffer_depth" : 0,
-    "rows_in": 1,
-    "cols_in": 1,
+    "rows_in": 10,
+    "cols_in": 10,
     "channels_in": 10,
-    "filters": 10,
-    "coarse_in": 2,
-    "coarse_out": 5,
+    "filters": 84,
+    "coarse_in": 1,
+    "coarse_out": 84,
     "batch_size": 1,
     "input_width": 16,
-    "acc_width": 30,
+    "acc_width": 16,
     "weight_width": 16,
     "output_width": 16,
     "biases_width": 16,
     "has_bias": 1,
-    "description": "bias testing"
+    "description": "brn se, backbone inner prod layer "
 }

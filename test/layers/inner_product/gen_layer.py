@@ -47,23 +47,31 @@ class InnerProductLayerTB(Layer):
         weights = self.gen_data([
             self.param['filters'],
             self.param['cols_in']*self.param['rows_in']*self.param['channels_in']
-        ])
+        ],data_range=[-1,1]) #more realistic to have +ve and -ve weights
+        # might also help truncation issue for large layers
         biases     = np.zeros(self.param['filters'])
         # biases
         biases = np.zeros(self.param['filters'])
         if self.param['has_bias'] == 1:
             biases = self.gen_data([
                 self.param['filters']
-            ])
+            ],data_range=[-1,1])
 
         # data out
         data_out = layer.functional_model(copy.copy(data_in),weights,biases)[0]
         data_out = np.moveaxis(data_out,0,-1)
 
         # reshape weights
-        weights = np.reshape(weights,(self.param['filters'],self.param['cols_in'],self.param['rows_in'],self.param['channels_in'],1,1))
-        weights = np.rollaxis(weights,1,3)
-        weights = np.reshape(weights,(self.param['filters'],self.param['cols_in']*self.param['rows_in']*self.param['channels_in'],1,1))
+        weights = np.reshape(weights,(self.param['filters'],
+            self.param['channels_in'],
+            self.param['rows_in'],
+            self.param['cols_in'],
+            1,1))
+        weights = np.rollaxis(weights,1,4)
+        weights = np.reshape(weights,
+                (self.param['filters'],
+                    self.param['cols_in']*self.param['rows_in']*self.param['channels_in'],
+                    1,1))
 
         # save weights
         weights = ONNXData._transform_weights(
@@ -92,7 +100,7 @@ class InnerProductLayerTB(Layer):
             'input'  : data_in.reshape(-1).tolist(),
             'output' : data_out.reshape(-1).tolist(),
             'weights': array_init(weights[0]),
-            'biases' : array_init(biases)
+            'biases' : array_init(biases[0])
         }
 
         # resource and latency model

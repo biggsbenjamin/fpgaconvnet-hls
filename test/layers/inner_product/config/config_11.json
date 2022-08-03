@@ -1,18 +1,18 @@
 {
     "type": "INNER_PRODUCT",
     "buffer_depth" : 0,
-    "rows_in": 1,
-    "cols_in": 1,
-    "channels_in": 10,
+    "rows_in": 16,
+    "cols_in": 16,
+    "channels_in": 5,
     "filters": 10,
-    "coarse_in": 2,
-    "coarse_out": 5,
+    "coarse_in": 1,
+    "coarse_out": 10,
     "batch_size": 1,
     "input_width": 16,
-    "acc_width": 30,
+    "acc_width": 16,
     "weight_width": 16,
     "output_width": 16,
     "biases_width": 16,
     "has_bias": 1,
-    "description": "bias testing"
+    "description": "brn se, early exit inner prod layer "
 }
