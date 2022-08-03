@@ -11,8 +11,8 @@ set hls_arg [ lindex $argv 2 ]
 getopt $hls_arg -num    test_num    ""
 getopt $hls_arg -type   test_type   ""
 getopt $hls_arg -name   name        ""
-getopt $hls_arg -fpga   fpga        "xc7z020clg484-1"
-#getopt $hls_arg -fpga   fpga        "xc7z045ffg900-2"
+#getopt $hls_arg -fpga   fpga        "xc7z020clg484-1"
+getopt $hls_arg -fpga   fpga        "xc7z045ffg900-2"
 getopt $hls_arg -clk    clk_period  "5"
 
 # get type of test
@@ -21,6 +21,8 @@ set layer_flag      [ getopt $hls_arg -layer    ]
 set network_flag    [ getopt $hls_arg -network  ]
 set reset_flag      [ getopt $hls_arg -reset    ]
 set fast_flag       [ getopt $hls_arg -fast     ]
+
+set split_net_flag    [ getopt $hls_arg -split_net  ]
 
 # check a name is given
 if { ![ info exists name ] } {
@@ -40,6 +42,7 @@ puts "  - module flag   = ${module_flag}    "
 puts "  - layer flag    = ${layer_flag}     "
 puts "  - network flag  = ${network_flag}   "
 puts "  - reset flag    = ${reset_flag}     "
+puts "  - split net flag  = ${split_net_flag}   "
 
 # open project
 if { $reset_flag == 1 } {
@@ -53,6 +56,8 @@ if { $layer_flag == 1 } {
     set_top ${name}_layer_top
 } elseif { $network_flag == 1 } {
     set_top fpgaconvnet_ip
+} elseif { $split_net_flag == 1 } {
+    set_top ${name}_top
 } else {
     set_top ${name}_top
 }
@@ -60,11 +65,16 @@ if { $layer_flag == 1 } {
 if          { $module_flag == 1     } {
     add_files src/${name}.cpp               -cflags "-Wtautological-compare -Wno-parentheses-equality -std=c++11 -I../../../include -I../../../src -I./tb"
     add_files -tb tb/${name}_tb.cpp         -cflags "-Wtautological-compare -Wno-parentheses-equality -std=c++11 -I../../../include -I../../../src -I./tb"
+
 } elseif    { $layer_flag == 1      } {
     add_files src/${name}_layer.cpp         -cflags "-Wtautological-compare -Wno-parentheses-equality -std=c++11 -I../../../include -I./tb -I./include"
-    #add_files src/${name}_layer_${name}.cpp -cflags "-Wtautological-compare -Wno-parentheses-equality -std=c++11 -I../../../include -I./tb -I./include"
     add_files src/${name}_layer_top.cpp     -cflags "-Wtautological-compare -Wno-parentheses-equality -std=c++11 -I../../../include -I./tb -I./include -I./data -I./data/test_${test_num}"
     add_files -tb tb/${name}_layer_tb.cpp   -cflags "-Wtautological-compare -Wno-parentheses-equality -std=c++11 -I../../../include -I./tb -I./include"
+
+} elseif    { $split_net_flag == 1      } {
+    add_files [ glob src/*.cpp ]            -cflags "-Wtautological-compare -Wno-parentheses-equality -std=c++11 -I${fpgaconvnet_root}/include -I./tb -I./include -I../partition_0/data"
+    #add_files -tb tb/${name}_layer_tb.cpp   -cflags "-Wtautological-compare -Wno-parentheses-equality -std=c++11 -I../../../include -I./tb -I./include"
+
 } elseif    { $network_flag == 1    } {
     add_files [ glob src/*.cpp ]            -cflags "-Wtautological-compare -Wno-parentheses-equality -std=c++11 -I${fpgaconvnet_root}/include -I./tb -I./include -I./data"
     add_files -tb tb/${name}_tb.cpp         -cflags "-Wtautological-compare -Wno-parentheses-equality -std=c++11 -I${fpgaconvnet_root}/include -I./tb -I./include -lyaml-cpp"
@@ -81,7 +91,7 @@ if { [ info exists test_num ] } {
 set_part $fpga -tool vivado
 
 # increase fifo depth
-config_dataflow -default_channel fifo -fifo_depth 2
+config_dataflow -default_channel fifo -fifo_depth 16
 config_dataflow -strict_mode warning
 
 #set_directive_interface -mode m_axi -depth 1 -offset slave -bundle out_0 "mem_write_top" out_hw
@@ -94,7 +104,7 @@ create_clock -period $clk_period -name default
 #proc csim   {} { csim_design -mflags "-j 8" }
 proc csim   {} { csim_design }
 proc csynth {} { csynth_design }
-proc cosim  {} { cosim_design -rtl verilog -trace_level all }
+proc cosim  {} { cosim_design -rtl verilog -trace_level all -disable_deadlock_detect}
 proc export {} { export_design -flow impl -rtl verilog -format ip_catalog }
 #if { $fast_flag == 1 } {
 #    proc export {} { export_design -rtl verilog -format ip_catalog }

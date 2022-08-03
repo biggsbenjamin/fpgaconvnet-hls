@@ -42,7 +42,7 @@ shift $((OPTIND -1))
 #cd $NETWORK
 
 # create outputs folder
-mkdir -p outputs
+#mkdir -p outputs
 
 # get the number of partitions
 NUM_PARTITIONS=$( jq '.partition | length' $PARTITION_INFO_PATH )
@@ -63,12 +63,16 @@ for i in $( seq 1 ${NUM_PARTITIONS}); do
     mkdir -p partition_${PARTITION_INDEX}/data
 
     # get weights reloading factor
-    WEIGHTS_RELOADING_FACTOR=$( jq .partition[$PARTITION_INDEX].weights_reloading_factor $PARTITION_INFO_PATH )
     WEIGHTS_RELOADING_LAYER=$( jq .partition[$PARTITION_INDEX].weights_reloading_layer $PARTITION_INFO_PATH )
-    WEIGHTS_RELOADING_FLAG=1
-    if [ "$WEIGHTS_RELOADING_LAYER" == "None" ]; then
+    if [ $WEIGHTS_RELOADING_LAYER == "\"None\"" ]; then
         WEIGHTS_RELOADING_FLAG=0
+    else true
+        WEIGHTS_RELOADING_FACTOR=$( jq .partition[$PARTITION_INDEX].weights_reloading_factor $PARTITION_INFO_PATH )
+        printf "Factor: ${WEIGHTS_RELOADING_FACTOR}\n"
+        printf "Layer: ${WEIGHTS_RELOADING_LAYER}\n"
+        WEIGHTS_RELOADING_FLAG=1
     fi
+    printf "Weigths reloading flag: ${WEIGHTS_RELOADING_FLAG} (0 is no wr, 1 is wr)\n"
 
     # port information
     PORT_WIDTH=64 # TODO: get from partition information file
@@ -77,9 +81,10 @@ for i in $( seq 1 ${NUM_PARTITIONS}); do
 
     # partition frequency
     FREQ=125 # TODO: get from partition information file
+    printf "Target operating frequency: ${FREQ}MHz\n"
 
     # create hardware
-    python $FPGACONVNET_HLS/scripts/generate_hardware.py -n $NETWORK -p $PARTITION_INFO_PATH -i $PARTITION_INDEX
+    python $FPGACONVNET_HLS/scripts/generate_hardware.py -n $NETWORK -m $MODEL_PATH -p $PARTITION_INFO_PATH -i $PARTITION_INDEX
 
     # format weights
     python $FPGACONVNET_HLS/scripts/format_weights.py -p $PARTITION_INFO_PATH -i $PARTITION_INDEX -m $MODEL_PATH
@@ -91,20 +96,25 @@ for i in $( seq 1 ${NUM_PARTITIONS}); do
     cd partition_${PARTITION_INDEX}
         if [ "$TEST_TYPE" = "gen_hw" ]; then
             # create fpgaconvnet partition ip
+            #printf "NO HLS RUNNING\n"
             vivado_hls -f $FPGACONVNET_HLS/scripts/run_hls.tcl "_  -type impl -name ${NETWORK} -fpga ${ZYNQ_PART} -network_flag -reset -fast"
             # create bitstream for given platform
             vivado -mode batch -notrace -source $FPGACONVNET_HLS/scripts/gen_hw.tcl \
                 -tclargs $NETWORK $ZYNQ_PART $ZYNQ_BOARD $FREQ $PORT_WIDTH $WEIGHTS_RELOADING_FLAG
-            # copy bitstreams for partition, as well as hardware platform definition
-            cp ${NETWORK}_hw_prj/project_1/design_1_wrapper.bin                         ../outputs/p${PARTITION_INDEX}.bin
-            cp ${NETWORK}_hw_prj/project_1/project_1.runs/impl_1/design_1_wrapper.bit   ../outputs/p${PARTITION_INDEX}.bit
-            cp ${NETWORK}_hw_prj/project_1/project_1.runs/impl_1/design_1_wrapper.hwdef ../outputs/p${PARTITION_INDEX}.hwdef
+            cd ..
+            ## create outputs folder
+            #mkdir -p outputs
+            ## copy bitstreams for partition, as well as hardware platform definition
+            #cp partition_${PARTITION_INDEX}/${NETWORK}_hw_prj/project_1/design_1_wrapper.bin \
+            #    outputs/p${PARTITION_INDEX}.bin
+            #cp partition_${PARTITION_INDEX}/${NETWORK}_hw_prj/project_1/project_1.runs/impl_1/design_1_wrapper.bit   outputs/p${PARTITION_INDEX}.bit
+            #cp partition_${PARTITION_INDEX}/${NETWORK}_hw_prj/project_1/project_1.runs/impl_1/design_1_wrapper.hwdef outputs/p${PARTITION_INDEX}.hwdef
         else
             true
             # run hls only
             vivado_hls -f $FPGACONVNET_HLS/scripts/run_hls.tcl "_  -type ${TEST_TYPE} -name ${NETWORK} -fpga ${ZYNQ_PART} -network_flag -reset -fast"
+            cd ..
         fi
-    cd ..
 
 done
 cd ..

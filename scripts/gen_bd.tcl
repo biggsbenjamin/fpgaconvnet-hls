@@ -47,7 +47,7 @@ proc generate_hardware { BOARD WR_ON PORT_WIDTH FREQ DEBUG DEBUG_DEPTH } {
     } else {
         set_property -dict [ list \
            CONFIG.NUM_MI {1} \
-           CONFIG.NUM_SI {2} \
+           CONFIG.NUM_SI {1} \
            CONFIG.STRATEGY {2} \
         ] $hp_in
     }
@@ -69,6 +69,7 @@ proc generate_hardware { BOARD WR_ON PORT_WIDTH FREQ DEBUG DEBUG_DEPTH } {
     if       { $BOARD == "xilinx.com:zc702:part0:1.4" } {
         set_property -dict [list CONFIG.preset {ZC702}] $ps
     } elseif { $BOARD == "xilinx.com:zc706:part0:1.4" } {
+        puts "TRYING TO USE ZC706 board config"
         set_property -dict [list CONFIG.preset {ZC706}] $ps
     } elseif { $BOARD == "em.avnet.com:zed:part0:1.4" } {
         set_property -dict [list CONFIG.preset {ZedBoard}] $ps
