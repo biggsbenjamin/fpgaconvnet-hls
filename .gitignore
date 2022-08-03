@@ -60,3 +60,10 @@ test/partitions/**/*.txt
 
 **/old/*
 **/new/*
+**.old
+**.new
+**.tmp
+**/past_logs/**
+**/logs2/**
+**/tmp_improved/**
+**.original

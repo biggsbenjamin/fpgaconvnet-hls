@@ -46,6 +46,47 @@ def gen_layer_name(layer): # layer in protobuf form
     else:
         return layer.name
 
+def bin_to_fixed_point(filename, data_width=16, int_width=8):
+    #get numpy data type from width
+    if   0  < data_width <= 8:
+        data_type = np.uint8
+    elif 8  < data_width <= 16:
+        data_type = np.uint16
+    elif 16 < data_width <= 32:
+        data_type = np.uint32
+    elif 32 < data_width <= 64:
+        data_type = np.uint64
+    else:
+        raise TypeError
+
+    #import the file
+    bin_in = np.fromfile(filename, dtype=data_type)
+
+    #TODO convert to fixed point with integer component of width int_width
+    #TODO maybe convert to floating point?
+    #for b in bin_in:
+    #    print(b)
+
+    return bin_in
+
+def validate_output(args):
+    #get fixed point tolerance
+    errtol = fixed_point(args.error_tolerance, args.data_width) #TODO add int_width
+    print(f"Error tolerance as fxpbin: {errtol}, as uint: {errtol.bits_to_signed()}")
+    #load golden data, convert to float
+    g_dat = bin_to_fixed_point(args.gold_path, args.data_width)
+    #load actual data, convert to float
+    a_dat = bin_to_fixed_point(args.actual_path, args.data_width)
+    #compare values, check length, compute average error
+    if len(g_dat) != len(a_dat):
+        raise ValueError(f"Data length differs! Expected: {len(g_dat)} Actual: {len(a_dat)}")
+
+    for idx,(g,a) in enumerate(zip(g_dat, a_dat)):
+        cmpr = (g-a) if (g > a) else (a-g)
+        if cmpr > errtol.bits_to_signed():
+            raise ValueError(f"Difference greater than tolerance.\n \
+                    Values g:{g} a:{a} @ index:{idx}")
+
 class ONNXData:
     def __init__(self, partition, model_path=None):
         # partitions
@@ -186,13 +227,14 @@ class ONNXData:
             stream_out[index] = fixed_point(val,total_width=total_width,int_width=int_width)
         return stream_out
 
-    def _fixed_point_stream_format(self, stream, streams=1, port_width=64, ports=1):
+    def _fixed_point_stream_format(self, stream, streams=1, port_width=16, ports=1):
         # check it's only a 1D array
         assert len(stream.shape) == 1
         # check the stream is fixed-point
         # TODO
         # get width of fixed point data
         data_width = sum(stream[0].format)
+        print ("Fixed point stream data width:",data_width)
         # check theres enough ports for the streams
         if streams > ports*(port_width/data_width):
             raise ValueError
@@ -277,10 +319,12 @@ class ONNXData:
         stream = self._convert_fixed_port_stream(featuremap.reshape(-1))
         # binary format
         if to_bin:
-            self._fixed_point_stream_to_bin(stream, output_path, streams=parallel_streams)
+            print("WARNING: port width set to 16 bits for bin")
+            self._fixed_point_stream_to_bin(stream, output_path, streams=parallel_streams, port_width=16)
         # dat format
         if to_dat:
-            self._fixed_point_stream_to_dat(stream, output_path, streams=parallel_streams)
+            print("WARNING: port width set to 16 bits for dat")
+            self._fixed_point_stream_to_dat(stream, output_path, streams=parallel_streams, port_width=16)
         # csv format
         if to_csv:
             pass
@@ -576,3 +620,6 @@ class ONNXData:
                                                                 to_bin=to_bin,to_csv=to_csv,
                                                                 to_dat=to_dat)
         return biases
+
+if __name__ == "__main__":
+    bin_to_fixed_point()
