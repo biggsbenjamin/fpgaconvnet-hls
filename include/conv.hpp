@@ -28,7 +28,7 @@ void conv_intr(
 )
 {
 
-//#pragma HLS INLINE OFF
+#pragma HLS INLINE OFF
 
     const unsigned int batch_size    = BATCH_SIZE;
     const unsigned int rows          = ROWS;
@@ -183,7 +183,7 @@ void conv_acc(
 )
 {
 
-//    #pragma HLS INLINE OFF
+    #pragma HLS INLINE OFF
 
     #pragma HLS STREAM variable=acc_stream
     #pragma HLS ARRAY_PARTITION variable=acc_stream complete dim=0
@@ -237,7 +237,7 @@ void conv(
 )
 {
 
-//#pragma HLS INLINE OFF
+#pragma HLS INLINE OFF
 #pragma HLS DATAFLOW
 
 //#pragma HLS stable variable=weights
@@ -323,7 +323,7 @@ void conv(
 )
 {
 
-//#pragma HLS INLINE OFF
+#pragma HLS INLINE OFF
 
     const unsigned batch_size   = BATCH_SIZE;
     const unsigned rows         = ROWS;

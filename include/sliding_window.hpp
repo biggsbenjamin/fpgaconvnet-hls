@@ -230,7 +230,7 @@ void sliding_window_line_shift(
 )
 {
 
-//#pragma HLS INLINE OFF
+#pragma HLS INLINE OFF
 
     const unsigned int batch_size    = BATCH_SIZE;
     const unsigned int rows          = ROWS;
@@ -376,7 +376,7 @@ void sliding_window_out(
 )
 {
 
-//#pragma HLS INLINE OFF
+#pragma HLS INLINE OFF
 
     #pragma HLS STREAM variable=frame_buffer
     #pragma HLS ARRAY_PARTITION variable=frame_buffer complete dim=0
@@ -573,7 +573,7 @@ void sliding_window(
 )
 {
 
-//#pragma HLS INLINE OFF
+#pragma HLS INLINE OFF
 #pragma HLS DATAFLOW
 
     #pragma HLS STREAM variable=in
@@ -641,7 +641,7 @@ void sliding_window(
 )
 {
 
-//#pragma HLS INLINE OFF
+#pragma HLS INLINE OFF
 #pragma HLS DATAFLOW
 
     #pragma HLS STREAM variable=in

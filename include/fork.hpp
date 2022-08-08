@@ -20,7 +20,7 @@ void fork(
 )
 {
 
-//#pragma HLS INLINE OFF
+#pragma HLS INLINE OFF
 
     const unsigned int batch_size   = BATCH_SIZE;
     const unsigned int rows         = ROWS;
@@ -70,7 +70,7 @@ void fork(
 )
 {
 
-//#pragma HLS INLINE OFF
+#pragma HLS INLINE OFF
 
     const unsigned int batch_size    = BATCH_SIZE;
     const unsigned int rows          = ROWS;
@@ -124,7 +124,7 @@ void fork(
 )
 {
 
-//#pragma HLS INLINE OFF 
+#pragma HLS INLINE OFF 
 
     const unsigned int batch_size   = BATCH_SIZE;
     const unsigned int rows         = ROWS;
