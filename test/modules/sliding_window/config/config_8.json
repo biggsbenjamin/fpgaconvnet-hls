@@ -2,7 +2,7 @@
     "batch_size" : 1,
     "rows" : 28,
     "cols" : 28,
-    "channels" : 1,
+    "channels" : 3,
     "pad_top" : 4,
     "pad_right" : 4,
     "pad_bottom" : 4,
