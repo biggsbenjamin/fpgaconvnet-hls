@@ -1,0 +1,209 @@
+{
+  "partition": [
+    {
+      "id": 0,
+      "ports": 1,
+      "batch_size": 1,
+      "input_node": "lenet_in",
+      "output_node": "lenet_out",
+      "weights_reloading_factor": 1,
+      "weights_reloading_layer": "None",
+      "layers": [
+        {
+          "name": "CONVOLUTION2",
+          "streams_in": [
+            {
+              "name": "in",
+              "coarse": 1,
+              "ctrl": false,
+              "split": false
+            }
+          ],
+          "streams_out": [
+            {
+              "name": "CONVOLUTION2_POOLING3",
+              "coarse": 5,
+              "ctrl": false,
+              "split": false
+            }
+          ],
+          "parameters": {
+            "buffer_depth": 0,
+            "batch_size": 1,
+            "rows_in": 28,
+            "cols_in": 28,
+            "channels_in": 1,
+            "rows_out": 32,
+            "cols_out": 32,
+            "channels_out": 5,
+            "coarse_in": 1,
+            "coarse_out": 5,
+            "coarse_group": 1,
+            "groups": 1,
+            "fine": 25,
+            "filters": 5,
+            "pad_top": 4,
+            "pad_right": 4,
+            "pad_left": 4,
+            "pad_bottom": 4,
+            "kernel_size": [
+              5,
+              5
+            ],
+            "stride": [
+              1,
+              1
+            ],
+            "data_width": 16,
+            "weight_width": 16,
+            "acc_width": 16,
+            "input_width": 16,
+            "output_width": 16,
+            "has_bias": 0,
+            "biases_width": 16
+          },
+          "node_in": [
+            "CONVOLUTION2"
+          ],
+          "node_out": [
+            "POOLING3"
+          ],
+          "type": "CONVOLUTION",
+          "weights_path": "testnet.0.weight",
+          "bias_path": ""
+        },
+        {
+          "name": "POOLING3",
+          "streams_in": [
+            {
+              "name": "CONVOLUTION2_POOLING3",
+              "coarse": 5,
+              "ctrl": false,
+              "split": false
+            }
+          ],
+          "streams_out": [
+            {
+              "name": "POOLING3_lenet_out",
+              "coarse": 5,
+              "ctrl": false,
+              "split": false
+            }
+          ],
+          "parameters": {
+            "buffer_depth": 0,
+            "batch_size": 1,
+            "rows_in": 32,
+            "cols_in": 32,
+            "channels_in": 5,
+            "rows_out": 16,
+            "cols_out": 16,
+            "channels_out": 5,
+            "coarse_in": 5,
+            "coarse_out": 5,
+            "coarse": 5,
+            "pad_top": 0,
+            "pad_right": 0,
+            "pad_left": 0,
+            "pad_bottom": 0,
+            "kernel_size": [
+              2,
+              2
+            ],
+            "stride": [
+              2,
+              2
+            ],
+            "data_width": 16
+          },
+          "node_in": [
+            "CONVOLUTION2"
+          ],
+          "node_out": [
+            "lenet_out"
+          ],
+          "type": "POOLING"
+        },
+        {
+          "name": "lenet_out",
+          "streams_in": [
+            {
+              "name": "POOLING3_lenet_out",
+              "coarse": 5,
+              "ctrl": false,
+              "split": false
+            }
+          ],
+          "streams_out": [
+            {
+              "name": "lenet_out_squeeze_lenet_out",
+              "coarse": 5,
+              "ctrl": false,
+              "split": false
+            }
+          ],
+          "parameters": {
+            "buffer_depth": 0,
+            "batch_size": 1,
+            "rows_in": 16,
+            "cols_in": 16,
+            "channels_in": 5,
+            "rows_out": 16,
+            "cols_out": 16,
+            "channels_out": 5,
+            "coarse_in": 5,
+            "coarse_out": 5,
+            "coarse": 5,
+            "data_width": 16
+          },
+          "node_in": [
+            "POOLING3"
+          ],
+          "node_out": [
+            "squeeze_lenet_out"
+          ],
+          "type": "RELU"
+        },
+        {
+          "name": "squeeze_lenet_out",
+          "streams_in": [
+            {
+              "name": "lenet_out_squeeze_lenet_out",
+              "coarse": 5,
+              "ctrl": false,
+              "split": false
+            }
+          ],
+          "streams_out": [
+            {
+              "name": "out",
+              "coarse": 1,
+              "ctrl": false,
+              "split": false
+            }
+          ],
+          "parameters": {
+            "buffer_depth": 0,
+            "batch_size": 1,
+            "rows_in": 16,
+            "cols_in": 16,
+            "channels_in": 5,
+            "rows_out": 16,
+            "cols_out": 16,
+            "channels_out": 5,
+            "coarse_in": 5,
+            "coarse_out": 1,
+            "data_width": 16
+          },
+          "node_in": [
+            "lenet_out"
+          ],
+          "node_out": [
+            "squeeze_lenet_out"
+          ],
+          "type": "SQUEEZE"
+        }
+      ]
+    }
+  ]
+}
