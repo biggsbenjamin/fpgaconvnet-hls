@@ -1,11 +1,13 @@
-network_header_template = """#ifndef {NAME}_TOP_HPP_
+network_header_template = """//auto generated file
+#ifndef {NAME}_TOP_HPP_
 #define {NAME}_TOP_HPP_
 
 #include "common.hpp"
+//FIXME only reason layers are included is because of in/out types, CHANGE THIS
 {include}
 #include "mem_read.hpp"
 #include "mem_write.hpp"
-#include "wr.hpp"
+//#include "wr.hpp"
 
 #define {NAME}_BATCH_SIZE   {batch_size}
 
@@ -19,19 +21,19 @@ network_header_template = """#ifndef {NAME}_TOP_HPP_
 
 #define {NAME}_STREAMS_IN   {streams_in}
 #define {NAME}_STREAMS_OUT  {streams_out}
-#define {NAME}_STREAMS_WR   1
+//#define {NAME}_STREAMS_WR   1
 
 #define {NAME}_PORTS        {ports}
 #define {NAME}_PORTS_IN     {ports}  //{NAME}_PORTS
 #define {NAME}_PORTS_OUT    {ports}  //{NAME}_PORTS
-#define {NAME}_PORTS_WR     1 //{NAME}_PORTS
+//#define {NAME}_PORTS_WR     1 //{NAME}_PORTS
 
-#define {NAME}_WEIGHTS_RELOADING_FACTOR {wr_factor}
-#define {NAME}_WEIGHTS_RELOADING_LAYER  {wr_layer}
-#define {NAME}_WEIGHTS_RELOADING_FLAG   {wr_flag}
+//#define {NAME}_WEIGHTS_RELOADING_FACTOR {wr_factor}
+//#define {NAME}_WEIGHTS_RELOADING_LAYER  {wr_layer}
+//#define {NAME}_WEIGHTS_RELOADING_FLAG   {wr_flag}
 
 #define {NAME}_SIZE_IN  {NAME}_BATCH_SIZE*{NAME}_ROWS_IN*{NAME}_COLS_IN*DIVIDE({NAME}_CHANNELS_IN,{NAME}_STREAMS_IN)
-#define {NAME}_SIZE_OUT {NAME}_BATCH_SIZE*{NAME}_ROWS_OUT*{NAME}_COLS_OUT*DIVIDE({NAME}_CHANNELS_OUT,{NAME}_STREAMS_OUT)*{NAME}_WEIGHTS_RELOADING_FACTOR
+#define {NAME}_SIZE_OUT {NAME}_BATCH_SIZE*{NAME}_ROWS_OUT*{NAME}_COLS_OUT*DIVIDE({NAME}_CHANNELS_OUT,{NAME}_STREAMS_OUT) //*{NAME}_WEIGHTS_RELOADING_FACTOR
 
 typedef {input_layer}_input_t   {name}_input_t;
 typedef {output_layer}_output_t {name}_output_t;
@@ -39,6 +41,7 @@ typedef {output_layer}_output_t {name}_output_t;
 //no weights reloading
 //no process but adding in dma translation
 
+//FIXME replace in/out streams with 16 + 8bit struct for bs
 void {name}_top(
     axis_hls_t &dma_in,
     axis_hls_t &dma_out,
@@ -49,10 +52,11 @@ void {name}_top(
 #endif
 """
 
-network_src_template = """#include "{name}_top.hpp"
+network_src_template = """//auto generated file
+#include "{name}_top.hpp"
 
-//NOTE weights and biases contained within layers - no wr
-//process
+//NOTE weights and biases contained within layers
+//no wr process
 
 void axis_convert_in(
     axis_hls_t &dma_in,
@@ -79,7 +83,7 @@ void axis_convert_in(
         data = cache.data;
 
         //write out simple hls stream of ap_fixed type
-        in[0].write(data); //hoping 16 bits just matches up
+        in[0].write(data); //16 bits maps to 16 bits
     }}
 
 }}
@@ -91,6 +95,8 @@ void axis_convert_out(
 {{
 
 #pragma HLS DATAFLOW
+//TODO add inline off pragma
+
 //in out array partitioning not required
 
     const unsigned size_in  = {NAME}_SIZE_IN ;

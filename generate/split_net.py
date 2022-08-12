@@ -21,7 +21,7 @@ from generate.layers.squeeze        import gen_squeeze_layer
 from generate.layers.split          import gen_split_layer
 from generate.layers.buffer         import gen_buffer_layer
 from generate.layers.softmax_cmp    import gen_softmax_cmp_layer
-#from generate.layers.exit_select    import gen_exit_select # TODO
+#from generate.layers.exit_merge    import gen_exit_merge # TODO
 
 import fpgaconvnet_optimiser.tools.graphs as graphs
 import fpgaconvnet_optimiser.proto.fpgaconvnet_pb2 as fpgaconvnet_pb2
@@ -93,13 +93,14 @@ def gen_network(name,partition,output_path):
     wr_layer = partition.weights_reloading_layer
 
     wr_layer_identifier = "" #NOTE might break
+    #NOTE no weights reloading for the split net, for now...
     if wr_layer != "None":
         layer_object = get_layer_from_partition(partition, wr_layer)
         wr_layer_identifier = gen_layer_name(layer_object) #_fix_identifier(wr_layer).replace("/", "_")
 
 
+    p_id = int(partition.id)
     batch_size = partition.batch_size
-
     input_node  = partition.input_node
     output_node = partition.output_node
 
@@ -136,7 +137,6 @@ def gen_network(name,partition,output_path):
 
     # remove duplicates
     # streams = list(set(streams))
-
     print('streams',streams)
     print('ctrl',ctrl_streams)
     print('split',split_streams)
@@ -186,23 +186,20 @@ def gen_network(name,partition,output_path):
 
     # generate hardware
     for layer_idx,layer in enumerate(partition.layers):
-        print("Layer index:", layer_idx)
+        #print("Layer index:", layer_idx)
         # get parameters of layer
         parameters = MessageToDict(layer.parameters, preserving_proto_field_name=True)
         # init function arguments for this layer
         fn_args=[]
-        layer_name = gen_layer_name(layer)
         # init hardware generation args
         layer_name = gen_layer_name(layer)
 
-        #NOTE BREAKING CHANGE TO EVERYTHING ELSE
-        layer_output_path=f'layer_{layer_idx}'
+        #NOTE layer_name and layer.name should be the same for my work
+        assert(layer.name == layer_name, "ERROR: layer name difference")
+        layer_output_path=f'partition_{p_id}/{layer.name}'
         args = [
             layer_name,
             parameters,
-            #NOTE BREAKING CHANGE TO EVERYTHING ELSE
-            #os.path.join(output_path,'src',f'{layer_name}.cpp'),
-            #os.path.join(output_path,'include',f'{layer_name}.hpp'),
             os.path.join(layer_output_path,'src',f'{layer_name}.cpp'),
             os.path.join(layer_output_path,'include',f'{layer_name}.hpp'),
             False
@@ -218,7 +215,7 @@ def gen_network(name,partition,output_path):
                     fn_args.append(f"{layer_name}_biases")
             # generate hardware
             if layer.name == wr_layer:
-                print("WR ADDED")
+                print("WARNING: WR ADDED")
                 args.append(partition.weights_reloading_factor)
             gen_convolution_layer(*args)
             # create weights
@@ -328,24 +325,26 @@ def gen_network(name,partition,output_path):
     out_net_stream=out_net_stream,
     include     =include
     )
+
     # SRC
     network_src = network_src_template.format(
     name        =name,
     NAME        =name.upper(),
-    wr_layer    =wr_layer_identifier,
-    weights     =weights,
-    weights_init=weights_init,
-    biases      =biases,
-    biases_init =biases_init,
+    #wr_layer    =wr_layer_identifier,
+    #weights     =weights,
+    #weights_init=weights_init,
+    #biases      =biases,
+    #biases_init =biases_init,
     streams_init=streams_init,
     in_net_stream=in_net_stream,
     out_net_stream=out_net_stream,
-    layers      =layers
+    #layers      =layers
     )
 
-    with open(os.path.join(output_path,f'include/{name}_top.hpp'),'w') as f:
+    #name is network name
+    with open(os.path.join(output_path,f'{name}_top/include/{name}_top.hpp'),'w') as f:
         f.write(network_header)
-    with open(os.path.join(output_path,f'src/{name}_top.cpp'),'w') as f:
+    with open(os.path.join(output_path,f'{name}_top/src/{name}_top.cpp'),'w') as f:
         f.write(network_src)
 
 if __name__=="__main__":
