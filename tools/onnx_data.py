@@ -23,7 +23,10 @@ from fpgaconvnet_optimiser.tools.layer_enum import LAYER_TYPE
 import fpgaconvnet_optimiser.tools.onnx_helper as onnx_helper
 import fpgaconvnet_optimiser.proto.fpgaconvnet_pb2 as fpgaconvnet_pb2
 
-from tools.array_init import array_init
+try:
+    from tools.array_init import array_init
+except ModuleNotFoundError:
+    from array_init import array_init
 
 SCALE=256
 

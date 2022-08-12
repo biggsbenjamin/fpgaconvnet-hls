@@ -1,21 +1,11 @@
 import sys
-#import tempfile
 import parser
 import argparse
-#import json
 import numpy as np
-#import random
 import os
-#import onnx
-#from PIL import Image
-#from google.protobuf import json_format
+from tools.onnx_data import ONNXData, validate_output
 
 sys.path.append(os.environ.get("FPGACONVNET_HLS"))
-
-#import fpgaconvnet_optimiser.proto.fpgaconvnet_pb2
-#import fpgaconvnet_optimiser.tools.onnx_helper as onnx_helper
-
-from tools.onnx_data import ONNXData, validate_output
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Script for comparing sample binary files")

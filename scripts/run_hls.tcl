@@ -72,7 +72,7 @@ if          { $module_flag == 1     } {
     add_files -tb tb/${name}_layer_tb.cpp   -cflags "-Wtautological-compare -Wno-parentheses-equality -std=c++11 -I../../../include -I./tb -I./include"
 
 } elseif    { $split_net_flag == 1      } {
-    add_files [ glob src/*.cpp ]            -cflags "-Wtautological-compare -Wno-parentheses-equality -std=c++11 -I${fpgaconvnet_root}/include -I./tb -I./include -I../partition_0/data"
+    add_files [ glob src/*.cpp ]            -cflags "-Wtautological-compare -Wno-parentheses-equality -std=c++11 -I${fpgaconvnet_root}/include -I./tb -I./include -I../data -I../tmp_inc"
     #add_files -tb tb/${name}_layer_tb.cpp   -cflags "-Wtautological-compare -Wno-parentheses-equality -std=c++11 -I../../../include -I./tb -I./include"
 
 } elseif    { $network_flag == 1    } {
