@@ -72,7 +72,7 @@ void axis_convert_in(
 
     axis_t cache;
     //FIXME auto match the input data stream or just use axiu
-    CONVOLUTION2_input_t data;
+    {in_type} data;
 
     for (unsigned int in_idx=0;in_idx<size_in;in_idx++) {{
 #pragma HLS PIPELINE II=1
@@ -103,7 +103,7 @@ void axis_convert_out(
     const unsigned size_out = {NAME}_SIZE_OUT;
 
     //FIXME auto match the output data stream or just use axiu
-    squeeze_lenet_out_output_t cache;
+    {out_type} cache;
     axis_t out_pkt;
 
     //NOTE looping for one extra packet because of tlast staying high

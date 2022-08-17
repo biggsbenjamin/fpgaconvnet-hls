@@ -3,9 +3,14 @@ import parser
 import argparse
 import numpy as np
 import os
-from tools.onnx_data import ONNXData, validate_output
 
 sys.path.append(os.environ.get("FPGACONVNET_HLS"))
+
+try:
+    from tools.onnx_data import ONNXData, validate_output
+except ModuleNotFoundError:
+    from onnx_data import ONNXData, validate_output
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Script for comparing sample binary files")

@@ -153,10 +153,13 @@ def gen_network(name,partition,output_path):
     in_net_stream = "stream_t({stream_type}) {stream_name}[{coarse}]".format(
             stream_name='in',
             coarse=streams['in'][0],stream_type=streams['in'][1])
-
     out_net_stream = "stream_t({stream_type}) {stream_name}[{coarse}]".format(
             stream_name='out',
             coarse=streams['out'][0],stream_type=streams['out'][1])
+
+    # input and output types for the top connecty layer
+    in_type = '{}'.format(streams['in'][1])
+    out_type = '{}'.format(streams['out'][1])
 
     for key in split_streams.keys():
         streams_init +=  """
@@ -252,7 +255,9 @@ def gen_network(name,partition,output_path):
                     fn_args.append(f"{layer_name}_biases")
             # generate hardware
             if layer.name == wr_layer:
+                print("WARNING: WR ADDED")
                 args.append(partition.weights_reloading_factor)
+            print("Printing inrpr args:",args)
             gen_inner_product_layer(*args)
             # create weights
             weights += str(generate_weight_def(
@@ -338,6 +343,8 @@ def gen_network(name,partition,output_path):
     streams_init=streams_init,
     in_net_stream=in_net_stream,
     out_net_stream=out_net_stream,
+    in_type=in_type,
+    out_type=out_type
     #layers      =layers
     )
 

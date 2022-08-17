@@ -84,11 +84,19 @@ def validate_output(args):
     if len(g_dat) != len(a_dat):
         raise ValueError(f"Data length differs! Expected: {len(g_dat)} Actual: {len(a_dat)}")
 
+    max_err=0.0
     for idx,(g,a) in enumerate(zip(g_dat, a_dat)):
+        #print(idx," : ",g," : ",a)
         cmpr = (g-a) if (g > a) else (a-g)
+        max_err = max(max_err,cmpr)
         if cmpr > errtol.bits_to_signed():
             raise ValueError(f"Difference greater than tolerance.\n \
                     Values g:{g} a:{a} @ index:{idx}")
+
+    err_p = (max_err)/errtol.bits_to_signed()
+    raw_err_mx = err_p*args.error_tolerance
+    print("Made it to end with no errors exceeding tolerance! YAY")
+    print("(Maximum error was ~{:.2f}% of tolerance, ~{:.5f})".format(100*err_p, raw_err_mx))
 
 class ONNXData:
     def __init__(self, partition, model_path=None):

@@ -56,6 +56,12 @@ def get_output(args,prt):
             return
     raise NameError("ERROR: no outputs or something?")
 
+def gen_host_code(args):
+    # Returns some sort of automated generation of host code
+    # (required manual integration with sdk)
+
+    raise NotImplementedError
+
 if __name__ == "__main__":
     #NOTE arguments returned are delineated by spaces, newline
 
@@ -84,6 +90,9 @@ if __name__ == "__main__":
     get_output_p = subparsers.add_parser("get_output",
             help="Get the output layer name")
 
+    gen_hc_p = subparsers.add_parser("gen_host_code",
+            help="Generate the host code for the network")
+
     # parse arguments
     args = parser.parse_args()
 
@@ -101,6 +110,8 @@ if __name__ == "__main__":
         get_input(args, partitions.partition[args.partition_index])
     elif args.helper_func == 'get_output':
         get_output(args, partitions.partition[args.partition_index])
+    elif args.helper_func == 'gen_host_code':
+        gen_host_code(args)
     else:
         raise NotImplementedError(
                 f"ERROR: {args.helper_func} does not exist")
