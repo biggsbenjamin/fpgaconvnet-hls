@@ -344,6 +344,18 @@ proc generate_split_hardware { BOARD PORT_WIDTH FREQ } {
     puts "FINISHED BD GENERATION!"
 }
 
+proc version_checker {verlim} {
+    # xilinx hates backwards compatibility 
+    # who knows if this will help
+    #
+    # if the version specified is later than current, return true
+
+    # get version & remove leading v
+    set curr_ver [string trim [lindex [version] 1] "v"]
+    set res [expr $curr_ver > $verlim]
+    return $res
+}
+
 proc impl_split_hardware {pth proj} {
     # generate outputs, run synth, impl, bitstream gen
     # overlapping names means OOC per IP required
@@ -358,6 +370,11 @@ proc impl_split_hardware {pth proj} {
     
     #RUN SYNTH AND IMPL - without all the reseting stuff, defaults to .xci repr for imported IP
     launch_runs impl_1 -to_step write_bitstream -jobs 16
+    if {[version_checker 2021.2]} {
+        wait_on_runs impl_1
+    } else {
+        wait_on_run impl_1
+    }
     
     # EXPORTING HW + bitstream
     file mkdir $pth/$proj/project_1/project_1.sdk
