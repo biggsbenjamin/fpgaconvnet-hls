@@ -7,8 +7,9 @@ int main()
     std::string input_path  = std::string(DATA_DIR)+"/input.dat";
     std::string output_path = std::string(DATA_DIR)+"/output.dat";
 
-    const int rows_out = 1;
-    const int cols_out = 1;
+    //NOTE should both be 1 anyway
+    const int rows_out = INNER_PRODUCT_LAYER_ROWS_OUT;
+    const int cols_out = INNER_PRODUCT_LAYER_COLS_OUT;
 
     stream_t(inner_product_layer_input_t) in[INNER_PRODUCT_LAYER_COARSE_IN];
     stream_t(inner_product_layer_output_t) out[INNER_PRODUCT_LAYER_COARSE_OUT];
