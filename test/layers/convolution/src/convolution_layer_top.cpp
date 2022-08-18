@@ -1,6 +1,10 @@
 #include "convolution_layer_tb.hpp"
 #include "convolution_layer.hpp"
 
+/////////////////////
+// WEIGHTS AND BIASES
+/////////////////////
+
 const static convolution_layer_weight_t weights[CONVOLUTION_LAYER_COARSE_IN][CONVOLUTION_LAYER_COARSE_OUT][DIVIDE(CONVOLUTION_LAYER_CHANNELS,CONVOLUTION_LAYER_COARSE_IN)*DIVIDE(CONVOLUTION_LAYER_FILTERS,CONVOLUTION_LAYER_COARSE_OUT*CONVOLUTION_LAYER_GROUPS)][CONVOLUTION_LAYER_KERNEL_SIZE_X][CONVOLUTION_LAYER_KERNEL_SIZE_Y] = {
         #include "weights.csv"
 };
@@ -10,6 +14,10 @@ const static convolution_layer_biases_t biases[CONVOLUTION_LAYER_COARSE_OUT][DIV
         #include "biases.csv"
 };
 #endif
+
+/////////////////////
+// TOP LEVEL FUNCTION
+/////////////////////
 
 void convolution_layer_top(
     stream_t(convolution_layer_input_t) in[CONVOLUTION_LAYER_COARSE_IN],
@@ -24,8 +32,6 @@ void convolution_layer_top(
 #pragma HLS INTERFACE s_axilite port=return bundle=ctrl
 #pragma HLS INTERFACE axis port=in
 #pragma HLS INTERFACE axis port=out
-
-
 
 #pragma HLS ARRAY_PARTITION variable=weights complete dim=1
 #pragma HLS ARRAY_PARTITION variable=weights complete dim=2

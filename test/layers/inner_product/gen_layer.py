@@ -46,10 +46,11 @@ class InnerProductLayerTB(Layer):
         # weights
         weights = self.gen_data([
             self.param['filters'],
-            self.param['cols_in']*self.param['rows_in']*self.param['channels_in']
-        ],data_range=[-1,1]) #more realistic to have +ve and -ve weights
+            self.param['rows_in']*self.param['cols_in']*self.param['channels_in']
+        ],
+        data_range=[-1,1]) #more realistic to have +ve and -ve weights
         # might also help truncation issue for large layers
-        biases     = np.zeros(self.param['filters'])
+
         # biases
         biases = np.zeros(self.param['filters'])
         if self.param['has_bias'] == 1:
@@ -61,8 +62,9 @@ class InnerProductLayerTB(Layer):
         data_out = layer.functional_model(copy.copy(data_in),weights,biases)[0]
         data_out = np.moveaxis(data_out,0,-1)
 
-        # reshape weights
-        weights = np.reshape(weights,(self.param['filters'],
+        # reshape weights - I guess to match conv weight format?
+        weights = np.reshape(weights,
+                (self.param['filters'],
             self.param['channels_in'],
             self.param['rows_in'],
             self.param['cols_in'],
