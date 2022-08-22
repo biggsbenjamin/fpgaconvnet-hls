@@ -205,16 +205,25 @@ proc generate_split_hardware { BOARD PORT_WIDTH FREQ } {
     incr ip_num
     puts "Number of IPs: $ip_num"
     
-    # create interrupt concat instance
+    # create main concat instance
     set irq_c [create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat:2.1 irq_c]
-    # add enough ports
-    set_property -dict [list CONFIG.NUM_PORTS [expr $ip_num + 2]] $irq_c
-    # ip_num + 2(for dma)
+    set_property -dict [list CONFIG.NUM_PORTS {4} ] $irq_c
     connect_bd_net [get_bd_pins dma/mm2s_introut] [get_bd_pins irq_c/In0]
     connect_bd_net [get_bd_pins dma/s2mm_introut] [get_bd_pins irq_c/In1]
     connect_bd_net [get_bd_pins irq_c/dout] [get_bd_pins ps/IRQ_F2P]
     
     set ip_cell_list { }
+    # create network layer only concat instance for interrupts (minus top level)
+    set intr_cc [create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat:2.1 intr_cc]
+    lappend ip_cell_list $intr_cc
+    set_property -dict [list CONFIG.NUM_PORTS [ expr $ip_num - 1 ] ] $intr_cc
+    # create reduction AND gate
+    set intr_red [create_bd_cell -type ip -vlnv xilinx.com:ip:util_reduced_logic:2.0 intr_red]
+    lappend ip_cell_list $intr_red
+    set_property -dict [list CONFIG.C_SIZE [ expr $ip_num - 1 ] ] $intr_red
+    connect_bd_net [get_bd_pins intr_cc/dout] [get_bd_pins intr_red/Op1]
+    connect_bd_net [get_bd_pins intr_red/Res] [get_bd_pins irq_c/In3]
+
     # create axi_lite control instance
     set ctrl_ic [create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect:2.1 ctrl_ic]
     lappend ip_cell_list $ctrl_ic
@@ -267,7 +276,7 @@ proc generate_split_hardware { BOARD PORT_WIDTH FREQ } {
         connect_bd_net -net pl_clk [get_bd_pins ${lyr}/ap_clk] ; # connect clock
         connect_bd_net -net peripheral_reset [get_bd_pins ${lyr}/ap_rst_n] ; # connect reset
         # connect component interrupts
-        connect_bd_net [get_bd_pins ${lyr}/interrupt] [get_bd_pins irq_c/In[expr $ivar + 3]]
+        connect_bd_net [get_bd_pins ${lyr}/interrupt] [get_bd_pins intr_cc/In${ivar}]
         # connect axi lite ports to ic
         set ctrl_m [format "%02d" [expr $ivar + 2]] ; # generate leading zero
         connect_bd_intf_net [get_bd_intf_pins ctrl_ic/M${ctrl_m}_AXI] \
