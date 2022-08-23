@@ -245,7 +245,6 @@ class ONNXData:
         # TODO
         # get width of fixed point data
         data_width = sum(stream[0].format)
-        print ("Fixed point stream data width:",data_width)
         # check theres enough ports for the streams
         if streams > ports*(port_width/data_width):
             raise ValueError
