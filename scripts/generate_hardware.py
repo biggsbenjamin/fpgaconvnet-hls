@@ -56,7 +56,7 @@ if __name__ == "__main__":
                                         )
     else:
         if args.split_net:
-            print("Generating split hardware")
+            print("Generating split hardware template code.")
             generate.split_net.gen_network( args.name,
                                             partitions.partition[args.partition_index],
                                             f"partition_{args.partition_index}"

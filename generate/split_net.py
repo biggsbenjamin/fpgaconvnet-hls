@@ -198,7 +198,7 @@ def gen_network(name,partition,output_path):
         layer_name = gen_layer_name(layer)
 
         #NOTE layer_name and layer.name should be the same for my work
-        assert(layer.name == layer_name, "ERROR: layer name difference")
+        assert layer.name == layer_name, "ERROR: layer name difference"
         layer_output_path=f'partition_{p_id}/{layer.name}'
         args = [
             layer_name,
@@ -257,7 +257,6 @@ def gen_network(name,partition,output_path):
             if layer.name == wr_layer:
                 print("WARNING: WR ADDED")
                 args.append(partition.weights_reloading_factor)
-            print("Printing inrpr args:",args)
             gen_inner_product_layer(*args)
             # create weights
             weights += str(generate_weight_def(
