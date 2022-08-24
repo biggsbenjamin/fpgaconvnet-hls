@@ -247,6 +247,7 @@ class ONNXData:
         data_width = sum(stream[0].format)
         # check theres enough ports for the streams
         if streams > ports*(port_width/data_width):
+            print(f"streams:{streams} ports:{ports} pw:{port_width} dw:{data_width}")
             raise ValueError
         # get port data type
         if   port_width == 8:

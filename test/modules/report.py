@@ -72,6 +72,7 @@ if __name__ == "__main__":
             pass
         try:
             results["latency"]["sim"] = module_test_log.get_sim_latency()
+            print("Got sim latency:",results["latency"]["sim"])
         except AssertionError:
             pass
         try:

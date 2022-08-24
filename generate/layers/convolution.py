@@ -92,6 +92,9 @@ typedef ap_fixed<{biases_width},{biases_int_width},AP_RND>  {name}_biases_t;
 #define {NAME}_CONV_KERNEL_SIZE_Y {kernel_size_y}
 #define {NAME}_CONV_FINE          {fine}
 #define {NAME}_CONV_INTERVAL      {interval}
+// Vivado template work around
+#define {NAME}_CONV_CHANNELS_PER_GROUP  {channels_per_module_per_group}
+#define {NAME}_CONV_FILTERS_PER_GROUP   {filters_per_module_per_group}
 
 // ACCUM
 #define {NAME}_ACCUM_BATCH_SIZE         {batch_size}
@@ -100,6 +103,9 @@ typedef ap_fixed<{biases_width},{biases_int_width},AP_RND>  {name}_biases_t;
 #define {NAME}_ACCUM_GROUPS             {groups_per_module}
 #define {NAME}_ACCUM_CHANNELS           {channels_per_module}
 #define {NAME}_ACCUM_FILTERS            {filters_per_module}
+// Vivado template workaround
+#define {NAME}_ACCUM_CHANNELS_PER_GROUP  {channels_per_module_per_group}
+#define {NAME}_ACCUM_FILTERS_PER_GROUP   {filters_per_module_per_group}
 
 // GLUE
 #define {NAME}_GLUE_BATCH_SIZE   {batch_size}
@@ -315,6 +321,7 @@ def gen_convolution_layer(name,param,src_path,header_path,topless=True,wr_factor
         """.format(NAME=name.upper(),name=name)
         conv = generate.modules.conv.gen_conv_module(
             name+"_conv",
+            param, #NOTE PROVIDE PARAMS FOR LESS MESSY TEMPLATING
             inputs['conv'],
             "weights[i][j]",
             outputs['conv'],
@@ -335,6 +342,7 @@ def gen_convolution_layer(name,param,src_path,header_path,topless=True,wr_factor
         """.format(NAME=name.upper(),name=name)
         accum = generate.modules.accum.gen_accum_module(
             name+"_accum",
+            param,
             inputs['accum'],
             outputs['accum'],
             accum_t=f"{name}_acc_t",
@@ -400,8 +408,10 @@ def gen_convolution_layer(name,param,src_path,header_path,topless=True,wr_factor
         cols                =param['cols_in'],
         channels            =param['channels_in'],
         channels_per_module =param['channels_in']//(param['coarse_in']*param['coarse_group']),
+        channels_per_module_per_group =param['channels_in']//(param['coarse_in']*param['coarse_group']*param["groups"]),
         filters             =param['filters'],
         filters_per_module  =param['filters']//(param['coarse_out']*param['coarse_group']),
+        filters_per_module_per_group =param['filters']//(param['coarse_out']*param['coarse_group']*param["groups"]),
         groups              =param['groups'],
         groups_per_module   =param['groups']//param['coarse_group'],
         coarse_in           =param['coarse_in'],
