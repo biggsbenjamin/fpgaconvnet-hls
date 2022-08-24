@@ -1,0 +1,13 @@
+{
+    "batch_size" : 1,
+    "rows" : 16,
+    "cols" : 16,
+    "channels" : 5,
+    "pad_top" : 4,
+    "pad_right" : 4,
+    "pad_bottom" : 4,
+    "pad_left" : 4,
+    "stride" : [1,1],
+    "kernel_size" : [5,5],
+    "description" : "brn example"
+}

@@ -1,0 +1,12 @@
+{
+    "rows": 20,
+    "cols": 20,
+    "channels": 5,
+    "filters": 1,
+    "groups": 1,
+    "batch_size": 1,
+    "data_width": 16,
+    "data_int_width": 8,
+    "description": "challenging for viv hls to get II=1"
+}
+

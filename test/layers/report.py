@@ -65,10 +65,12 @@ if __name__ == "__main__":
         try:
             results["latency"]["synth"] = layer_test_log.get_synth_latency()
             results["resources"]["synth"] = layer_test_log.get_synth_resources()
+            print("Got synth latency:",results["latency"]["synth"])
         except AssertionError:
             pass
         try:
             results["latency"]["sim"] = layer_test_log.get_sim_latency()
+            print("Got sim latency:",results["latency"]["sim"])
         except AssertionError:
             pass
         try:
