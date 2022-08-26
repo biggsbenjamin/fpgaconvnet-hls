@@ -207,7 +207,7 @@ proc generate_split_hardware { BOARD PORT_WIDTH FREQ } {
     
     # create main concat instance
     set irq_c [create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat:2.1 irq_c]
-    set_property -dict [list CONFIG.NUM_PORTS {4} ] $irq_c
+    set_property -dict [list CONFIG.NUM_PORTS {3} ] $irq_c
     connect_bd_net [get_bd_pins dma/mm2s_introut] [get_bd_pins irq_c/In0]
     connect_bd_net [get_bd_pins dma/s2mm_introut] [get_bd_pins irq_c/In1]
     connect_bd_net [get_bd_pins irq_c/dout] [get_bd_pins ps/IRQ_F2P]
@@ -222,7 +222,9 @@ proc generate_split_hardware { BOARD PORT_WIDTH FREQ } {
     lappend ip_cell_list $intr_red
     set_property -dict [list CONFIG.C_SIZE [ expr $ip_num - 1 ] ] $intr_red
     connect_bd_net [get_bd_pins intr_cc/dout] [get_bd_pins intr_red/Op1]
-    connect_bd_net [get_bd_pins intr_red/Res] [get_bd_pins irq_c/In3]
+    # TODO sdk breaks when reduce output concatenated with other interrupts...
+    # leaving unconnected
+    #connect_bd_net [get_bd_pins intr_red/Res] [get_bd_pins irq_c/In3]
 
     # create axi_lite control instance
     set ctrl_ic [create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect:2.1 ctrl_ic]
@@ -283,6 +285,8 @@ proc generate_split_hardware { BOARD PORT_WIDTH FREQ } {
                             [get_bd_intf_pins ${lyr}/s_axi_ctrl]
         incr ivar
     }
+    #debug save
+    save_bd_design
     puts "IP CELL LIST HERE: $ip_cell_list"
 
     # connect top to in/out
@@ -292,13 +296,17 @@ proc generate_split_hardware { BOARD PORT_WIDTH FREQ } {
     set p_out [run_python $::env(FPGACONVNET_HLS)/tools/split_hw_helper.py \
         [list -p ../$NET.json -pi 0 get_output] ]
     #puts "partition input: $p_in , partition output: $p_out"
-    connect_bd_intf_net \
+    set in_conn [ connect_bd_intf_net \
         [get_bd_intf_pins ${NET}/in_0_V_V   ] \
-        [get_bd_intf_pins ${p_in}/in_0_V_V  ]
-    connect_bd_intf_net \
+        [get_bd_intf_pins ${p_in}/in_0_V_V  ] ]
+    set out_conn [ connect_bd_intf_net \
         [get_bd_intf_pins ${NET}/out_0_V_V  ] \
-        [get_bd_intf_pins ${p_out}/out_0_V_V]
+        [get_bd_intf_pins ${p_out}/out_0_V_V] ]
 
+    puts "connecting layers..."
+    #debug save
+    current_bd_instance $oldCurInst
+    save_bd_design
     # connect layers to each other
     foreach lyr $layer_list {
         # python: get connected layer, get coarse(out)
@@ -321,7 +329,7 @@ proc generate_split_hardware { BOARD PORT_WIDTH FREQ } {
             }
         }
     }
-    
+
     #create hierarchy
     group_bd_cells ${NET}_network {*}$ip_cell_list
 
@@ -349,6 +357,7 @@ proc generate_split_hardware { BOARD PORT_WIDTH FREQ } {
     # validate design
     validate_bd_design
     #puts "validated design"
+    current_bd_instance $oldCurInst
     save_bd_design
     puts "FINISHED BD GENERATION!"
 }

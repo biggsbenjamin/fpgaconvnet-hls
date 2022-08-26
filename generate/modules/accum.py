@@ -1,4 +1,4 @@
-accum_start     ="{indent}accum<"
+accum_start     ="{indent}accum<\n"
 accum_iter      ="""
 {indent}    {NAME}_BATCH_SIZE,
 {indent}    {NAME}_ROWS,
@@ -8,8 +8,8 @@ accum_chFil     ="""
 {indent}    {NAME}_CHANNELS,
 {indent}    {NAME}_FILTERS,
 """
-accum_filPerGrp ="{indent}    {NAME}_FILTERS_PER_GROUP,"
-accum_grp       ="{indent}    {NAME}_GROUPS,"
+accum_filPerGrp ="{indent}    {NAME}_FILTERS_PER_GROUP,\n"
+accum_grp       ="{indent}    {NAME}_GROUPS,\n"
 accum_end       ="""
 {indent}    {accum_t}
 {indent}>({input_stream},{output_stream});

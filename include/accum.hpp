@@ -350,7 +350,7 @@ void accum(
     stream_t(accum_t) reorder[filters_per_group];
     #pragma HLS STREAM variable=reorder
     #pragma HLS array_partition variable=reorder complete dim=0
-    DO_PRAGMA(HLS STREAM variable=reorder depth=channels_per_group+1)
+    DO_PRAGMA(HLS STREAM variable=reorder depth=channels_per_group+10)
 
     #pragma HLS DATAFLOW
     accum_reorder<
@@ -414,7 +414,7 @@ void accum(
     stream_t(accum_t) reorder[filters_per_group];
     #pragma HLS STREAM variable=reorder
     #pragma HLS array_partition variable=reorder complete dim=0
-    DO_PRAGMA(HLS STREAM variable=reorder depth=channels_per_group+1)
+    DO_PRAGMA(HLS STREAM variable=reorder depth=channels_per_group+10)
 
     #pragma HLS DATAFLOW
     accum_reorder<
@@ -470,7 +470,7 @@ void accum(
     stream_t(accum_t) reorder[filters_per_group];
     #pragma HLS STREAM variable=reorder
     #pragma HLS array_partition variable=reorder complete dim=0
-    DO_PRAGMA(HLS STREAM variable=reorder depth=channels+1)
+    DO_PRAGMA(HLS STREAM variable=reorder depth=channels+10)
 
     #pragma HLS DATAFLOW
     accum_reorder<
@@ -521,7 +521,7 @@ void accum(
     stream_t(accum_t) reorder[1];
     #pragma HLS stream variable=reorder
     #pragma HLS array_partition variable=reorder complete dim=0
-    DO_PRAGMA(HLS STREAM variable=reorder depth=channels+1)
+    DO_PRAGMA(HLS STREAM variable=reorder depth=channels+10)
 
     #pragma HLS DATAFLOW
     accum_reorder<

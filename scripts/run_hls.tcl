@@ -1,8 +1,6 @@
 # load getopt script
 source $::env(FPGACONVNET_HLS)/scripts/tcl_getopt.tcl
 
-#TODO elevate warning for failing to pipeline/flatten/unroll
-
 # get fpgaconvnet root folder
 set fpgaconvnet_root $::env(FPGACONVNET_HLS)
 
