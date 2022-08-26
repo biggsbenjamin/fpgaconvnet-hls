@@ -150,6 +150,26 @@ class ONNXData:
             self.data = np.expand_dims(self.data,axis=0)
         self.data = np.stack([self.data for _ in range(self.partition.batch_size)], axis=0 )
 
+    #TODO version of load input that takes in folder full of images, maybe randomised
+    def load_inputs(self,filepath):
+        img_ls = os.listdir(filepath)
+        img_ls.sort()
+
+        np_ls=[]
+        for s in range(self.partition.batch_size):
+            current_path = os.path.join(filepath,img_ls[s])
+            # load in the numpy array
+            #img = np.array(Image.open(current_path),dtype=np.float32)
+            img = np.load(current_path)
+            # scale images
+            data_max = np.amax(img)
+            img = img / data_max
+            if len(img.shape) == 2:
+                img = np.expand_dims(img,axis=0)
+            np_ls.append(img)
+        self.data = np.concatenate(np_ls, axis=0 )
+        print("Input data shape:",self.data.shape)
+
     def get_layer(self,layer_name):
         for layer in self.partition.layers:
             if layer.name == layer_name:

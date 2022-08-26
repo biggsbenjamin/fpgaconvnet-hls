@@ -28,6 +28,9 @@ if __name__ == "__main__":
     parser.add_argument('-i','--partition_index',metavar='N',required=True, type=int,
         help='Partition index')
 
+    parser.add_argument('-s','--multi_inputs',action='store_true',
+        help='multiple inputs for the feature maps')
+
     # parse arguments
     args = parser.parse_args()
 
@@ -40,7 +43,10 @@ if __name__ == "__main__":
     onnx_data = ONNXData(partitions.partition[args.partition_index], args.onnx_path)
 
     # load input image
-    onnx_data.load_input(args.image_path)
+    if args.multi_inputs:
+        onnx_data.load_inputs(args.image_path)
+    else:
+        onnx_data.load_input(args.image_path)
 
     # save feature maps
     onnx_data.save_featuremap_in_out(

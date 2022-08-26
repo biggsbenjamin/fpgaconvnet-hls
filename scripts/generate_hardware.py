@@ -32,10 +32,9 @@ if __name__ == "__main__":
         help='Path to onnx model (.onnx)')
     parser.add_argument('-i','--partition_index',metavar='N',required=True, type=int,
         help='Partition index')
-    #TODO add split net version too
+
     parser.add_argument('-eep', '--early_exit_profiling', action='store_true',
         help='early exit profiling flag') #default is false
-
     parser.add_argument('-sp', '--split_net', action='store_true',
         help='running split net hw gen flag') #default is false
 
