@@ -64,7 +64,7 @@ class ConvolutionLayerTB(Layer):
             self.param['channels_in']//self.param['groups'],
             self.param['kernel_size'][0],
             self.param['kernel_size'][1]
-        ],[-8,8]) #todo: consistent with weight_t
+        ],[-1,1]) #todo: consistent with weight_t
 
         # biases
         biases = np.zeros(self.param['filters'])

@@ -1,0 +1,11 @@
+{
+    "type": "GLUE",
+    "rows": 12,
+    "cols": 12,
+    "filters": 20,
+    "coarse_in": 2,
+    "coarse_out": 5,
+    "coarse_group": 1,
+    "batch_size": 1,
+    "description": "brn backbone conv3 se lenet"
+}

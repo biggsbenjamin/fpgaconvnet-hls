@@ -1,0 +1,13 @@
+{
+    "batch_size": 1,
+    "rows": 12,
+    "cols": 12,
+    "channels":5,
+    "filters":4,
+    "groups": 1,
+    "fine": 25,
+    "kernel_size": [5,5],
+    "channels_per_group": 5,
+    "filters_per_group": 4,
+    "description": "brn padding variant, conv3 se lenet"
+}
