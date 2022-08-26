@@ -67,3 +67,8 @@ test/partitions/**/*.txt
 **/logs2/**
 **/tmp_improved/**
 **.original
+
+**/IMAGES/**
+test/partitions/**/*.BIN
+test/partitions/**/*.c
+
