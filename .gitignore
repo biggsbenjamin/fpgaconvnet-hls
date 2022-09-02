@@ -72,3 +72,4 @@ test/partitions/**/*.txt
 test/partitions/**/*.BIN
 test/partitions/**/*.c
 
+**.tar.gz
