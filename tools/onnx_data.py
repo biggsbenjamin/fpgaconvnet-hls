@@ -84,18 +84,30 @@ def validate_output(args):
     if len(g_dat) != len(a_dat):
         raise ValueError(f"Data length differs! Expected: {len(g_dat)} Actual: {len(a_dat)}")
 
+    def make_signed(value, datawidth):
+        if value > 2**(datawidth-1)-1:
+            return value-(2**datawidth)
+        return value
+
     max_err=0.0
+    err_tot=0
     for idx,(g,a) in enumerate(zip(g_dat, a_dat)):
-        #print(idx," : ",g," : ",a)
-        cmpr = (g-a) if (g > a) else (a-g)
+        sg=make_signed(g,args.data_width)
+        sa=make_signed(a,args.data_width)
+        cmpr = (sg-sa) if (sg > sa) else (sa-sg)
         max_err = max(max_err,cmpr)
         if cmpr > errtol.bits_to_signed():
-            raise ValueError(f"Difference greater than tolerance.\n \
-                    Values g:{g} a:{a} @ index:{idx}")
+            print(f"ERROR: Difference greater than tolerance.\n \
+                    Values g:{sg} a:{sa} @ index:{idx}")
+            err_tot+=1
 
     err_p = (max_err)/errtol.bits_to_signed()
     raw_err_mx = err_p*args.error_tolerance
-    print("Made it to end with no errors exceeding tolerance! YAY")
+    if err_tot == 0:
+        print("Made it to end with no errors exceeding tolerance! YAY")
+    else:
+        print("Error count total:",err_tot)
+
     print("(Maximum error was ~{:.2f}% of tolerance, ~{:.5f})".format(100*err_p, raw_err_mx))
 
 class ONNXData:
