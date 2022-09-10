@@ -5,7 +5,8 @@
 #include "relu_param.hpp"
 
 // define the type based on the test configuration
-typedef ap_fixed<RELU_DATA_WIDTH,RELU_DATA_INT_WIDTH,AP_RND,AP_SAT> relu_t;
+//typedef ap_fixed<RELU_DATA_WIDTH,RELU_DATA_INT_WIDTH,AP_RND,AP_SAT> relu_t;
+typedef b_data_t relu_t;
 
 void relu_top(
 	stream_t(relu_t) &in,

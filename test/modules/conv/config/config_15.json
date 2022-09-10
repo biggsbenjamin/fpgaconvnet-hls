@@ -1,0 +1,13 @@
+{
+    "batch_size": 2,
+    "rows": 1,
+    "cols": 1,
+    "channels":720,
+    "filters":10,
+    "groups": 1,
+    "fine": 1,
+    "kernel_size": [1,1],
+    "channels_per_group": 720,
+    "filters_per_group": 10,
+    "description": "se lenet innr prd, pointwise conv"
+}

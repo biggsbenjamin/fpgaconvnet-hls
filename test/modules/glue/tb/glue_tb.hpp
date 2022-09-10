@@ -5,8 +5,10 @@
 #include "glue_param.hpp"
 
 // define the type based on the test configuration
-typedef ap_fixed<GLUE_DATA_WIDTH, GLUE_DATA_INT_WIDTH, AP_RND,AP_SAT> glue_data_t;
-typedef ap_fixed<GLUE_ACC_WIDTH, GLUE_ACC_INT_WIDTH, AP_RND,AP_SAT> glue_acc_t;
+//typedef ap_fixed<GLUE_DATA_WIDTH, GLUE_DATA_INT_WIDTH, AP_RND,AP_SAT> glue_data_t;
+//typedef ap_fixed<GLUE_ACC_WIDTH, GLUE_ACC_INT_WIDTH, AP_RND,AP_SAT> glue_acc_t;
+typedef b_data_t glue_data_t;
+typedef b_acc_t glue_acc_t;
 
 void glue_top(
     stream_t(glue_acc_t) in[GLUE_COARSE_IN][GLUE_COARSE_OUT],

@@ -4,8 +4,10 @@
 #include "common.hpp"
 #include "bias_param.hpp"
 
-typedef     ap_fixed<BIAS_DATA_WIDTH,BIAS_DATA_INT_WIDTH,AP_RND> bias_data_t;
-typedef     ap_fixed<BIAS_BIASES_WIDTH,BIAS_BIASES_INT_WIDTH,AP_RND> bias_biases_t;
+//typedef     ap_fixed<BIAS_DATA_WIDTH,BIAS_DATA_INT_WIDTH,AP_RND> bias_data_t;
+//typedef     ap_fixed<BIAS_BIASES_WIDTH,BIAS_BIASES_INT_WIDTH,AP_RND> bias_biases_t;
+typedef b_data_t bias_data_t;
+typedef weight_t bias_biases_t;
 
 void bias_top(
     stream_t(bias_data_t) &in,

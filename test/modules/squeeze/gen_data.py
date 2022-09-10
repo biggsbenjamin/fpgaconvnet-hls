@@ -30,7 +30,9 @@ class SqueezeTB(Data):
         self.param['data_width'] = squeeze.data_width
         self.param['data_int_width'] = squeeze.data_width//2
 
-        self.param['buffer_size'] = lcm(self.param['coarse_in'], self.param['coarse_out'])
+        #self.param['buffer_size'] = lcm(self.param['coarse_in'], self.param['coarse_out'])
+        self.param['channels_per_coarse_in'] = self.param['channels']//self.param['coarse_in']
+        self.param['channels_per_coarse_out'] = self.param['channels']//self.param['coarse_out']
 
         # data in
         data_in = self.gen_data([
@@ -39,9 +41,11 @@ class SqueezeTB(Data):
             self.param['channels']//self.param['coarse_in'],
             self.param['coarse_in']
         ])
+        print("shape in:",data_in.shape)
 
         # data out
         data_out = squeeze.functional_model(data_in)
+        print("shape out:",data_out.shape)
 
         # return data
         data = {

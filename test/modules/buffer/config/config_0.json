@@ -6,7 +6,7 @@
     "rows_out": 30,
     "cols_out": 30,
     "channels_out": 5,
-    "batch_size": 1,
+    "batch_size": 5,
     "ctrledge": 0,
     "drop_mode": true,
     "description": "module name: buffer, layer name: after conv, net name: brn"

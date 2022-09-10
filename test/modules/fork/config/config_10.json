@@ -1,0 +1,11 @@
+{
+    "type": "FORK",
+    "rows": 3,
+    "cols": 3,
+    "channels": 2,
+    "coarse": 2,
+    "kernel_size": [3,3],
+    "batch_size": 1,
+    "description": "basic test"
+}
+

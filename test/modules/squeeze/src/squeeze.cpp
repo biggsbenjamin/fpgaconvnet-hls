@@ -6,16 +6,26 @@ void squeeze_top(
     stream_t(squeeze_t) out[SQUEEZE_COARSE_OUT]
 )
 {
+#pragma HLS DATAFLOW
 
-    #pragma HLS DATAFLOW
-    squeeze<
+#if ( SQUEEZE_BATCH_SIZE*SQUEEZE_COLS*SQUEEZE_ROWS > 1 )
+    squeeze_spatial<
         SQUEEZE_BATCH_SIZE,
         SQUEEZE_ROWS,
         SQUEEZE_COLS,
+#else
+    squeeze<
+#endif
         SQUEEZE_CHANNELS,
         SQUEEZE_COARSE_IN,
         SQUEEZE_COARSE_OUT,
-        SQUEEZE_BUFFER_SIZE,
+#if SQUEEZE_CHANNELS_PER_COARSE_IN > 1
+        SQUEEZE_CHANNELS_PER_COARSE_IN,
+        SQUEEZE_CHANNELS_PER_COARSE_IN,
+#endif
+#if SQUEEZE_CHANNELS_PER_COARSE_OUT > 1
+        SQUEEZE_CHANNELS_PER_COARSE_OUT,
+#endif
         squeeze_t
     >(in,out);
 

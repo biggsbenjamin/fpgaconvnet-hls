@@ -51,7 +51,7 @@ class ConvTB(Data):
             int(self.param['filters']/self.param['groups']),
             self.param['kernel_size'][0],
             self.param['kernel_size'][1]
-        ])
+        ], data_range=[-1,1])
 
         # data out
         data_out = conv.functional_model(data_in, weights)

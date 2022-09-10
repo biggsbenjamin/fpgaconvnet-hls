@@ -13,8 +13,8 @@ class AccumTB(Data):
     # update stimulus generation
     def gen_stimulus(self):
 
-        self.param['channels_per_group'] = int(self.param['channels']/self.param['groups'])
-        self.param['filters_per_group'] = int(self.param['filters'] /self.param['groups'])
+        #self.param['channels_per_group'] = int(self.param['channels']/self.param['groups'])
+        #self.param['filters_per_group'] = int(self.param['filters'] /self.param['groups'])
 
         # Init Module
         accum = Accum(

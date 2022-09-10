@@ -5,7 +5,8 @@
 #include "fork_param.hpp"
 
 // define the type based on the test configuration
-typedef ap_fixed<FORK_DATA_WIDTH, FORK_DATA_INT_WIDTH, AP_RND,AP_SAT> fork_t;
+//typedef ap_fixed<FORK_DATA_WIDTH, FORK_DATA_INT_WIDTH, AP_RND,AP_SAT> fork_t;
+typedef b_data_t fork_t;
 
 void fork_top(
 #if FORK_KERNEL_SIZE == 1

@@ -2,10 +2,12 @@
     "rows": 4,
     "cols": 4,
     "channels": 2,
-    "filters": 1,
-    "group": 1,
-    "fine": 4,
+    "filters": 2,
+    "groups": 1,
+    "fine": 9,
     "kernel_size": [3,3],
     "batch_size": 1,
+    "channels_per_group": 2,
+    "filters_per_group": 2,
     "description": "single filter, 3x3"
 }

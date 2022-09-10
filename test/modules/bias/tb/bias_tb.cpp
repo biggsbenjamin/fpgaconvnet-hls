@@ -10,8 +10,6 @@ int main()
     std::string biases_path    = std::string(DATA_DIR)+"/biases.dat";
 
     // biases
-    //bias_weight_t biases[BIAS_CHANNELS*DIVIDE(BIAS_FILTERS,BIAS_GROUPS)];
-    //const unsigned int f_per_cout = DIVIDE(BIAS_FILTERS,BIAS_COARSE_OUT);
     bias_biases_t biases[BIAS_FILTERS];
 
     stream_t(bias_data_t) in("in");
@@ -23,7 +21,7 @@ int main()
     static bias_data_t test_out[BIAS_ROWS*BIAS_COLS*BIAS_FILTERS]; //TODO check
 
     // load biases
-    load_data<
+    load_data_b<
         BIAS_FILTERS,
         bias_biases_t
     >(biases_path,biases);

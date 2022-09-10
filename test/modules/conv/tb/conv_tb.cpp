@@ -21,7 +21,7 @@ int main()
     static conv_acc_t test_out[CONV_ROWS*CONV_COLS*CONV_CHANNELS*FILTERS_PER_UNIT(CONV_FILTERS,CONV_GROUPS)];
 
     // load weights
-    load_data<
+    load_data_w<
         CONV_CHANNELS*DIVIDE(CONV_FILTERS,CONV_GROUPS),
         CONV_KERNEL_SIZE_0,
         CONV_KERNEL_SIZE_1,

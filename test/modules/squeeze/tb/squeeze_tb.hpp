@@ -5,7 +5,8 @@
 #include "squeeze_param.hpp"
 
 // define the type based on the test configuration
-typedef ap_fixed<SQUEEZE_DATA_WIDTH,SQUEEZE_DATA_INT_WIDTH,AP_RND,AP_SAT> squeeze_t;
+//typedef ap_fixed<SQUEEZE_DATA_WIDTH,SQUEEZE_DATA_INT_WIDTH,AP_RND,AP_SAT> squeeze_t;
+typedef b_data_t squeeze_t;
 
 void squeeze_top(
     stream_t(squeeze_t) in[SQUEEZE_COARSE_IN],
