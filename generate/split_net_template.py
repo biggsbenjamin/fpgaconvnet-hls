@@ -35,16 +35,16 @@ network_header_template = """//auto generated file
 #define {NAME}_SIZE_IN  {NAME}_BATCH_SIZE*{NAME}_ROWS_IN*{NAME}_COLS_IN*DIVIDE({NAME}_CHANNELS_IN,{NAME}_STREAMS_IN)
 #define {NAME}_SIZE_OUT {NAME}_BATCH_SIZE*{NAME}_ROWS_OUT*{NAME}_COLS_OUT*DIVIDE({NAME}_CHANNELS_OUT,{NAME}_STREAMS_OUT) //*{NAME}_WEIGHTS_RELOADING_FACTOR
 
-typedef {input_layer}_input_t   {name}_input_t;
-typedef {output_layer}_output_t {name}_output_t;
+//typedef {input_layer}_input_t   {name}_input_t;
+//typedef {output_layer}_output_t {name}_output_t;
 
 //no weights reloading
 //no process but adding in dma translation
 
 //FIXME replace in/out streams with 16 + 8bit struct for bs
 void {name}_top(
-    axis_hls_t &dma_in,
-    axis_hls_t &dma_out,
+    b_axis_hls_t &dma_in,
+    b_axis_hls_t &dma_out,
     {in_net_stream},
     {out_net_stream}
 );
@@ -59,7 +59,7 @@ network_src_template = """//auto generated file
 //no wr process
 
 void axis_convert_in(
-    axis_hls_t &dma_in,
+    b_axis_hls_t &dma_in,
     {in_net_stream}
 )
 {{
@@ -70,7 +70,7 @@ void axis_convert_in(
     const unsigned size_in  = {NAME}_SIZE_IN ;
     const unsigned size_out = {NAME}_SIZE_OUT;
 
-    axis_t cache;
+    b_axis_t cache;
     //FIXME auto match the input data stream or just use axiu
     {in_type} data;
 
@@ -80,7 +80,7 @@ void axis_convert_in(
         cache = dma_in.read();
 
         // cast data to input type
-        data = cache.data;
+        data = cache.samp;
 
         //write out simple hls stream of ap_fixed type
         in[0].write(data); //16 bits maps to 16 bits
@@ -90,7 +90,7 @@ void axis_convert_in(
 
 void axis_convert_out(
     {out_net_stream},
-    axis_hls_t &dma_out
+    b_axis_hls_t &dma_out
 )
 {{
 
@@ -104,7 +104,7 @@ void axis_convert_out(
 
     //FIXME auto match the output data stream or just use axiu
     {out_type} cache;
-    axis_t out_pkt;
+    b_axis_t out_pkt;
 
     //NOTE looping for one extra packet because of tlast staying high
     for (unsigned int out_idx=0;out_idx<size_out;out_idx++) {{
@@ -112,20 +112,8 @@ void axis_convert_out(
         //read in stream data from last fcn layer
         cache = out[0].read();
 
-        //construct packets
-        //if (out_idx == 0){{
-        //    out_pkt.user = 1;
-        //}} else {{
-        //    out_pkt.user = 0;
-        //}}
-
-        //out_pkt.id = 0;
-        //out_pkt.dest = 0;
-        //out_pkt.strb = 0;
-        //out_pkt.keep = 0;
-
         //writing data to out packet
-        out_pkt.data = cache;
+        out_pkt.samp = cache;
 
         if (out_idx+1 == size_out) {{
             //null packet to make tlast go low
@@ -141,8 +129,8 @@ void axis_convert_out(
 }}
 
 void {name}_top(
-    axis_hls_t &dma_in,
-    axis_hls_t &dma_out,
+    b_axis_hls_t &dma_in,
+    b_axis_hls_t &dma_out,
     {in_net_stream},
     {out_net_stream}
 )

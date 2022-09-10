@@ -55,7 +55,7 @@ void pool_inner(
             }
             else {
                 pool_t tmp = in[k1][k2].read();
-                cache = (cache > tmp ) ? cache : tmp ;
+                cache.data = (cache.data > tmp.data ) ? cache.data : tmp.data ;
             }
         }
     }

@@ -33,7 +33,8 @@ pooling_layer_template_header = """#ifndef {NAME}_HPP_
 #define {NAME}_CHANNELS_OUT {channels_out}
 
 // define the data type
-typedef ap_fixed<{data_width},{data_int_width},AP_RND> {name}_data_t;
+//typedef ap_fixed<{data_width},{data_int_width},AP_RND> {name}_data_t;
+typedef b_data_t {name}_data_t;
 typedef {name}_data_t {name}_input_t;
 typedef {name}_data_t {name}_output_t;
 

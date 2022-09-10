@@ -12,8 +12,9 @@ split_layer_template_header = """#ifndef {NAME}_HPP_
 #define name        {name}
 #define {NAME}_ID   {id}
 
-#define {name}_input_t          data_t
-#define {name}_output_t         data_t
+typedef b_data_t {name}_data_t;
+typedef {name}_data_t {name}_input_t;
+typedef {name}_data_t {name}_output_t;
 
 #define {NAME}_BATCH_SIZE   {batch_size}
 #define {NAME}_ROWS         {rows}

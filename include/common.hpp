@@ -65,11 +65,15 @@ typedef ap_axis<DMA_WIDTH,1,1,1>    axi_stream_t;
 typedef hls::stream<axi_stream_t>   axi_stream_hw_t;
 
 
-typedef ap_fixed<DATA_WIDTH,INTEGER_BITS,AP_RND> data_t;
+//typedef ap_fixed<DATA_WIDTH,INTEGER_BITS,AP_RND> data_t;
+typedef ap_fixed<16,8,AP_RND> data_t;
 typedef ap_fixed<30,16,AP_RND> acc_t;
 typedef ap_fixed<16,8,AP_RND> weight_t;
+//typedef ap_fixed<10,2,AP_RND> weight_t;
 
 typedef ap_fixed<64,32> bdata_t;
+
+typedef uint16_t batch_t;
 
 //axi stream experiment
 //typedef ap_axiu<16,0,0,0> axis_t;
@@ -79,6 +83,26 @@ struct axis_t {
 };
 typedef hls::stream<axis_t>   axis_hls_t;
 //axi stream experiment
+
+// batch id included data types
+struct b_data_t {
+    batch_t batchid;
+    data_t data;
+};
+struct b_acc_t {
+    batch_t batchid;
+    acc_t data;
+};
+struct b_float_t {
+    batch_t batchid;
+    float data;
+};
+struct b_axis_t {
+    b_data_t samp;
+    ap_int<1> last;
+};
+typedef hls::stream<axis_t>   b_axis_hls_t;
+
 
 //#define stream_t(x) hlslib::Stream<x>
 #define stream_t(x) hls::stream<x>

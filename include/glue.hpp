@@ -41,8 +41,12 @@ void glue(
 #pragma HLS ARRAY_PARTITION variable=in  complete dim=0
 #pragma HLS ARRAY_PARTITION variable=out complete dim=0
 
-    glue_acc_t acc[coarse_out*coarse_group];
+    glue_acc_t acc[coarse_out*coarse_group], prev, tmp, glue_zero;
 #pragma HLS ARRAY_PARTITION variable=acc complete dim=0
+    // zero constant for acc data type
+    glue_zero.data=0;
+
+    glue_data_t outcaster;
 
     pixel_loop: for(unsigned int pixel_index=0;pixel_index<px_lim;pixel_index++) {
 //        filter_loop: for(unsigned int filter_index=0;filter_index<filters_per_coarse;filter_index++) {
@@ -53,12 +57,18 @@ void glue(
                 coarse_out_loop: for(unsigned int out_index=0; out_index<coarse_out; out_index++) {
                     coarse_in_loop: for(unsigned int in_index=0; in_index<coarse_in; in_index++) {
                         // update accumulation cache
-                        glue_acc_t prev = ( in_index == 0 ) ? glue_acc_t(0) : acc[group_index*coarse_out+out_index] ;
-                        acc[group_index*coarse_out+out_index] = prev + in[group_index*coarse_in+in_index][out_index].read() ;
-
+                        prev.data = ( in_index == 0 ) ? 
+                            glue_zero.data : 
+                            acc[group_index*coarse_out+out_index].data ;
+                        //tmp var required for casting - FIXME introduce methods for casting
+                        tmp = in[group_index*coarse_in+in_index][out_index].read();
+                        acc[group_index*coarse_out+out_index].data = prev.data + tmp.data; 
+                        acc[group_index*coarse_out+out_index].batchid = tmp.batchid;
                         // write to output stream
                         if( in_index == (coarse_in-1) ) {
-                            out[group_index*coarse_out+out_index].write( glue_data_t(acc[group_index*coarse_out+out_index]) ) ;
+                            outcaster.data = acc[group_index*coarse_out+out_index].data;
+                            outcaster.batchid = acc[group_index*coarse_out+out_index].batchid;
+                            out[group_index*coarse_out+out_index].write( outcaster );
                         }
                     }
                 }

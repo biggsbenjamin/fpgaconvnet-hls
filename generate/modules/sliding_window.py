@@ -12,11 +12,14 @@ sliding_window_template = """
 {indent}    {NAME}_STRIDE_Y,
 {indent}    {NAME}_KERNEL_SIZE_X,
 {indent}    {NAME}_KERNEL_SIZE_Y,
+{indent}    // type internal to sw module is datatype of {sliding_window_t}.data
+{indent}    data_t,
 {indent}    {sliding_window_t}
 {indent}>({input_stream},{output_stream});
 """
 
 sliding_window_1d_horizontal_template = """
+// FIXME NOT UPDATED WITH BATCH
 {indent}sliding_window_1d_horizontal<
 {indent}    {NAME}_BATCH_SIZE,
 {indent}    {NAME}_ROWS,
@@ -34,6 +37,7 @@ sliding_window_1d_horizontal_template = """
 """
 
 sliding_window_1d_vertical_template = """
+// FIXME NOT UPDATED WITH BATCH
 {indent}sliding_window_1d_vertical<
 {indent}    {NAME}_BATCH_SIZE,
 {indent}    {NAME}_ROWS,

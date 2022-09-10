@@ -12,7 +12,41 @@
 //////////////////////////////////////////////////////////////////////
 /////////////////////////////// LAYERS ///////////////////////////////
 //////////////////////////////////////////////////////////////////////
+template<int BATCH_SIZE, int SIZE, int STREAMS, typename T>
+void load_data_l(
+    std::string filepath,
+    T data[SIZE*BATCH_SIZE][STREAMS]
+) {
+    // read in file
+    const char *filepath_cstr = filepath.c_str();
+    FILE * fp = fopen(filepath_cstr,"r");
 
+    // check file opened
+    if (fp == NULL) {
+        perror("Failed: ");
+    }
+
+    // save to array
+    //int index = 0;
+    int bidx=0;
+    for(int i=0;i<SIZE*BATCH_SIZE;i++) {
+        if (i % SIZE == 0 && i != 0) {
+            bidx++;
+        }
+        for(int j=0;j<STREAMS;j++) {
+            float val;
+            fscanf(fp,"%f\n", &val);
+            //data[i][j] = T( val );
+            data[i][j].batchid = bidx;
+            data[i][j].data = ( val );
+        }
+    }
+
+    // close file
+    fclose(fp);
+}
+
+/* LAYER but also GLUE output, and squeeze */
 template<int SIZE, int STREAMS, typename T>
 void load_data(
     std::string filepath,
@@ -33,7 +67,9 @@ void load_data(
         for(int j=0;j<STREAMS;j++) {
             float val;
             fscanf(fp,"%f\n", &val);
-            data[i][j] = T( val );
+            //data[i][j] = T( val );
+            data[i][j].batchid = 7;
+            data[i][j].data = ( val );
         }
     }
 
@@ -41,6 +77,18 @@ void load_data(
     fclose(fp);
 }
 
+/* STANDARD FOR TESTING LAYER INPUTS */
+template<int BATCH_SIZE,int SIZE, int STREAMS, typename T>
+void to_stream_l(
+    T in[SIZE*BATCH_SIZE][STREAMS],
+    stream_t(T) out[STREAMS]
+) {
+    for(int i=0;i<SIZE*BATCH_SIZE;i++) {
+        for(int j=0;j<STREAMS;j++) {
+ 	        out[j].write(in[i][j]);
+	    }
+    }
+}
 /* STANDARD FOR TESTING LAYER INPUTS */
 template<int SIZE, int STREAMS, typename T>
 void to_stream(
@@ -168,6 +216,33 @@ void load_data(
     for(int i=0;i<SIZE;i++) {
         float val;
         fscanf(fp,"%f\n", &val);
+        //data[i] = T( val );
+        data[i].batchid = 7;
+        data[i].data = ( val );
+    }
+
+    // close file
+    fclose(fp);
+}
+// bias loading 
+template<int SIZE, typename T>
+void load_data_b(
+    std::string filepath,
+    T data[SIZE]
+) {
+    // read in file
+    const char *filepath_cstr = filepath.c_str();
+    FILE * fp = fopen(filepath_cstr,"r");
+
+    // check file opened
+    if (fp == NULL) {
+        perror("Failed: ");
+    }
+
+    // save to array
+    for(int i=0;i<SIZE;i++) {
+        float val;
+        fscanf(fp,"%f\n", &val);
         data[i] = T( val );
     }
 
@@ -186,9 +261,9 @@ void to_stream(
     }
 }
 
-/* (CONV,POOL) */
+/* (weights only because of new default types) */
 template<int SIZE, int KERNEL_SIZE_X, int KERNEL_SIZE_Y, typename T>
-void load_data(
+void load_data_w(
     std::string filepath,
     T data[SIZE][KERNEL_SIZE_X][KERNEL_SIZE_Y]
 ) {
@@ -215,6 +290,39 @@ void load_data(
     // close file
     fclose(fp);
 }
+/* (CONV,POOL, FORK in) */
+template<int SIZE, int KERNEL_SIZE_X, int KERNEL_SIZE_Y, typename T>
+void load_data(
+    std::string filepath,
+    T data[SIZE][KERNEL_SIZE_X][KERNEL_SIZE_Y]
+) {
+
+    // read in file
+    const char *filepath_cstr = filepath.c_str();
+    FILE * fp = fopen(filepath_cstr,"r");
+
+    // check file opened
+    if (fp == NULL) {
+        perror("Failed: ");
+    }
+     // save to array
+    for(int i=0;i<SIZE;i++) {
+        for(int k1=0;k1<KERNEL_SIZE_X;k1++) {
+            for(int k2=0;k2<KERNEL_SIZE_Y;k2++) {
+                float val;
+                fscanf(fp,"%f\n", &val);
+                T tmp;
+                //FIXME include CORRECT batch info
+                tmp.batchid=7;
+                tmp.data=val;
+                data[i][k1][k2] = tmp;
+	        }
+	    }
+    }
+
+    // close file
+    fclose(fp);
+}
 
 template<int SIZE, int KERNEL_SIZE_X, int KERNEL_SIZE_Y, typename T>
 void to_stream(
@@ -230,7 +338,7 @@ void to_stream(
     }
 }
 
-/* (FORK) */
+/* (FORK out only) */
 template<int SIZE, int COARSE, int KERNEL_SIZE_X, int KERNEL_SIZE_Y, typename T>
 void load_data(
     std::string filepath,
@@ -252,7 +360,11 @@ void load_data(
                 for(int k2=0;k2<KERNEL_SIZE_Y;k2++) {
                     float val;
                     fscanf(fp,"%f\n", &val);
-                    data[i][c][k1][k2] = T(val);
+                    //data[i][c][k1][k2] = T(val);
+                    T tmp;
+                    tmp.batchid=7;
+                    tmp.data=val;
+                    data[i][c][k1][k2] = tmp;
                 }
             }
         }
@@ -307,7 +419,8 @@ void load_data(
                             fscanf(fp,"%f\n", &val);
                             //int index = (i*COARSE_IN+cin)*filters_per_coarse_out+j*COARSE_OUT+cout;
                             int index = i*filters_per_coarse_out+j;
-                            data[cin][cout][index][k1][k2] = T(val);
+                            //data[cin][cout][index][k1][k2] = T(val);
+                            data[cin][cout][index][k1][k2].data = (val);
                         }
                     }
                 }
@@ -345,7 +458,8 @@ void load_data(
                     float val;
                     fscanf(fp,"%f\n", &val);
                     int index = i*filters_per_coarse_out+j;
-                    data[cin][cout][index] = T(val);
+                    //data[cin][cout][index] = T(val);
+                    data[cin][cout][index].data = (val);
                 }
             }
         }
@@ -440,7 +554,8 @@ void load_data(
                 for(int f=0;f<FINE;f++) {
                     float val;
                     fscanf(fp,"%f\n", &val);
-                    data[cin][cout][i][f] = T(val);
+                    //data[cin][cout][i][f] = T(val);
+                    data[cin][cout][i][f].data = (val);
                 }
             }
         }
@@ -532,7 +647,8 @@ void load_data(
     //for(int i=0;i<SIZE;i++) {
     float val;
     fscanf(fp,"%f\n", &val);
-    data[0] = val;
+    //data[0] = val;
+    data[0].data = val;
     //}
     
     // close file
@@ -556,8 +672,10 @@ void load_data(
     
     // save to array
     int i=0;
+    T tmp;
     while(input_file >> val) {
-        data.push_back(data_t(val));
+        tmp.data = val;
+        data.push_back( tmp );
         i++;
     }
     
@@ -604,8 +722,8 @@ int checkStreamEqual(
         valid.read_nb(tmp_valid);
         //float conversion for visual comparison
         float tmpf,tmpf_valid;
-        tmpf=tmp.to_float();
-        tmpf_valid=tmp_valid.to_float();
+        tmpf=tmp.data.to_float();
+        tmpf_valid=tmp_valid.data.to_float();
 
 		if(print_out) {
             //printf("%x,%x\n",tmp.range()&BIT_MASK,tmp_valid.range()&BIT_MASK);
@@ -615,16 +733,21 @@ int checkStreamEqual(
                 <<" Actual:"<<tmpf_valid<<std::endl;    
         }
 		if(
-				(tmp.to_float() > tmp_valid.to_float()+ERROR_TOLERANCE) ||
-				(tmp.to_float() < tmp_valid.to_float()-ERROR_TOLERANCE)
+				(tmp.data.to_float() > tmp_valid.data.to_float()+ERROR_TOLERANCE) ||
+				(tmp.data.to_float() < tmp_valid.data.to_float()-ERROR_TOLERANCE)
 		)
 		{
 			//printf("ERROR: wrong value\n");
 			printf("ERROR: wrong value. Actual:%f, Expected:%f, Difference:%f\n",
-                    tmp.to_float(), tmp_valid.to_float(), tmp.to_float()-tmp_valid.to_float());
+                    tmp.data.to_float(), tmp_valid.data.to_float(), tmp.data.to_float()-tmp_valid.data.to_float());
 			//return 1;
 			err++;
 		}
+        if (tmp.batchid != tmp_valid.batchid) {
+			printf("ERROR: wrong ID. Actual:%d, Expected:%d\n",
+                    tmp.batchid, tmp_valid.batchid );
+			err++;
+        }
 	}
 
 	if(!test.empty())
@@ -725,11 +848,11 @@ int checkStreamEqual_file(
 			fid.write(byte,4);
 		}
 
-		if(print_out) printf("%f,%f\n",tmp.to_float(),tmp_valid.to_float());
+		if(print_out) printf("%f,%f\n",tmp.data.to_float(),tmp_valid.data.to_float());
 
 		if(
-				(tmp.to_float() > tmp_valid.to_float()+ERROR_TOLERANCE) ||
-				(tmp.to_float() < tmp_valid.to_float()-ERROR_TOLERANCE)
+				(tmp.data.to_float() > tmp_valid.data.to_float()+ERROR_TOLERANCE) ||
+				(tmp.data.to_float() < tmp_valid.data.to_float()-ERROR_TOLERANCE)
 		)
 		{
 			printf("ERROR: wrong value\n");

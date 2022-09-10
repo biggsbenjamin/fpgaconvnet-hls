@@ -32,11 +32,15 @@ void bias(
 #pragma HLS STREAM variable=in 
 #pragma HLS STREAM variable=out
 
+    bias_data_t tmp;
+
     pixel_loop: for(unsigned int pixel_index=0;pixel_index<batch_size*rows*cols;pixel_index++) {
         filter_loop: for(unsigned int filter_index=0;filter_index<filters;filter_index++) {
             #pragma HLS PIPELINE II=1 rewind
             #pragma HLS loop_flatten
-            out.write(in.read() + bias[filter_index]);
+            tmp = in.read();
+            tmp.data = tmp.data + bias[filter_index];
+            out.write(tmp);
 	    }
     }
 }

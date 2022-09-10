@@ -52,11 +52,17 @@ convolution_layer_template_header = """//auto generated file
 #define {NAME}_CHANNELS_OUT {channels_out}
 
 // define data types
-typedef ap_fixed<{input_width},{input_int_width},AP_RND>    {name}_input_t;
-typedef ap_fixed<{output_width},{output_int_width},AP_RND>  {name}_output_t;
-typedef ap_fixed<{acc_width},{acc_int_width},AP_RND>        {name}_acc_t;
-typedef ap_fixed<{weight_width},{weight_int_width},AP_RND>  {name}_weight_t;
-typedef ap_fixed<{biases_width},{biases_int_width},AP_RND>  {name}_biases_t;
+//typedef ap_fixed<{input_width},{input_int_width},AP_RND>    {name}_input_t;
+//typedef ap_fixed<{output_width},{output_int_width},AP_RND>  {name}_output_t;
+//typedef ap_fixed<{acc_width},{acc_int_width},AP_RND>        {name}_acc_t;
+//typedef ap_fixed<{weight_width},{weight_int_width},AP_RND>  {name}_weight_t;
+//typedef ap_fixed<{biases_width},{biases_int_width},AP_RND>  {name}_biases_t;
+// forcing common data types
+typedef b_data_t    {name}_input_t;
+typedef b_data_t    {name}_output_t;
+typedef b_acc_t     {name}_acc_t;
+typedef weight_t    {name}_weight_t;
+typedef weight_t    {name}_biases_t;
 
 // SLIDING WINDOW
 #define {NAME}_SLIDING_WINDOW_BATCH_SIZE    {batch_size}

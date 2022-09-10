@@ -32,10 +32,12 @@ void relu(
     for(unsigned long pixel_index=0 ; pixel_index < batch_size*rows*cols*channels ; pixel_index++) {
         #pragma HLS PIPELINE II=1 rewind
         relu_t tmp = in.read();
-        if(tmp < 0.0)
-            out.write(0.0);
-        else
+        if(tmp.data < 0.0) {
+            tmp.data = 0.0;
             out.write(tmp);
+        } else {
+            out.write(tmp);
+        }
     }
 }
 

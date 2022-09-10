@@ -32,7 +32,8 @@ squeeze_layer_template_header = """#ifndef {NAME}_HPP_
 #define {NAME}_SQUEEZE_COARSE_OUT   {coarse_out}
 #define {NAME}_SQUEEZE_BUFFER_SIZE  {buffer_size}
 
-typedef ap_fixed<{data_width},{data_int_width},AP_RND> {name}_data_t;
+//typedef ap_fixed<{data_width},{data_int_width},AP_RND> {name}_data_t;
+typedef b_data_t {name}_data_t;
 typedef {name}_data_t {name}_input_t;
 typedef {name}_data_t {name}_output_t;
 

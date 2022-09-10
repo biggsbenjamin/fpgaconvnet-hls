@@ -32,7 +32,7 @@ void conv_intr_inner(
 {
 
 #pragma HLS INLINE
-    //printf("Conv version A, conv_intr_inner");
+    //printf("Conv version A, conv_intr_inner\n");
 
     const unsigned int batch_size    = BATCH_SIZE;
     const unsigned int rows          = ROWS;
@@ -97,7 +97,7 @@ void conv_intr(
 
 #pragma HLS INLINE OFF
 
-    printf("Conv version B, conv intr full");
+    printf("Conv version B, conv intr full\n");
     const unsigned int batch_size    = BATCH_SIZE;
     const unsigned int rows          = ROWS;
     const unsigned int cols          = COLS;
@@ -178,7 +178,7 @@ void conv_intr(
 
 #pragma HLS INLINE OFF
 
-    printf("Conv version C, conv intr single ch p grp");
+    printf("Conv version C, conv intr single ch p grp\n");
     const unsigned int batch_size    = BATCH_SIZE;
     const unsigned int rows          = ROWS;
     const unsigned int cols          = COLS;
@@ -256,7 +256,7 @@ void conv_intr(
 
 #pragma HLS INLINE OFF
 
-    printf("Conv version D, conv intr single fil");
+    printf("Conv version D, conv intr single fil\n");
     const unsigned int batch_size    = BATCH_SIZE;
     const unsigned int rows          = ROWS;
     const unsigned int cols          = COLS;
@@ -333,7 +333,7 @@ void conv_intr(
 
 #pragma HLS INLINE OFF
 
-    printf("Conv version E, conv intr, 1 fil, 1 ch per grp");
+    printf("Conv version E, conv intr, 1 fil, 1 ch per grp\n");
     const unsigned int batch_size    = BATCH_SIZE;
     const unsigned int rows          = ROWS;
     const unsigned int cols          = COLS;
@@ -405,7 +405,7 @@ void conv_intr(
 
 #pragma HLS INLINE OFF
 
-    printf("Conv version F, conv intr, 1 iter");
+    printf("Conv version F, conv intr, 1 iter\n");
     const unsigned int channels      = CHANNELS;
     const unsigned int filters       = FILTERS;
     const unsigned int groups        = GROUPS;
@@ -479,7 +479,7 @@ void conv_intr(
 
 #pragma HLS INLINE OFF
 
-    printf("Conv version G, conv intr, 1 iter, 1 ch per grp");
+    printf("Conv version G, conv intr, 1 iter, 1 ch per grp\n");
     const unsigned int channels      = CHANNELS;
     const unsigned int filters       = FILTERS;
     const unsigned int groups        = GROUPS;
@@ -548,7 +548,7 @@ void conv_intr(
 
 #pragma HLS INLINE OFF
 
-    printf("Conv version H, conv intr, 1 iter, 1 fil");
+    printf("Conv version H, conv intr, 1 iter, 1 fil\n");
     const unsigned int channels      = CHANNELS;
     const unsigned int groups        = GROUPS;
     const unsigned int kernel_size_x = KERNEL_SIZE_X;
@@ -616,7 +616,7 @@ void conv_intr(
 
 #pragma HLS INLINE OFF
 
-    printf("Conv version I, 1 iter, 1 fil, 1 ch per grp");
+    printf("Conv version I, 1 iter, 1 fil, 1 ch per grp\n");
     const unsigned int channels      = CHANNELS;
     const unsigned int groups        = GROUPS;
     const unsigned int kernel_size_x = KERNEL_SIZE_X;
@@ -687,7 +687,7 @@ void conv_mul(
 #pragma HLS STREAM variable=weight_stream
 #pragma HLS STREAM variable=acc_stream
 
-    printf("Conv version K, conv mul");
+    printf("Conv version K, conv mul\n");
     const unsigned int batch_size    = BATCH_SIZE;
     const unsigned int rows          = ROWS;
     const unsigned int cols          = COLS;
@@ -707,15 +707,25 @@ void conv_mul(
 #pragma HLS ARRAY_PARTITION variable=weight_stream complete dim=0
 #pragma HLS ARRAY_PARTITION variable=acc_stream    complete dim=0
 
-    // MULTIPLICATION LOOP
-    conv_acc_t acc_cache[fine];
+    // intermediate variables to deal with struct
+    conv_data_t win;
+    conv_acc_t acc_cache[fine], prev;
+    // Setting up a variable of accumulation type that is zero
+    conv_acc_t acc_zero;
+    acc_zero.data = 0;
     unsigned char acc_index=0;
+    // MULTIPLICATION LOOP
     mul_pixel_loop: for(unsigned int pixel_index=0;pixel_index<batch_size*rows*cols*channels_per_group*filters_per_group*groups*interval;pixel_index++) {
             #pragma HLS pipeline II=1
             mul_loop: for(unsigned char fine_index=0;fine_index<fine;fine_index++) {
+                
                 // update accumulation cache
-                conv_acc_t prev = ( acc_index == 0 ) ? conv_acc_t(0) : acc_cache[fine_index] ;
-                acc_cache[fine_index] = prev + window_stream[fine_index].read() * weight_stream[fine_index].read();
+                prev.data = ( acc_index == 0 ) ? acc_zero.data : acc_cache[fine_index].data ;
+                win = window_stream[fine_index].read();
+                acc_cache[fine_index].data = prev.data+win.data*weight_stream[fine_index].read();
+                //set batchid
+                acc_cache[fine_index].batchid = win.batchid;
+                
                 // write to output stream
                 if( acc_index == (interval-1) ) {
                     acc_stream[fine_index].write( acc_cache[fine_index] ) ;
@@ -768,12 +778,15 @@ void conv_acc(
     const unsigned int channels_per_group = DIVIDE(channels,groups);
     const unsigned int filters_per_group  = DIVIDE(filters ,groups);
 
+    conv_acc_t acc,tmp;
     // ACCUMULATION LOOP
     acc_pixel_loop: for(unsigned int pixel_index=0;pixel_index<batch_size*rows*cols*channels_per_group*filters_per_group*groups;pixel_index++) {
         #pragma HLS pipeline II=1 rewind
-        conv_acc_t acc = 0 ;
+        acc.data=0;
         acc_fine_loop: for(unsigned char fine_index=0;fine_index<fine;fine_index++) {
-            acc += acc_stream[fine_index].read();
+            tmp = acc_stream[fine_index].read();
+            acc.data += tmp.data;
+            acc.batchid = tmp.batchid;
         }
         out.write(acc);
     }
@@ -814,7 +827,7 @@ void conv(
 
 #pragma HLS ARRAY_PARTITION variable=in complete dim=0
 
-    printf("Conv version M, conv standard");
+    printf("Conv version M, full conv standard\n");
     const unsigned int fine = FINE;
 
     stream_t(conv_data_t) window_stream[fine];
@@ -906,7 +919,7 @@ void conv(
 
 #pragma HLS ARRAY_PARTITION variable=in complete dim=0
 
-    printf("Conv version N, full conv, 1 ch per grp");
+    printf("Conv version N, full conv, 1 ch per grp\n");
     const unsigned int fine = FINE;
 
     stream_t(conv_data_t) window_stream[fine];
@@ -996,7 +1009,7 @@ void conv(
 
 #pragma HLS ARRAY_PARTITION variable=in complete dim=0
 
-    printf("Conv version O, full conv, 1 fil");
+    printf("Conv version O, full conv, 1 fil\n");
     const unsigned int fine = FINE;
 
     stream_t(conv_data_t) window_stream[fine];
@@ -1086,7 +1099,7 @@ void conv(
 
 #pragma HLS ARRAY_PARTITION variable=in complete dim=0
 
-    printf("Conv version Q, full conv, 1 fil, 1 ch per grp");
+    printf("Conv version Q, full conv, 1 fil, 1 ch per grp\n");
     const unsigned int fine = FINE;
 
     stream_t(conv_data_t) window_stream[fine];
@@ -1177,7 +1190,7 @@ void conv(
 
 #pragma HLS ARRAY_PARTITION variable=in complete dim=0
 
-    printf("Conv version R, full conv, 1 iter");
+    printf("Conv version R, full conv, 1 iter\n");
     const unsigned int fine = FINE;
 
     stream_t(conv_data_t) window_stream[fine];
@@ -1267,7 +1280,7 @@ void conv(
 
 #pragma HLS ARRAY_PARTITION variable=in complete dim=0
 
-    printf("Conv version S, 1 iter, 1 ch per grp");
+    printf("Conv version S, 1 iter, 1 ch per grp\n");
     const unsigned int fine = FINE;
 
     stream_t(conv_data_t) window_stream[fine];
@@ -1356,7 +1369,7 @@ void conv(
 
 #pragma HLS ARRAY_PARTITION variable=in complete dim=0
 
-    printf("Conv version T, full conv, 1 iter, 1 fil");
+    printf("Conv version T, full conv, 1 iter, 1 fil\n");
     const unsigned int fine = FINE;
 
     stream_t(conv_data_t) window_stream[fine];
@@ -1440,7 +1453,7 @@ void conv(
 
 #pragma HLS ARRAY_PARTITION variable=in complete dim=0
 
-    printf("Conv version U, 1 iter, 1 fil, 1 ch per grp");
+    printf("Conv version U, 1 iter, 1 fil, 1 ch per grp\n");
     const unsigned int fine = FINE;
 
     stream_t(conv_data_t) window_stream[fine];
@@ -1517,7 +1530,7 @@ void conv(
 
 #pragma HLS INLINE OFF
 
-    printf("Conv version V, pointwise full conv");
+    printf("Conv version V, pointwise full conv\n");
     const unsigned batch_size   = BATCH_SIZE;
     const unsigned rows         = ROWS;
     const unsigned cols         = COLS;
@@ -1531,8 +1544,10 @@ void conv(
 #pragma HLS STREAM variable=in
 #pragma HLS STREAM variable=out
 
+    //conv_data_t window_cache;
+    //conv_acc_t acc;
     conv_data_t window_cache;
-
+    conv_acc_t dot;
     pixel_loop: for(unsigned int pixel_index=0;pixel_index<batch_size*rows*cols;pixel_index++) {
         unsigned int weight_index = 0;
         channel_loop: for(unsigned int channel_index=0;channel_index<channels_per_group;channel_index++) {
@@ -1541,14 +1556,16 @@ void conv(
                 #pragma HLS PIPELINE II=1
                 // #pragma HLS dependence variable=windowCache intra RAW true
                 if(filter_index%filters_per_group == 0) {
-                    DO_PRAGMA(HLS occurrence cycle=batch_size*rows*cols*channels)
+                    //DO_PRAGMA(HLS occurence cycle=batch_size*rows*cols*channels)
                     window_cache = in.read();
                 }
-
-                conv_acc_t acc = window_cache * weights[weight_index][0][0];
-
+                // perform the dot product
+                dot.data = window_cache.data * weights[weight_index][0][0];
+                dot.batchid=window_cache.batchid;
+                // write to the dotproduct to the output
+                out.write(dot);
+                // increment weights index
                 weight_index++;
-                out.write(acc);
             }
         }
     }
@@ -1579,7 +1596,7 @@ void conv(
 
 #pragma HLS INLINE OFF
 
-    printf("Conv version W, point wise");
+    printf("Conv version W, point wise\n");
     const unsigned batch_size   = BATCH_SIZE;
     const unsigned rows         = ROWS;
     const unsigned cols         = COLS;
@@ -1604,7 +1621,8 @@ void conv(
             // update the cache
             window_cache = in.read();
             // perform the dot product
-            dot = window_cache * weights[weight_index][0][0];
+            dot.data = window_cache.data * weights[weight_index][0][0];
+            dot.batchid=window_cache.batchid;
             // write to the dotproduct to the output
             out.write(dot);
             // increment weights index
@@ -1639,7 +1657,7 @@ void conv(
 
 #pragma HLS INLINE OFF
 
-    printf("Conv version X, pointwise");
+    printf("Conv version X, pointwise\n");
     const unsigned batch_size   = BATCH_SIZE;
     const unsigned rows         = ROWS;
     const unsigned cols         = COLS;
@@ -1667,7 +1685,8 @@ void conv(
                 window_cache = in.read();
             }
             // perform the dot product
-            dot = window_cache * weights[weight_index][0][0];
+            dot.data = window_cache.data * weights[weight_index][0][0];
+            dot.batchid=window_cache.batchid;
             // write to the dotproduct to the output
             out.write(dot);
             // increment weights index
@@ -1700,7 +1719,7 @@ void conv(
 
 #pragma HLS INLINE OFF
 
-    printf("Conv version Y, pointwise");
+    printf("Conv version Y, pointwise\n");
     const unsigned channels     = CHANNELS;
     const unsigned filters      = FILTERS;
     const unsigned groups       = GROUPS;
@@ -1727,7 +1746,8 @@ void conv(
                 //printf("C.Y in idx:"<<channel_index*filters+filter_index<<", ";
             }
             // perform the dot product
-            dot = window_cache * weights[weight_index][0][0];
+            dot.data = window_cache.data * weights[weight_index][0][0];
+            dot.batchid=window_cache.batchid;
             // write to the dotproduct to the output
             out.write(dot);
             //printf("C.Y out idx:"<<channel_index*filters+filter_index);
@@ -1760,7 +1780,7 @@ void conv(
 
 #pragma HLS INLINE OFF
 
-    printf("Conv version Z, pointwise");
+    printf("Conv version Z, pointwise\n");
     const unsigned channels     = CHANNELS;
     const unsigned groups       = GROUPS;
 
@@ -1780,7 +1800,8 @@ void conv(
         // update the cache
         window_cache = in.read();
         // perform the dot product
-        dot = window_cache * weights[weight_index][0][0];
+        dot.data = window_cache.data * weights[weight_index][0][0];
+        dot.batchid=window_cache.batchid;
         // write to the dotproduct to the output
         out.write(dot);
         // increment weights index
@@ -1812,7 +1833,7 @@ void conv(
 
 #pragma HLS INLINE OFF
 
-    printf("Conv version AA, pointwise");
+    printf("Conv version AA, pointwise\n");
     const unsigned channels = CHANNELS;
     const unsigned filters  = FILTERS;
 
@@ -1834,7 +1855,8 @@ void conv(
             window_cache = in.read();
         }
         // perform the dot product
-        dot = window_cache * weights[weight_index][0][0];
+        dot.data = window_cache.data * weights[weight_index][0][0];
+        dot.batchid=window_cache.batchid;
         // write to the dotproduct to the output
         out.write(dot);
         // increment weights index
