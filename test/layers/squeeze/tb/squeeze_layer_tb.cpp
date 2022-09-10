@@ -11,33 +11,40 @@ int main()
     stream_t(squeeze_layer_data_t) out[SQUEEZE_LAYER_COARSE_OUT];
     stream_t(squeeze_layer_data_t) out_correct[SQUEEZE_LAYER_COARSE_OUT];
 
+    const unsigned int in_size  = DIVIDE(SQUEEZE_LAYER_CHANNELS,SQUEEZE_LAYER_COARSE_IN)*SQUEEZE_LAYER_ROWS*SQUEEZE_LAYER_COLS;
+    const unsigned int out_size = DIVIDE(SQUEEZE_LAYER_CHANNELS,SQUEEZE_LAYER_COARSE_OUT)*SQUEEZE_LAYER_ROWS_OUT*SQUEEZE_LAYER_COLS_OUT;
+
     // test images
-    static squeeze_layer_data_t test_in[DIVIDE(SQUEEZE_LAYER_CHANNELS,SQUEEZE_LAYER_COARSE_IN)*SQUEEZE_LAYER_ROWS*SQUEEZE_LAYER_COLS][SQUEEZE_LAYER_COARSE_IN];
-    static squeeze_layer_data_t test_out[DIVIDE(SQUEEZE_LAYER_CHANNELS,SQUEEZE_LAYER_COARSE_OUT)*SQUEEZE_LAYER_ROWS_OUT*SQUEEZE_LAYER_COLS_OUT][SQUEEZE_LAYER_COARSE_OUT];
+    static squeeze_layer_data_t test_in[SQUEEZE_LAYER_BATCH_SIZE*in_size][SQUEEZE_LAYER_COARSE_IN];
+    static squeeze_layer_data_t test_out[SQUEEZE_LAYER_BATCH_SIZE*out_size][SQUEEZE_LAYER_COARSE_OUT];
 
     // load input
-    load_data<
-        DIVIDE(SQUEEZE_LAYER_CHANNELS,SQUEEZE_LAYER_COARSE_IN)*SQUEEZE_LAYER_ROWS*SQUEEZE_LAYER_COLS,
+    load_data_l<
+        SQUEEZE_LAYER_BATCH_SIZE,
+        in_size,
         SQUEEZE_LAYER_COARSE_IN,
         squeeze_layer_data_t
     >(input_path,test_in);
 
     // load output
-    load_data<
-        DIVIDE(SQUEEZE_LAYER_CHANNELS,SQUEEZE_LAYER_COARSE_OUT)*SQUEEZE_LAYER_ROWS_OUT*SQUEEZE_LAYER_COLS_OUT,
+    load_data_l<
+        SQUEEZE_LAYER_BATCH_SIZE,
+        out_size,
         SQUEEZE_LAYER_COARSE_OUT,
         squeeze_layer_data_t
     >(output_path,test_out);
 
     // convert to streams
-    to_stream<
-        DIVIDE(SQUEEZE_LAYER_CHANNELS,SQUEEZE_LAYER_COARSE_IN)*SQUEEZE_LAYER_ROWS*SQUEEZE_LAYER_COLS,
+    to_stream_l<
+        SQUEEZE_LAYER_BATCH_SIZE,
+        in_size,
         SQUEEZE_LAYER_COARSE_IN,
         squeeze_layer_data_t
     >(test_in,in);
 
-    to_stream<
-        DIVIDE(SQUEEZE_LAYER_CHANNELS,SQUEEZE_LAYER_COARSE_OUT)*SQUEEZE_LAYER_ROWS_OUT*SQUEEZE_LAYER_COLS_OUT,
+    to_stream_l<
+        SQUEEZE_LAYER_BATCH_SIZE,
+        out_size,
         SQUEEZE_LAYER_COARSE_OUT,
         squeeze_layer_data_t
     >(test_out,out_correct);

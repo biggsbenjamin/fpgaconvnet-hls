@@ -19,36 +19,40 @@ int main()
     const int data_in_size = CHANNELS_3D(INNER_PRODUCT_LAYER_CHANNELS,INNER_PRODUCT_LAYER_COARSE_IN)*INNER_PRODUCT_LAYER_ROWS*INNER_PRODUCT_LAYER_COLS;
     const int data_out_size = FILTERS_PER_UNIT(INNER_PRODUCT_LAYER_FILTERS,INNER_PRODUCT_LAYER_COARSE_OUT)*rows_out*cols_out;
 
-    static inner_product_layer_input_t test_in[data_in_size][INNER_PRODUCT_LAYER_COARSE_IN];
-    static inner_product_layer_output_t test_out[data_out_size][INNER_PRODUCT_LAYER_COARSE_OUT];
+    static inner_product_layer_input_t test_in[data_in_size*INNER_PRODUCT_LAYER_BATCH_SIZE][INNER_PRODUCT_LAYER_COARSE_IN];
+    static inner_product_layer_output_t test_out[data_out_size*INNER_PRODUCT_LAYER_BATCH_SIZE][INNER_PRODUCT_LAYER_COARSE_OUT];
 
     std::cout << "data in size:" << data_in_size << std::endl;
     std::cout << "data out size:" << data_out_size << std::endl;
     const bool debug = true;
 
     // load input
-    load_data<
+    load_data_l<
+        INNER_PRODUCT_LAYER_BATCH_SIZE,
         data_in_size,
         INNER_PRODUCT_LAYER_COARSE_IN,
         inner_product_layer_input_t
     >(input_path,test_in);
 
     // load output
-    load_data<
+    load_data_l<
+        INNER_PRODUCT_LAYER_BATCH_SIZE,
         data_out_size,
         INNER_PRODUCT_LAYER_COARSE_OUT,
         inner_product_layer_output_t
     >(output_path,test_out);
 
     // convert to streams
-    to_stream<
+    to_stream_l<
+        INNER_PRODUCT_LAYER_BATCH_SIZE,
         data_in_size,
         INNER_PRODUCT_LAYER_COARSE_IN,
         //debug,
         inner_product_layer_input_t
     >(test_in,in);
 
-    to_stream<
+    to_stream_l<
+        INNER_PRODUCT_LAYER_BATCH_SIZE,
         data_out_size,
         INNER_PRODUCT_LAYER_COARSE_OUT,
         //debug,

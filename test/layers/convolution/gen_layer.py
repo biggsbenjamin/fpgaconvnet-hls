@@ -51,12 +51,19 @@ class ConvolutionLayerTB(Layer):
         self.param["pad_bottom"] = layer.pad_bottom
         self.param["pad_left"] = layer.pad_left
 
+        # add output dimensions
+        self.param['rows_out']      = layer.rows_out()
+        self.param['cols_out']      = layer.cols_out()
+        self.param['channels_out']  = layer.channels_out()
+
         # data in
         data_in = self.gen_data([
+            #self.param['batch_size'],
             self.param['rows_in'],
             self.param['cols_in'],
             self.param['channels_in']
         ])
+        data_in = np.repeat(data_in[np.newaxis,...], self.param['batch_size'], axis=0)
 
         # weights
         weights = self.gen_data([
@@ -71,11 +78,12 @@ class ConvolutionLayerTB(Layer):
         if self.param['has_bias'] == 1:
             biases = self.gen_data([
                 self.param['filters']
-            ])
+            ],[-1,1])
 
         # generate data out with functional model
-        data_out = layer.functional_model(copy.copy(data_in),weights,biases)[0]
-        data_out = np.moveaxis(data_out,0,-1)
+        data_out = layer.functional_model(copy.copy(data_in),weights,biases)
+        # move channels to the back
+        data_out = np.moveaxis(data_out,1,-1)
 
         # save weights
         weights = ONNXData._transform_weights(
@@ -94,15 +102,14 @@ class ConvolutionLayerTB(Layer):
             self.param['coarse_out']
         )
 
-        # add output dimensions
-        self.param['rows_out']      = layer.rows_out()
-        self.param['cols_out']      = layer.cols_out()
-        self.param['channels_out']  = layer.channels_out()
         print('out sizes, rows:{} cols:{} chans:{}'.format(
                 self.param['rows_out'],
                 self.param['cols_out'],
                 self.param['channels_out']))
+
+        # what does this reshapping do?
         data_in = data_in.reshape(
+            self.param['batch_size'],
             self.param['rows_in'],
             self.param['cols_in'],
             int(self.param['groups']/self.param['coarse_group']),
@@ -110,9 +117,10 @@ class ConvolutionLayerTB(Layer):
             int(self.param['channels_in']/(self.param['groups']*self.param['coarse_in'])),
             self.param['coarse_in']
         )
-        data_in = data_in.transpose((0,1,2,4,3,5))
+        data_in = data_in.transpose((0,1,2,4,3,5,6))
 
         data_out = data_out.reshape(
+            self.param['batch_size'],
             self.param['rows_out'],
             self.param['cols_out'],
             int(self.param['groups']/self.param['coarse_group']),
@@ -121,7 +129,7 @@ class ConvolutionLayerTB(Layer):
             self.param['coarse_out']
         )
         #print(data_out)
-        data_out = data_out.transpose(0,1,2,4,3,5)
+        data_out = data_out.transpose(0,1,2,4,3,5,6)
 
         # return data
         data = {

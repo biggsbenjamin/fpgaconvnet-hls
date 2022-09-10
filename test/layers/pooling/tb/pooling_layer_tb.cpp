@@ -16,33 +16,37 @@ int main()
     const int size_out = CHANNELS_3D(POOLING_LAYER_CHANNELS,POOLING_LAYER_COARSE)*POOLING_LAYER_ROWS_OUT*POOLING_LAYER_COLS_OUT;
 
     // test images
-    static pooling_layer_data_t test_in[size_in][POOLING_LAYER_COARSE];
-    static pooling_layer_data_t test_out[size_out][POOLING_LAYER_COARSE];
+    static pooling_layer_data_t test_in[POOLING_LAYER_BATCH_SIZE*size_in][POOLING_LAYER_COARSE];
+    static pooling_layer_data_t test_out[POOLING_LAYER_BATCH_SIZE*size_out][POOLING_LAYER_COARSE];
 
     std::cout << "data in size:" << size_in << std::endl;
     std::cout << "data out size:" << size_out << std::endl;
     // load input
-    load_data<
+    load_data_l<
+        POOLING_LAYER_BATCH_SIZE,
         size_in,
         POOLING_LAYER_COARSE,
         pooling_layer_data_t
     >(input_path,test_in);
 
     // load output
-    load_data<
+    load_data_l<
+        POOLING_LAYER_BATCH_SIZE,
         size_out,
         POOLING_LAYER_COARSE,
         pooling_layer_data_t
     >(output_path,test_out);
 
     // convert to streams
-    to_stream<
+    to_stream_l<
+        POOLING_LAYER_BATCH_SIZE,
         size_in,
         POOLING_LAYER_COARSE,
         pooling_layer_data_t
     >(test_in,in);
 
-    to_stream<
+    to_stream_l<
+        POOLING_LAYER_BATCH_SIZE,
         size_out,
         POOLING_LAYER_COARSE,
         pooling_layer_data_t

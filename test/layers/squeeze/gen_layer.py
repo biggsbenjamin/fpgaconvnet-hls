@@ -32,9 +32,11 @@ class SqueezeLayerTB(Layer):
             self.param['cols_in'],
             self.param['channels_in']
         ],data_range=[-1,1])
+        data_in = np.repeat(data_in[np.newaxis,...], self.param['batch_size'], axis=0)
         # data out
-        data_out = layer.functional_model(data_in)[0]
-        data_out = np.moveaxis(data_out,0,-1)
+        data_out = layer.functional_model(data_in)
+        # move channels to last axis
+        data_out = np.moveaxis(data_out,1,-1)
 
         # add output dimensions
         self.param['rows_out']      = layer.rows_out()

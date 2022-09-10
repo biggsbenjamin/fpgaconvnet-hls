@@ -46,15 +46,17 @@ class PoolingLayerTB(Layer):
             self.param['cols_in'],
             self.param['channels_in']
         ])
+        data_in = np.repeat(data_in[np.newaxis,...], self.param['batch_size'], axis=0)
 
         # data out
-        data_out = layer.functional_model(copy.copy(data_in))[0]
-        data_out = np.moveaxis(data_out,0,-1)
+        data_out = layer.functional_model(copy.copy(data_in))
+        # move channels to last axis
+        data_out = np.moveaxis(data_out,1,-1)
 
         # add output dimensions
-        self.param['rows_out']      = layer.rows_out()#0)
-        self.param['cols_out']      = layer.cols_out()#0)
-        self.param['channels_out']  = layer.channels_out()#0)
+        self.param['rows_out']      = layer.rows_out()
+        self.param['cols_out']      = layer.cols_out()
+        self.param['channels_out']  = layer.channels_out()
         # return data
         data = {
             'input'  : data_in.reshape(-1).tolist(),

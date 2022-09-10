@@ -38,10 +38,12 @@ class InnerProductLayerTB(Layer):
 
         # data in
         data_in = self.gen_data([
+            self.param['batch_size'],
             self.param['rows_in'],
             self.param['cols_in'],
             self.param['channels_in']
         ])
+        #data_in = np.repeat(data_in[np.newaxis,...], self.param['batch_size'], axis=0)
 
         # weights
         weights = self.gen_data([
@@ -59,8 +61,9 @@ class InnerProductLayerTB(Layer):
             ],data_range=[-1,1])
 
         # data out
-        data_out = layer.functional_model(copy.copy(data_in),weights,biases)[0]
-        data_out = np.moveaxis(data_out,0,-1)
+        data_out = layer.functional_model(copy.copy(data_in),weights,biases)
+        # move channels to last dimension
+        data_out = np.moveaxis(data_out,1,-1)
 
         # reshape weights - I guess to match conv weight format?
         weights = np.reshape(weights,
