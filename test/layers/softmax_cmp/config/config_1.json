@@ -1,7 +1,7 @@
 {
     "type": "SOFTMAX_CMP",
     "buffer_depth" : 2,
-    "batch_size": 10,
+    "batch_size": 256,
     "rows_in": 1,
     "cols_in": 1,
     "channels_in": 10,

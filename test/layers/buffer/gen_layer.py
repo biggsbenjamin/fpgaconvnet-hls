@@ -18,16 +18,19 @@ class BufferLayerTB(Layer):
 
     # update stimulus generation
     def gen_stimulus(self):
+        self.param['rows_in'] = self.param['rows']
+        self.param['cols_in'] = self.param['cols']
+        self.param['channels_in'] = self.param['channels']
         # Init Module
         layer = BufferLayer(
             self.param['rows'],
             self.param['cols'],
             self.param['channels'],
-            self.param['coarse'],
             self.param['ctrledge'],
-            self.param['drop_mode'],
+            drop_mode=self.param['drop_mode'],
+            coarse=self.param['coarse'],
         )
-        layer.load_coef()
+        #layer.load_coef()
 
         # data in
         data_in = self.gen_data([
@@ -50,7 +53,7 @@ class BufferLayerTB(Layer):
         }
         # resource and latency model
         model = {
-            'latency'   : layer.get_latency(),
+            'latency'   : layer.latency(),
             'resources' : layer.resource()
         }
         return data, model

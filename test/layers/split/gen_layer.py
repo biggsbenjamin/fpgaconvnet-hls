@@ -26,7 +26,7 @@ class SplitLayerTB(Layer):
             self.param['coarse'],
             self.param['ports_out']
         )
-        layer.load_coef()
+        #layer.load_coef()
 
         # data in
         data_in = self.gen_data([
@@ -34,14 +34,15 @@ class SplitLayerTB(Layer):
             self.param['cols_in'],
             self.param['channels_in']
         ])
+
         # data out
         data_out = layer.functional_model(copy.copy(data_in))
         #data_out = np.moveaxis(data_out,0,-1)
 
         # add output dimensions
-        self.param['rows_out']      = layer.rows_out(0)
-        self.param['cols_out']      = layer.cols_out(0)
-        self.param['channels_out']  = layer.channels_out(0)
+        #self.param['rows_out']      = layer.rows_out(0)
+        #self.param['cols_out']      = layer.cols_out(0)
+        #self.param['channels_out']  = layer.channels_out(0)
 
         # return data
         data = {
@@ -50,7 +51,7 @@ class SplitLayerTB(Layer):
         }
         # resource and latency model
         model = {
-            'latency'   : layer.get_latency(),
+            'latency'   : layer.latency(),
             'resources' : layer.resource()
         }
         return data, model

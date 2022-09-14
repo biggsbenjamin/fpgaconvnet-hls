@@ -6,8 +6,8 @@
 #include "softmax_cmp_layer_param.hpp"
 
 void softmax_cmp_layer_top(
-  stream_t(data_t) &in,
-  stream_t(data_t) out[SOFTMAX_CMP_LAYER_CTRL]
+  stream_t(softmax_cmp_layer_data_t) in[1],
+  stream_t(softmax_cmp_layer_ctrl_t) out[SOFTMAX_CMP_LAYER_CTRL]
 );
 
 #endif
