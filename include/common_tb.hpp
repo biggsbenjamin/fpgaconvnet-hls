@@ -89,6 +89,20 @@ void to_stream_l(
 	    }
     }
 }
+/* testing split layer out */
+template<int BATCH_SIZE,int SIZE, int COARSE, int PORTS, typename T>
+void to_stream_l(
+    T in[SIZE*BATCH_SIZE][PORTS][COARSE],
+    stream_t(T) out[PORTS][COARSE]
+) {
+    for(int i=0;i<SIZE*BATCH_SIZE;i++) {
+        for(int j=0;j<PORTS;j++) {
+            for(int k=0;k<COARSE;k++) {
+ 	            out[j][k].write(in[i][j][k]);
+            }
+	    }
+    }
+}
 /* STANDARD FOR TESTING LAYER INPUTS */
 template<int SIZE, int STREAMS, typename T>
 void to_stream(
@@ -132,9 +146,11 @@ void load_data(
     }
     
     // save to array
+    T caster;
     int i=0;
     while(input_file >> val) {
-        data[i].push_back(data_t(val));
+        caster.data = val;
+        data[i].push_back(caster);
         i++;
         if (i>=COARSE){ i=0; }; //reset i every COARSE number of items
         /*if (i==0){
@@ -218,6 +234,66 @@ void load_data(
         fscanf(fp,"%f\n", &val);
         //data[i] = T( val );
         data[i].batchid = 7;
+        data[i].data = ( val );
+    }
+
+    // close file
+    fclose(fp);
+}
+/* BUFFER and other batched modules */
+template<int BATCH_SIZE, int SHAPE_SIZE, typename T>
+void load_data_buff(
+    std::string filepath,
+    T data[BATCH_SIZE*SHAPE_SIZE]
+) {
+    // read in file
+    const char *filepath_cstr = filepath.c_str();
+    FILE * fp = fopen(filepath_cstr,"r");
+
+    // check file opened
+    if (fp == NULL) {
+        perror("Failed: ");
+    }
+
+    // save to array
+    int bidx = 0;
+    for(int i=0;i<BATCH_SIZE*SHAPE_SIZE;i++) {
+        if (i % SHAPE_SIZE == 0 && i != 0) {
+            bidx++;
+        }
+        float val;
+        fscanf(fp,"%f\n", &val);
+        data[i].batchid = bidx;
+        data[i].data = ( val );
+    }
+
+    // close file
+    fclose(fp);
+}
+/* EXIT MERGE */
+template<int BATCH_SIZE, int SHAPE_SIZE, int BATCH_OFFSET, typename T>
+void load_data_em(
+    std::string filepath,
+    T data[BATCH_SIZE*SHAPE_SIZE]
+) {
+    // read in file
+    const char *filepath_cstr = filepath.c_str();
+    FILE * fp = fopen(filepath_cstr,"r");
+
+    // check file opened
+    if (fp == NULL) {
+        perror("Failed: ");
+    }
+
+    // save to array
+    int bidx = BATCH_OFFSET;
+    for(int i=0;i<BATCH_SIZE*SHAPE_SIZE;i++) {
+        if (i % SHAPE_SIZE == 0 && i != 0) {
+            bidx++;
+        }
+        float val;
+        fscanf(fp,"%f\n", &val);
+        data[i].batchid = bidx;
         data[i].data = ( val );
     }
 
@@ -683,15 +759,44 @@ void load_data(
     input_file.close();
 }
 
-/* BUFFER OUT VARIABLE SIZE */
-template<typename T>
+/* BUFFER OUT VARIABLE SIZE - LAYER VERSION*/
+template<int COARSE, typename T, typename T2>
+void to_stream(
+    std::vector<T> in[COARSE],
+    std::vector<T2> b_in,
+    stream_t(T) out[COARSE],
+    int shape_size
+) {
+    int bidx=0;
+    T out_val;
+    for(int i=0;i<b_in.size()*shape_size;i++) {
+        if (i % shape_size == 0 && i != 0) {
+            bidx++;
+        }
+        for(int c=0;c<COARSE;c++) {
+            out_val.batchid = b_in[bidx];
+            out_val.data = in[c][i].data;
+	        out[c].write(out_val);
+        }
+    }
+}
+/* BUFFER OUT VARIABLE SIZE - MODULE VERSION*/
+template<typename T, typename T2>
 void to_stream(
     std::vector<T> in,
+    std::vector<T2> b_in,
     stream_t(T) &out,
-    int vec_size
+    int shape_size
 ) {
-    for(int i=0;i<vec_size;i++) {
-	    out.write(in[i]);
+    int bidx=0;
+    T out_val;
+    for(int i=0;i<b_in.size()*shape_size;i++) {
+        if (i % shape_size == 0 && i != 0) {
+            bidx++;
+        }
+        out_val.batchid = b_in[bidx];
+        out_val.data = in[i].data;
+	    out.write(out_val);
     }
 }
 
@@ -758,14 +863,84 @@ int checkStreamEqual(
 	}
 	return err;
 }
+template<typename T>
+int checkStreamEqual_EM(
+        int fm_size,
+		stream_t(T) &test,
+		stream_t(T) &valid,
+		bool print_out=false
+) 
+{
+    int fm_cntr=0;
+    int err = 0;
+    T id_str;
+    while(!valid.empty()) {
+		if(test.empty()) {
+			printf("ERROR: empty early\n");
+			return 1;
+		}
+		//T tmp = test.read();
+		//T tmp_valid = valid.read();
+        T tmp;
+        T tmp_valid;
+        test.read_nb(tmp);
+        valid.read_nb(tmp_valid);
+        //float conversion for visual comparison
+        float tmpf,tmpf_valid;
+        tmpf=tmp.data.to_float();
+        tmpf_valid=tmp_valid.data.to_float();
 
+		if(print_out) {
+            //printf("%x,%x\n",tmp.range()&BIT_MASK,tmp_valid.range()&BIT_MASK);
+            //std::cout<<"Expected:"<<tmp.range()&BIT_MASK
+            //    <<" Actual:"<<tmp_valid.range()&BIT_MASK<<std::endl;    
+            std::cout<<"Expected:"<<tmpf
+                <<" Actual:"<<tmpf_valid<<std::endl;    
+        }
+		//if(
+		//		(tmp.data.to_float() > tmp_valid.data.to_float()+ERROR_TOLERANCE) ||
+		//		(tmp.data.to_float() < tmp_valid.data.to_float()-ERROR_TOLERANCE)
+		//)
+		//{
+		//	//printf("ERROR: wrong value\n");
+		//	printf("ERROR: wrong value. Actual:%f, Expected:%f, Difference:%f\n",
+        //            tmp.data.to_float(), tmp_valid.data.to_float(), tmp.data.to_float()-tmp_valid.data.to_float());
+		//	//return 1;
+		//	err++;
+		//}
+        if (fm_cntr == 0 ) {
+            // up date the batch id every fm_size values
+            id_str.batchid = tmp.batchid;
+        } else {
+            if (tmp.batchid != id_str.batchid) {
+                printf("ERROR: wrong ID. Actual:%d, Expected:%d\n",
+                        tmp.batchid, id_str.batchid); //tmp_valid.batchid );
+                err++;
+            }
+        }
+        // count up to fm size
+        fm_cntr++;
+        fm_cntr = fm_cntr%fm_size;
+
+	}
+
+	if(!test.empty())
+	{
+		printf("ERROR: still data in stream\n");
+		return 1;
+		err++;
+	}
+	return err;
+}
+// bool version
 template<>
-int checkStreamEqual <float> (
-		hls::stream <float> &test,
-		hls::stream <float> &valid,
+int checkStreamEqual <b_bool_t> (
+		hls::stream <b_bool_t> &test,
+		hls::stream <b_bool_t> &valid,
 		bool print_out
 )
 {
+    int err=0;
 	while(!valid.empty())
 	{
 		if(test.empty())
@@ -773,28 +948,73 @@ int checkStreamEqual <float> (
 			printf("ERROR: empty early\n");
 			return 1;
 		}
-		float tmp = test.read();
-		float tmp_valid = valid.read();
+		b_bool_t tmp = test.read();
+		b_bool_t tmp_valid = valid.read();
 
-		if(print_out) printf("test:%f,valid:%f\n",tmp,tmp_valid);
+		if(print_out) printf("test val:%d, valid val:%d\n",tmp.data,tmp_valid.data);
 
-		if(
-				(tmp > tmp_valid+ERROR_TOLERANCE) ||
-				(tmp < tmp_valid-ERROR_TOLERANCE)
-		)
-		{
+		if( tmp.data != tmp_valid.data) {
 			//printf("ERROR: wrong value\n");
-			printf("ERROR: wrong value %f, %f \n",tmp, tmp_valid);
-			return 1;
+            printf("ERROR: wrong value Actual:%d, Expected:%d \n",tmp.data, tmp_valid.data);
+			err++;
 		}
+        if (tmp.batchid != tmp_valid.batchid) {
+			printf("ERROR: wrong ID. Actual:%d, Expected:%d\n",
+                    tmp.batchid, tmp_valid.batchid );
+			err++;
+        }
 	}
 
 	if(!test.empty())
 	{
 		printf("ERROR: still data in stream\n");
-		return 1;
+		err++;
 	}
-	return 0;
+	return err;
+}
+
+template<>
+int checkStreamEqual <b_float_t> (
+		hls::stream <b_float_t> &test,
+		hls::stream <b_float_t> &valid,
+		bool print_out
+)
+{
+    int err=0;
+	while(!valid.empty())
+	{
+		if(test.empty())
+		{
+			printf("ERROR: empty early\n");
+			return 1;
+		}
+		b_float_t tmp = test.read();
+		b_float_t tmp_valid = valid.read();
+
+		if(print_out) printf("test:%f,valid:%f\n",tmp.data,tmp_valid.data);
+
+		if(
+				(tmp.data > tmp_valid.data+ERROR_TOLERANCE) ||
+				(tmp.data < tmp_valid.data-ERROR_TOLERANCE)
+		)
+		{
+			//printf("ERROR: wrong value\n");
+			printf("ERROR: wrong value Actual:%f, Expected:%f \n",tmp.data, tmp_valid.data);
+			err++;
+		}
+        if (tmp.batchid != tmp_valid.batchid) {
+			printf("ERROR: wrong ID. Actual:%d, Expected:%d\n",
+                    tmp.batchid, tmp_valid.batchid );
+			err++;
+        }
+	}
+
+	if(!test.empty())
+	{
+		printf("ERROR: still data in stream\n");
+		err++;
+	}
+	return err;
 }
 
 template<int SIZE>

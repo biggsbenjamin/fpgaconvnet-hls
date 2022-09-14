@@ -97,6 +97,10 @@ struct b_float_t {
     batch_t batchid;
     float data;
 };
+struct b_bool_t {
+    batch_t batchid;
+    bool data;
+};
 struct b_axis_t {
     b_data_t samp;
     ap_int<1> last;

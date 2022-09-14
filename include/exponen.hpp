@@ -7,21 +7,17 @@
  * EXPONENTIAL FUNCTION
  */
 
-//typedef ap_fixed<16,8> exp_t;
-
 template<
     unsigned int BATCH_SIZE,
     unsigned int ROWS,
     unsigned int COLS,
     unsigned int CHANNELS,
-    typename exp_t
+    typename exp_t,
+    typename exp_f_t
 >
-
 void exponen(
     stream_t(exp_t) &in,
-    //stream_t(data_t) &out
-    hls::stream<float> &out
-    //stream_t(bdata_t) &out
+    stream_t(exp_f_t) &out
 )
 {
 
@@ -31,16 +27,17 @@ void exponen(
     const unsigned int rows         = ROWS;
     const unsigned int cols         = COLS;
     const unsigned int channels     = CHANNELS;
-    //const data_t exp_max_in         = 4.84375;
-    //const data_t data_max           = 127.99609375;
     //might not need these constants?
-    const exp_t exp_max_in         = 4.84375;
-    const exp_t data_max           = 127.99609375;
+    exp_t exp_max_in, data_max;
+    exp_max_in.data             = 4.84375;
+    data_max.data               = 127.99609375;
  
-    const unsigned int depth_in= rows*cols*channels+15;
-#pragma HLS STREAM variable=in depth=depth_in
+    // const unsigned int depth_in= rows*cols*channels+15; //FIXME WHY did i do this???
+#pragma HLS STREAM variable=in depth=41 //25(exp pipeline dpth) + 16(buffer) //OLD -> depth_in
 #pragma HLS STREAM variable=out //sets up streaming data type
-
+    
+    exp_t cache;
+    exp_f_t out_var;
     for(unsigned long pixel_index=0 ; pixel_index < batch_size*rows*cols*channels ; pixel_index++) {
 #pragma HLS PIPELINE II=1 rewind 
         /*exp_t tmp, res;
@@ -53,18 +50,13 @@ void exponen(
         }
         out.write( data_t{res} );*/
 
-        //data_t tmp = in.read();
-        float tmp = in.read().to_float();
-        //std::cout<<"exponen tmp: "<<tmp<<std::endl;
-        //bdata_t tmp = bdata_t{in.read()};
-        //exponential function options: cordic, lookup table, something else?
-        
-        //out.write( data_t{ hls::exp(exp_t{tmp}) } );
-        //out.write(data_t{ hls::exp(tmp.to_float()) });
-        //out.write( hls::exp(tmp.to_float()) );
-        float tmp_out = hls::exp(tmp);
-        out.write( tmp_out);//hls::exp(tmp) );
-        //std::cout<<"exponen out: "<<tmp_out<<std::endl;
+        // read fixed point in and batch id
+        cache = in.read();
+        // prepare float output var
+        out_var.batchid = cache.batchid;
+        // make use of naff hls thing
+        out_var.data = hls::exp( cache.data.to_float() );
+        out.write(out_var);
     }
 }
 

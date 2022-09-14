@@ -11,15 +11,16 @@ template<
     //unsigned int ROWS,
     //unsigned int COLS,
     //unsigned int CHANNELS,
-    typename compare_t
+    typename cmp_t,
+    typename ctrl_t
 >
 void compare(
-    //stream_t(data_t) &in,
-    //stream_t(data_t) &out
-    hls::stream<float> &max_in,
-    hls::stream<float> &thr_in,
+    stream_t(cmp_t) &max_in,
+    stream_t(cmp_t) &thr_in,
+    //hls::stream<float> &max_in,
+    //hls::stream<float> &thr_in,
     float thr_val[1],
-    stream_t(compare_t) &ctrl_out //TODO change this to some ctrl signal format
+    stream_t(ctrl_t) &ctrl_out
 )
 {
 
@@ -30,9 +31,10 @@ void compare(
     //const unsigned int cols         = COLS;
     //const unsigned int channels     = CHANNELS;
     const float threshold = thr_val[0];
+    const unsigned int depth_in = batch_size + 16;
  
-#pragma HLS STREAM variable=max_in depth=batch_size
-#pragma HLS STREAM variable=thr_in depth=batch_size
+#pragma HLS STREAM variable=max_in depth=depth_in
+#pragma HLS STREAM variable=thr_in depth=depth_in
 #pragma HLS STREAM variable=ctrl_out
 
     //TODO:
@@ -44,22 +46,25 @@ void compare(
     //TODO - consider later exits will be ctrl dependent, unknown number of iterations
     //  might make sense to have two versions (in this file)
 
-    float thr_mult, thr_res, cmp_max;
+    cmp_t thr_mult, thr_res, cmp_max;
+    ctrl_t out_var;
     
     batch_loop: for(unsigned long b_index=0;b_index<batch_size;b_index++) {
-#pragma HLS PIPELINE II=1 rewind 
+        #pragma HLS PIPELINE II=1 rewind 
         thr_mult = thr_in.read(); //this one will arrive later
+        thr_res.data = thr_mult.data * threshold;
         cmp_max = max_in.read();
-        thr_res = thr_mult * threshold;
-        //std::cout<<"threshold: "<<thr_res<<std::endl;
-        //std::cout<<"max val: "<<cmp_max<<std::endl;
-        if (cmp_max > thr_res) {
+        out_var.batchid = thr_mult.batchid;
+        //std::cout<<"sfmsm,thr_res: "<<thr_res.data<<" cmp_max:"<<cmp_max.data<<std::endl;
+        if (cmp_max.data >= thr_res.data) {
             //exit should occur
-            ctrl_out.write(1.0);
+            out_var.data = true;
         } else {
             //no exit for this batch item
-            ctrl_out.write(0.0);
+            out_var.data = false;
         }
+        //std::cout<<"cmp out: "<<out_var.data<< " ID:"<<out_var.batchid<<std::endl;
+        ctrl_out.write(out_var);
     }
 }
 

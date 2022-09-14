@@ -7,16 +7,17 @@
  *  SPLIT FUNCTION
  */
 template<
-unsigned int BATCH_SIZE,
-unsigned int ROWS,
-unsigned int COLS,
-unsigned int CHANNELS,
-unsigned int COARSE,
-unsigned int PORTS_OUT
+    unsigned int BATCH_SIZE,
+    unsigned int ROWS,
+    unsigned int COLS,
+    unsigned int CHANNELS,
+    unsigned int COARSE,
+    unsigned int PORTS_OUT,
+    typename split_t
 >
 void split(
-    stream_t(data_t) in[COARSE],
-    stream_t(data_t) out[PORTS_OUT][COARSE]
+    stream_t(split_t) in[COARSE],
+    stream_t(split_t) out[PORTS_OUT][COARSE]
 )
 {
 
@@ -25,7 +26,7 @@ void split(
     const unsigned int batch_size   = BATCH_SIZE;
     const unsigned int rows         = ROWS;
     const unsigned int cols         = COLS;
-    const unsigned int channels     = CHANNELS;
+    const unsigned int channels     = CHANNELS; //channels PER COARSE
     const unsigned int coarse       = COARSE;
     const unsigned int ports_out    = PORTS_OUT;
 
@@ -34,7 +35,7 @@ void split(
 
 #pragma HLS ARRAY_PARTITION variable=out complete dim=0
 
-    data_t local_cache[COARSE];
+    split_t local_cache[COARSE];
 #pragma HLS DEPENDENCE variable=local_cache RAW intra true
 
     pixel_loop: for (unsigned long pixel_index = 0; pixel_index < batch_size*rows*cols*channels; pixel_index++) {
