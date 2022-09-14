@@ -5,17 +5,21 @@ import shutil
 import generate.modules.fork
 import generate.modules.buff
 
-buffer_layer_template_header = """#ifndef {NAME}_HPP_
+buffer_layer_template_header = """//auto generated
+#ifndef {NAME}_HPP_
 #define {NAME}_HPP_
 
 #include "fork.hpp"
 #include "buffer.hpp"
 
 #define name        {name}
+#define NAME        {NAME}
 #define {NAME}_ID   {id}
 
-#define {name}_input_t          data_t
-#define {name}_output_t         data_t
+typedef b_data_t {name}_data_t;
+typedef b_bool_t {name}_ctrl_t;
+typedef {name}_data_t {name}_input_t;
+typedef {name}_data_t {name}_output_t;
 
 #define {NAME}_BATCH_SIZE   {batch_size}
 #define {NAME}_ROWS         {rows}
@@ -48,22 +52,24 @@ buffer_layer_template_header = """#ifndef {NAME}_HPP_
  */
 
 void {name}(
-    stream_t({name}_input_t)  in[{NAME}_COARSE],
-    stream_t({name}_input_t)  &ctrl_in,
-    stream_t({name}_output_t) out[{NAME}_COARSE],
+    stream_t({name}_data_t)  in[{NAME}_COARSE],
+    stream_t({name}_ctrl_t)  &ctrl_in,
+    stream_t({name}_data_t) out[{NAME}_COARSE],
     int mode
 );
 
 #undef name
+#undef NAME
 #endif
 """
 
-buffer_layer_template_src = """#include "{name}.hpp"
+buffer_layer_template_src = """//auto generated
+#include "{name}.hpp"
 
 void {name}(
-    stream_t({name}_input_t)  in[{NAME}_COARSE],
-    stream_t({name}_input_t)  &ctrl_in,
-    stream_t({name}_output_t) out[{NAME}_COARSE],
+    stream_t({name}_data_t)  in[{NAME}_COARSE],
+    stream_t({name}_ctrl_t)  &ctrl_in,
+    stream_t({name}_data_t) out[{NAME}_COARSE],
     int mode
 )
 {{
@@ -78,7 +84,7 @@ void {name}(
 #pragma HLS ARRAY_PARTITION variable=in  complete dim=0
 #pragma HLS ARRAY_PARTITION variable=out complete dim=0
 
-    stream_t(data_t) fork_out[{NAME}_COARSE];
+    stream_t({name}_ctrl_t) fork_out[{NAME}_COARSE];
 #pragma HLS STREAM variable=fork_out
 #pragma HLS ARRAY_PARTITION variable=fork_out  complete dim=0
 
@@ -100,6 +106,7 @@ def gen_buffer_layer(name,param,src_path,header_path):
         name+"_fork",
         "ctrl_in",
         "fork_out",
+        f"{name}_ctrl_t",
         indent=8
     )
 
@@ -109,6 +116,7 @@ def gen_buffer_layer(name,param,src_path,header_path):
         "in[coarseIndex]",
         "fork_out[coarseIndex]",
         "out[coarseIndex]",
+        f"{name}_data_t",
         indent=8
     )
 
