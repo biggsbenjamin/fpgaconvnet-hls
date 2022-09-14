@@ -2,10 +2,10 @@
 #include "reducemax.hpp"
 
 void reducemax_top(
-    //stream_t(data_t) &in,
-    //stream_t(data_t) &out
-    hls::stream<float> &in,
-    hls::stream<float> &out
+    stream_t(rdmx_t) &in,
+    stream_t(rdmx_t) &out
+    //hls::stream<float> &in,
+    //hls::stream<float> &out
 )
 {
 
@@ -16,7 +16,8 @@ void reducemax_top(
         REDUCEMAX_BATCH_SIZE,
         REDUCEMAX_ROWS,
         REDUCEMAX_COLS,
-        REDUCEMAX_CHANNELS
+        REDUCEMAX_CHANNELS,
+        rdmx_t
     >(in,out);
 
 }

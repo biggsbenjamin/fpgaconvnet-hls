@@ -5,13 +5,15 @@
 
 #include "reducemax_param.hpp"
 
+typedef b_float_t rdmx_t;
+
 /////////////////////////////////
 
 void reducemax_top(
-	//stream_t(data_t) &in,
-	//stream_t(data_t) &out
-    hls::stream<float> &in,
-    hls::stream<float> &out
+	stream_t(rdmx_t) &in,
+	stream_t(rdmx_t) &out
+    //hls::stream<float> &in,
+    //hls::stream<float> &out
 );
 
 /////////////////////////////////

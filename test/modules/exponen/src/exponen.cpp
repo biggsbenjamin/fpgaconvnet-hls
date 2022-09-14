@@ -2,10 +2,8 @@
 #include "exponen.hpp"
 
 void exponen_top(
-    stream_t(data_t) &in,
-    //stream_t(data_t) &out
-    hls::stream<float> &out
-    //stream_t(bdata_t) &out
+	stream_t(exp_t) &in,
+	stream_t(exp_f_t) &out
 )
 {
 
@@ -16,7 +14,9 @@ void exponen_top(
         EXPONEN_BATCH_SIZE,
         EXPONEN_ROWS,
         EXPONEN_COLS,
-        EXPONEN_CHANNELS
+        EXPONEN_CHANNELS,
+        exp_t, 
+        exp_f_t
     >(in,out);
 
 }

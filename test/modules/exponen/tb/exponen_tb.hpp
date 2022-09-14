@@ -5,13 +5,14 @@
 
 #include "exponen_param.hpp"
 
+typedef b_data_t exp_t;
+typedef b_float_t exp_f_t;
+
 /////////////////////////////////
 
 void exponen_top(
-	stream_t(data_t) &in,
-	//stream_t(data_t) &out
-    hls::stream<float> &out
-	//stream_t(bdata_t) &out
+	stream_t(exp_t) &in,
+	stream_t(exp_f_t) &out
 );
 
 /////////////////////////////////

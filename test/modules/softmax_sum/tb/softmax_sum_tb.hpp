@@ -5,13 +5,15 @@
 
 #include "softmax_sum_param.hpp"
 
+typedef b_float_t sfmsm_t;
+
 /////////////////////////////////
 
 void softmax_sum_top(
-	//stream_t(data_t) &in,
-	//stream_t(data_t) &out
-    hls::stream<float> &in,
-    hls::stream<float> &out
+	stream_t(sfmsm_t) &in,
+	stream_t(sfmsm_t) &out
+    //hls::stream<float> &in,
+    //hls::stream<float> &out
 );
 
 /////////////////////////////////

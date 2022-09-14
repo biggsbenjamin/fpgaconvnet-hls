@@ -45,12 +45,33 @@ class ExitMergeTB(Data):
                 self.param['channels'],
             ])
             data_arr.append(data_in)
+            # return data - for writing to files
             self.param[f'ex{ex}_in'] = sp
-            # return data
             data[f'input{ex}'] = data_in.reshape(-1).tolist()
 
+        # interleave data out for CSIM
+        #data_intrlv = []
+        #ex0=0
+        #ex1=0
+        #b_tot= self.param['batch_size']
+        #bidx=0
+        #while b_tot > 0:
+        #    if bidx%2 == 0 and ex0 < splits[0]:
+        #        data_intrlv.append(data_arr[0][ex0])
+        #        ex0+=1
+        #        b_tot-=1
+
+        #    elif bidx%2 == 1 and ex1 < splits[1]:
+        #        data_intrlv.append(data_arr[1][ex1])
+        #        ex1+=1
+        #        b_tot-=1
+        #    bidx+=1
+        #data_out2 = np.stack(data_intrlv)
+        #print(data_out2.shape)
+
         # add output to return data
-        data_out = np.concatenate(data_arr)
+        data_out = np.concatenate(data_arr) # FIXME not really using actual values
+        print(data_out.shape)
         data['output'] = data_out.reshape(-1).tolist()
         # resource and latency model
         #TODO needs to be fixed on optimiser side

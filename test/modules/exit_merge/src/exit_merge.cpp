@@ -2,8 +2,8 @@
 #include "exit_merge.hpp"
 
 void exit_merge_top(
-    stream_t(data_t) in[EXIT_MERGE_EXITS],
-    stream_t(data_t) &out
+    stream_t(em_t) in[EXIT_MERGE_EXITS],
+    stream_t(em_t) &out
 )
 {
 
@@ -15,7 +15,8 @@ void exit_merge_top(
         EXIT_MERGE_ROWS,
         EXIT_MERGE_COLS,
         EXIT_MERGE_CHANNELS,
-        EXIT_MERGE_EXITS                                 
-        >(in, out);
+        EXIT_MERGE_EXITS,                                 
+        em_t
+    >(in, out);
 
 }

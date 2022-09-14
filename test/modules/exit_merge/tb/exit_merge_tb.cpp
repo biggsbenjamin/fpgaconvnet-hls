@@ -10,57 +10,63 @@ int main()
     std::string output_path = std::string(DATA_DIR)+"/output.dat";
 
     // in/out streams
-    stream_t(data_t) in[EXIT_MERGE_EXITS];
-    stream_t(data_t) out;
-    stream_t(data_t) out_valid;
+    stream_t(em_t) in[EXIT_MERGE_EXITS];
+    stream_t(em_t) out;
+    stream_t(em_t) out_valid;
 
-    const unsigned int size_in = EXIT_MERGE_ROWS*EXIT_MERGE_COLS*EXIT_MERGE_CHANNELS;
+    const unsigned int fm_size = EXIT_MERGE_ROWS*EXIT_MERGE_COLS*EXIT_MERGE_CHANNELS;
     const unsigned int size_out = EXIT_MERGE_BATCH_SIZE*EXIT_MERGE_ROWS*EXIT_MERGE_COLS*EXIT_MERGE_CHANNELS;
 
     // test inputs data
-    static data_t test_in0[size_in*EXIT_MERGE_EX0_IN];
-    static data_t test_in1[size_in*EXIT_MERGE_EX1_IN];
-    static data_t test_out[size_out];
+    static em_t test_in0[fm_size*EXIT_MERGE_EX0_IN];
+    static em_t test_in1[fm_size*EXIT_MERGE_EX1_IN];
+    static em_t test_out[size_out];
 
     // load data_in0
-    load_data<
-        size_in*EXIT_MERGE_EX0_IN,
-        data_t
+    load_data_em<
+        EXIT_MERGE_EX0_IN,
+        fm_size,
+        0,
+        em_t
     >(input0_path,test_in0);
     // load data_in1
-    load_data<
-        size_in*EXIT_MERGE_EX1_IN,
-        data_t
+    load_data_em<
+        EXIT_MERGE_EX1_IN,
+        fm_size,
+        EXIT_MERGE_EX0_IN, // offsetting by first exit batch size, CSIM concats?
+        em_t
     >(input1_path,test_in1);
 
-    // load data_out
-    load_data<
-        size_out,
-        data_t
+    // load data_out - FIXME values not strictly of any use
+    load_data_buff<
+        EXIT_MERGE_BATCH_SIZE,
+        fm_size,
+        em_t
     >(output_path,test_out);
 
     // convert input stream0
     to_stream<
-        size_in*EXIT_MERGE_EX0_IN,
-        data_t
+        fm_size*EXIT_MERGE_EX0_IN,
+        em_t
     >(test_in0,in[0]);
     // convert input stream1
     to_stream<
-        size_in*EXIT_MERGE_EX1_IN,
-        data_t
+        fm_size*EXIT_MERGE_EX1_IN,
+        em_t
     >(test_in1,in[1]);
 
-    // convert to out valid stream
+    // convert to out valid stream - FIXME values not strictly of any use
     to_stream<
         size_out,
-        data_t
+        em_t
     >(test_out,out_valid);
 
     // run es 
     exit_merge_top(in, out);
 
     printf("\r\n\t EXIT_MERGE #1\r\n");
-    err += checkStreamEqual <data_t> (out,out_valid,false);
+    // FIXME only checks that batch grouping of data is preserved, not that data is correct
+    err += checkStreamEqual_EM<em_t> (fm_size,out,out_valid,false);
     //err += checkStreamEqual <float> (out,out_valid,true);
     
     return err;
