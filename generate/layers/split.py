@@ -85,7 +85,7 @@ void {name}_top(
 
 #pragma HLS DATAFLOW
 
-#pragma HLS INTERFACE s_axilite port=return                     bundle=ctrl
+#pragma HLS INTERFACE s_axilite port=return bundle=ctrl
 #pragma HLS INTERFACE axis port=in
 #pragma HLS INTERFACE axis port=out
 

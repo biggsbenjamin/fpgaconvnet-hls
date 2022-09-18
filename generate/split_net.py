@@ -238,13 +238,13 @@ def gen_network(name,partition,output_path):
                         wr=True if layer_name == wr_layer else False)
                 biases_init += generate_bias_init(layer_name,
                         wr=True if layer_name == wr_layer else False)
-        if layer.type == fpgaconvnet_pb2.layer.layer_type.POOLING:
+        elif layer.type == fpgaconvnet_pb2.layer.layer_type.POOLING:
             gen_pooling_layer(*args)
-        if layer.type == fpgaconvnet_pb2.layer.layer_type.CONCAT:
+        elif layer.type == fpgaconvnet_pb2.layer.layer_type.CONCAT:
             gen_concat_layer(*args)
-        if layer.type == fpgaconvnet_pb2.layer.layer_type.RELU:
+        elif layer.type == fpgaconvnet_pb2.layer.layer_type.RELU:
             gen_relu_layer(*args)
-        if layer.type == fpgaconvnet_pb2.layer.layer_type.INNER_PRODUCT:
+        elif layer.type == fpgaconvnet_pb2.layer.layer_type.INNER_PRODUCT:
             # add weights to function arguments
             fn_args.append(f"{layer_name}_weights")
             if layer.parameters.has_bias:
@@ -275,8 +275,21 @@ def gen_network(name,partition,output_path):
                         wr=True if layer_name == wr_layer else False)
                 biases_init += generate_bias_init(layer_name,
                         wr=True if layer_name == wr_layer else False)
-        if layer.type == fpgaconvnet_pb2.layer.layer_type.SQUEEZE:
+        elif layer.type == fpgaconvnet_pb2.layer.layer_type.SQUEEZE:
             gen_squeeze_layer(*args)
+        elif layer.type == fpgaconvnet_pb2.layer.layer_type.SPLIT:
+            gen_split_layer(*args)
+        elif layer.type == fpgaconvnet_pb2.layer.layer_type.GREATER:
+            #print("WARNING: temporarily IGNORING comparison layer.")
+            #continue
+            gen_softmax_cmp_layer(*args)
+        elif layer.type == fpgaconvnet_pb2.layer.layer_type.BUFFER:
+            gen_buffer_layer(*args)
+        elif layer.type == fpgaconvnet_pb2.layer.layer_type.IF:
+            print("WARNING: IGNORING ExitMerge layer.")
+            continue
+        else:
+            raise NameError("The layer you want ain't on the list, try again.")
 
         # add layer function
         for stream_in in layer.streams_in:

@@ -77,7 +77,7 @@ void {name}(
 #pragma HLS INLINE OFF
 #pragma HLS DATAFLOW
 
-#pragma HLS STREAM variable=in depth={buffer_depth}
+#pragma HLS STREAM variable=in
 #pragma HLS STREAM variable=ctrl_in
 #pragma HLS STREAM variable=out
 
@@ -99,7 +99,35 @@ void {name}(
 
 """
 
-def gen_buffer_layer(name,param,src_path,header_path):
+buffer_layer_top_template_src = """//auto generated
+#include "{name}.hpp"
+
+void {name}_top(
+    stream_t({name}_data_t)  in[{NAME}_COARSE],
+    stream_t({name}_ctrl_t)  &ctrl_in,
+    stream_t({name}_data_t) out[{NAME}_COARSE])
+{{
+
+#pragma HLS DATAFLOW
+
+#pragma HLS INTERFACE s_axilite port=return bundle=ctrl
+#pragma HLS INTERFACE axis port=in
+#pragma HLS INTERFACE axis port=ctrl_in
+#pragma HLS INTERFACE axis port=out
+
+#pragma HLS STREAM variable=in
+#pragma HLS STREAM variable=ctrl_in
+#pragma HLS STREAM variable=out
+
+    int mode=0;
+    {name}(in, ctrl_in, out, mode);
+
+}}
+
+"""
+
+
+def gen_buffer_layer(name,param,src_path,header_path, topless=True):
 
     #FORK MODULE INIT
     fork = generate.modules.fork.gen_fork_module(
@@ -150,9 +178,23 @@ def gen_buffer_layer(name,param,src_path,header_path):
         drop_mode           =dm
     )
 
+    # top src
+    buffer_layer_top_src = buffer_layer_top_template_src.format(
+        name            =name,
+        NAME            =name.upper(),
+        buffer_depth=max(param['buffer_depth'],2),
+    )
+
     # write source file
     with open(src_path,'w') as src_file:
         src_file.write(buffer_layer_src)
+
+    # write top source file
+    if not topless:
+        top_src_path = os.path.split(src_path)
+        top_src_path = os.path.join(top_src_path[0], f'{name}_top.cpp')
+        with open(top_src_path,'w') as src_file:
+            src_file.write(buffer_layer_top_src)
 
     # write header file
     with open(header_path,'w') as header_file:
