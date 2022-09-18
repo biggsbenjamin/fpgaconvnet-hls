@@ -22,6 +22,8 @@ import fpgaconvnet_optimiser.tools.layer_enum as layer_enum
 from fpgaconvnet_optimiser.tools.layer_enum import LAYER_TYPE
 import fpgaconvnet_optimiser.tools.onnx_helper as onnx_helper
 import fpgaconvnet_optimiser.proto.fpgaconvnet_pb2 as fpgaconvnet_pb2
+from fpgaconvnet_optimiser.tools.layer_enum \
+        import from_proto_layer_type
 
 try:
     from tools.array_init import array_init
@@ -119,7 +121,6 @@ class ONNXData:
             # model
             self.model = onnx_helper.load(model_path)
             self.model = onnx_helper.update_batch_size(self.model,self.partition.batch_size)
-
             # merge subgraphs into main graph
             self.merge_subgraphs()
             # add intermediate layers to outputs
@@ -128,18 +129,23 @@ class ONNXData:
                 og_VIP = onnx_helper.get_ValueInfoProto_from_node(self.model.graph,node)
                 VIP = onnx.ValueInfoProto()
                 VIP.CopyFrom(og_VIP)
-                new_outputs.append(VIP)
+                # FIXME temporarily ignoring 'ReduceMax' op because onnx_helper broken
+                if node.op_type in ['ReduceMax', 'Greater', 'Cast']:
+                    print("found control operation, ignore output")
+                else:
+                    new_outputs.append(VIP)
             # add input aswell to output
             input_VIP = onnx.ValueInfoProto()
             input_VIP.CopyFrom(self.model.graph.input[0])
             new_outputs.append(input_VIP)
             # extending model with intermediate outputs
             self.model.graph.output.extend(new_outputs)
-
-            # remove bias
+            # remove bias FIXME what is this doing again???
             self.remove_initializer_from_input()
             self.remove_bias()
-
+            # need to do EE VERSION to get all the other outputs
+            self.model = onnx_helper.update_batch_size(self.model,
+                    self.partition.batch_size, ee_flag=True)
             # verify model is onnx compliant after changes
             onnx.checker.check_model(self.model)
             # inference session
@@ -152,6 +158,7 @@ class ONNXData:
             self.output_shape = self.sess.get_outputs()[0].shape
             # create random data input
             self.data = np.random.uniform(0,1,self.input_shape).astype(np.float32)
+            onnx.save(self.model, "./TMP_ONNX_MODEL_bs4.onnx")
 
     def load_input(self,filepath):
         self.data = np.array(Image.open(filepath),dtype=np.float32)
@@ -237,6 +244,8 @@ class ONNXData:
                     for og_node in subgraph.g.node:
                         # copy VIP information to new class
                         og_VIP = onnx_helper.get_ValueInfoProto_from_node(subgraph.g,og_node)
+                        #print(og_VIP)
+                        #raise NameError
                         VIP = onnx.ValueInfoProto()
                         VIP.CopyFrom(og_VIP)
                         # copy node information
@@ -251,6 +260,7 @@ class ONNXData:
                 for op in self.model.graph.output:
                     if op.name == node.output[0]:
                         self.model.graph.output.remove(op)
+
         #extend main graph
         self.model.graph.node.extend(subnodes)
         self.model.graph.value_info.extend(valinfs)
@@ -270,7 +280,9 @@ class ONNXData:
             stream_out[index] = fixed_point(val,total_width=total_width,int_width=int_width)
         return stream_out
 
-    def _fixed_point_stream_format(self, stream, streams=1, port_width=16, ports=1):
+    def _fixed_point_stream_format(self, stream, streams=1, port_width=16, ports=1,
+            batch_flag=False,batch_num_width=8, sample_size=1):
+        print(f"batch flag:{batch_flag}")
         # check it's only a 1D array
         assert len(stream.shape) == 1
         # check the stream is fixed-point
@@ -281,6 +293,22 @@ class ONNXData:
         if streams > ports*(port_width/data_width):
             print(f"streams:{streams} ports:{ports} pw:{port_width} dw:{data_width}")
             raise ValueError
+
+        ##### batch id things #####
+        tot_data_width = data_width + batch_num_width
+        # get stream data type
+        if   0  < tot_data_width <= 8:
+            tot_data_type = np.uint8
+        elif 8  < tot_data_width <= 16:
+            tot_data_type = np.uint16
+        elif 16 < tot_data_width <= 32:
+            tot_data_type = np.uint32
+        elif 32 < tot_data_width <= 64:
+            tot_data_type = np.uint64
+        else:
+            raise TypeError
+        ##### batch id things #####
+
         # get port data type
         if   port_width == 8:
             port_type = np.uint8
@@ -306,32 +334,56 @@ class ONNXData:
         # check streams are a factor of the stream shape
         if not stream.shape[0]%streams == 0:
             raise ValueError
-        # get the size of the binary streas out
+        # get the size of the binary streams out
         size = int(stream.shape[0]/streams)
         # binary stream out
         bin_out = np.zeros([ports,size], dtype=port_type)
-        # copy stream to binary stream out
-        for i in range(size):
-            for j in range(streams):
-                port_index = math.floor((j*data_width)/port_width)
-                # print(stream[i*streams+j].bits_to_signed() & ((2**data_width)-1), data_type(stream[i*streams+j].bits_to_signed()))
-                stream_val = data_type( stream[i*streams+j].bits_to_signed() & ((2**data_width)-1) )
-                bin_out[port_index][i] |= port_type( stream_val  << (data_width*j)%port_width )
-        # return the formatted stream
-        return bin_out
+        if not batch_flag:
+            # copy stream to binary stream out
+            for i in range(size):
+                for j in range(streams):
+                    port_index = math.floor((j*data_width)/port_width)
+                    # print(stream[i*streams+j].bits_to_signed() & ((2**data_width)-1), data_type(stream[i*streams+j].bits_to_signed()))
+                    stream_val = tot_data_type( stream[i*streams+j].bits_to_signed() & ((2**data_width)-1) )
+                    bin_out[port_index][i] |= port_type( stream_val  << (data_width*j)%port_width )
+            # return the formatted stream
+            return bin_out
+        else:
+            batch_id=0
+            # copy stream to binary stream out
+            for i in range(size):
+                for j in range(streams): # streams = 1 in my case
+                    #format is portwidth[31:0];
+                    #portwidth[31:16] = batchid[15:0];
+                    #portwidth[15:0] = data[15:0];
 
-    def _fixed_point_stream_to_bin(self, stream, output_path, streams=1, port_width=64, ports=1):
+                    port_index = math.floor((j*tot_data_width)/port_width) # the port you're assigning the data to (always 0 in my case)
+                    #print(stream[i*streams+j].bits_to_signed() & ((2**data_width)-1), data_type(stream[i*streams+j].bits_to_signed()))
+                    batchid_val = data_type( batch_id )
+                    stream_val = data_type( stream[i*streams+j].bits_to_signed() & ((2**data_width)-1) )
+                    bin_out[port_index][i] |= port_type( batchid_val  << 16 )
+                    bin_out[port_index][i] |= port_type( stream_val  << 0 ) #<< (data_width*j)%port_width )
+                if (i+1) % sample_size == 0:
+                    batch_id+=1
+            # return the formatted stream
+            return bin_out
+
+    def _fixed_point_stream_to_bin(self, stream, output_path, streams=1, port_width=64, ports=1,
+            batch_flag=False, batch_num_width=8, sample_size=1):
         # get the formatted_stream
-        bin_out = self._fixed_point_stream_format(stream, streams=streams, port_width=port_width, ports=ports)
+        bin_out = self._fixed_point_stream_format(stream, streams=streams, port_width=port_width, ports=ports,
+                batch_flag=batch_flag, batch_num_width=batch_num_width, sample_size=sample_size)
         # get the port type
         port_type = bin_out.dtype
         # save to binary file
         for i in range(ports):
             bin_out[i].astype(port_type).tofile(f"{output_path}_{i}.bin".format(i=i))
 
-    def _fixed_point_stream_to_dat(self, stream, output_path, streams=1, port_width=64, ports=1):
+    def _fixed_point_stream_to_dat(self, stream, output_path, streams=1, port_width=64, ports=1,
+            batch_flag=False, batch_num_width=8, sample_size=1):
         # get the formatted_stream
-        bin_out = self._fixed_point_stream_format(stream, streams=streams, port_width=port_width, ports=ports)
+        bin_out = self._fixed_point_stream_format(stream, streams=streams, port_width=port_width, ports=ports,
+                batch_flag=batch_flag, batch_num_width=batch_num_width, sample_size=sample_size)
         # save to binary file
         for i in range(ports):
             with open(f"{output_path}_{i}.dat", 'w') as f:
@@ -346,7 +398,7 @@ class ONNXData:
         return np.moveaxis(featuremap, 1, -1)
         # TODO: handle 1D and 2D featuremaps
 
-    def save_featuremap(self, featuremap, output_path, parallel_streams=1, to_yaml=False, to_bin=False, to_csv=False, to_dat=False):
+    def save_featuremap(self, featuremap, output_path, sample_size=1, parallel_streams=1, to_yaml=False, to_bin=False, to_csv=False, to_dat=False):
         # yaml format
         if to_yaml:
             # save to yaml file
@@ -359,15 +411,18 @@ class ONNXData:
                     "channels"  : featuremap.shape[3],
                     "data"      : featuremap.reshape(-1).tolist() }, f)
         # get feature map stream
+        # NOTE THIS MAKES IT 16 bit fixed point
         stream = self._convert_fixed_port_stream(featuremap.reshape(-1))
         # binary format
         if to_bin:
-            print("WARNING: port width set to 16 bits for bin")
-            self._fixed_point_stream_to_bin(stream, output_path, streams=parallel_streams, port_width=16)
+            print("WARNING: port width set to 32 bits for bin, adding batchnum")
+            self._fixed_point_stream_to_bin(stream, output_path, streams=parallel_streams, port_width=32,
+                    batch_flag=True, batch_num_width=16, sample_size=sample_size)
         # dat format
         if to_dat:
-            print("WARNING: port width set to 16 bits for dat")
-            self._fixed_point_stream_to_dat(stream, output_path, streams=parallel_streams, port_width=16)
+            print("WARNING: port width set to 32 bits for dat, adding batchnum")
+            self._fixed_point_stream_to_dat(stream, output_path, streams=parallel_streams, port_width=32,
+                    batch_flag=True, batch_num_width=16, sample_size=sample_size)
         # csv format
         if to_csv:
             pass
@@ -378,16 +433,85 @@ class ONNXData:
         input_data = np.array( self.sess.run([input_node], { self.input_name : self.data } )[0] )
         input_data = self.transform_featuremap(input_data)
         input_streams = int(self.partition.layers[0].parameters.coarse_in)
-        self.save_featuremap(input_data, os.path.join(output_path, onnx_helper._format_name(input_node)),
-            parallel_streams=input_streams, to_yaml=False, to_bin=to_bin, to_csv=to_csv, to_dat=to_dat)
+        #FIXME allow input to be have more parallelism
+        assert input_streams == 1,\
+                "ERROR: Input stream is not coarse=1!\
+                (in save_featuremap_in_out)"
+        self.save_featuremap(input_data,
+                os.path.join(output_path,
+                    onnx_helper._format_name(input_node) ),
+            sample_size=784,
+            parallel_streams=input_streams,
+            to_yaml=False,to_bin=to_bin,
+            to_csv=to_csv, to_dat=to_dat)
         # save output layer
         output_node = self.partition.output_node
-        output_data = np.array( self.sess.run([output_node], { self.input_name : self.data } )[0], dtype=np.float64) #making sure data type works
-        output_data = self.transform_featuremap(output_data)
+
+        def _get_available_onnx_op(check_node, output_node_list):
+            avoid_types = [ LAYER_TYPE.If,
+                            LAYER_TYPE.Buffer,
+                            LAYER_TYPE.Split,
+                            LAYER_TYPE.Greater,
+                            LAYER_TYPE.Squeeze]
+            #find the layer to get the type, if its NOT in avoid_layers then RETURN that layer name
+            for idx,lyr in enumerate(self.partition.layers):
+                if lyr.name == check_node:
+                    ltype = from_proto_layer_type(self.partition.layers[idx].type)
+                    if ltype in avoid_types:
+                        # WE HAVE TO GO DEEPER
+                        #tmp_name=[]
+                        for ip_node in lyr.node_in:
+                            _get_available_onnx_op(ip_node, output_node_list)
+                    else:
+                        # WE DUG TOO GREEDILY AND TOO DEEP
+                        output_node_list.append(lyr.name)
+                        return
+        exit_list=[]
+        _get_available_onnx_op(output_node, exit_list)
+        print("exit list:", exit_list)
+        #print("attempting to run sesh")
+        output_data_list = []
+        for ex in exit_list:
+            #output_data = np.array( self.sess.run([output_node], { self.input_name : self.data } )[0], dtype=np.float64) #making sure data type works
+            ex_int = ''.join(c for c in ex if c.isdigit())
+            try:
+                op_data_tmp = np.array( self.sess.run([ex_int],
+                    { self.input_name : self.data } )[0],
+                    dtype=np.float64)
+            except onnxruntime.capi.onnxruntime_pybind11_state.InvalidArgument:
+                # onnx is stupid and removes TRAILING zeroes... sometimes
+                ex_int = str( int(ex_int)*10 )
+                #print("new ex_int:",ex_int)
+                op_data_tmp = np.array( self.sess.run([ex_int],
+                    { self.input_name : self.data } )[0],
+                    dtype=np.float64)
+            # store exits in list for post proc
+            output_data_list.append(op_data_tmp)
+        #print("sesh is run, now trying transform fm")
+
+        #output_data = self.transform_featuremap(output_data)
+        od_list=[]
+        for od in output_data_list:
+            od_tmp = self.transform_featuremap(od)
+            od_list.append(od_tmp)
         #print("Output tensor:\n",output_data)
-        output_streams = int(self.partition.layers[-1].parameters.coarse_out)
-        self.save_featuremap(output_data, os.path.join(output_path, onnx_helper._format_name(output_node)),
-            parallel_streams=output_streams, to_yaml=False, to_bin=to_bin, to_csv=to_csv, to_dat=to_dat)
+
+        output_streams = int(
+                self.partition.layers[-1].parameters.coarse_out)
+        #FIXME allow output to be have more parallelism
+        assert output_streams == 1,\
+                "ERROR: Output stream is not coarse=1!\
+                (in save_featuremap_in_out)"
+
+        for idx,(node,data) in enumerate(zip(exit_list, od_list)):
+            self.save_featuremap(
+                    data,
+                    os.path.join(output_path,
+                        f"OUTPUT{idx}_"+str(onnx_helper._format_name(node)) ),
+                    sample_size=10,
+                    parallel_streams=output_streams,
+                    to_yaml=False, to_bin=to_bin,
+                    to_csv=to_csv, to_dat=to_dat)
 
     """
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -28,6 +28,7 @@ if __name__ == "__main__":
     parser.add_argument('-i','--partition_index',metavar='N',required=True, type=int,
         help='Partition index')
 
+    # TODO make conditional on if input is file or dir
     parser.add_argument('-s','--multi_inputs',action='store_true',
         help='multiple inputs for the feature maps')
 
@@ -42,6 +43,7 @@ if __name__ == "__main__":
     # onnx data manipulation
     onnx_data = ONNXData(partitions.partition[args.partition_index], args.onnx_path)
 
+    # TODO make conditional on if input is file or dir
     # load input image
     if args.multi_inputs:
         onnx_data.load_inputs(args.image_path)
