@@ -1,0 +1,13 @@
+{
+    "batch_size": 4,
+    "rows": 1,
+    "cols": 1,
+    "channels": 320,
+    "filters": 1,
+    "groups": 1,
+    "data_width": 30,
+    "data_int_width": 16,
+    "channels_per_group": 320,
+    "filters_per_group": 1,
+    "description": "early inner prod layer for brn lenet"
+}

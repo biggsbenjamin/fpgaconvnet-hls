@@ -1,0 +1,18 @@
+{
+    "type": "INNER_PRODUCT",
+    "buffer_depth" : 0,
+    "batch_size": 4,
+    "rows_in": 8,
+    "cols_in": 8,
+    "channels_in": 10,
+    "filters": 10,
+    "coarse_in": 2,
+    "coarse_out": 10,
+    "input_width": 16,
+    "acc_width": 30,
+    "weight_width": 16,
+    "output_width": 16,
+    "biases_width": 16,
+    "has_bias": 1,
+    "description": "branchy se lenet, early final layer"
+}

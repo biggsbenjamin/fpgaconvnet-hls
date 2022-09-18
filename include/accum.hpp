@@ -422,62 +422,62 @@ void accum(
  *  - single filter per group
  */
 
-//template<
-//    unsigned int BATCH_SIZE,
-//    unsigned int ROWS,
-//    unsigned int COLS,
-//    unsigned int CHANNELS,
-//    unsigned int FILTERS,
-//    unsigned int GROUPS,
-//    typename accum_t
-//>
-//void accum(
-//    stream_t(accum_t) &in,
-//    stream_t(accum_t) &out
-//)
-//{
-//
-//    #pragma HLS INLINE OFF
-//
-//    //std::cout<<"Accum version B"<<std::endl;
-//    // get all constant parameters
-//    const unsigned int channels   = CHANNELS;
-//    const unsigned int filters    = FILTERS;
-//    const unsigned int groups     = GROUPS;
-//    const unsigned int filters_per_group  = filters;
-//    const unsigned int channels_per_group = DIVIDE(channels, groups);
-//
-//    #pragma HLS STREAM variable=in
-//    #pragma HLS STREAM variable=out
-//
-//    // re-ordered stream
-//    stream_t(accum_t) reorder[filters_per_group];
-//    #pragma HLS STREAM variable=reorder
-//    #pragma HLS array_partition variable=reorder complete dim=0
-//    DO_PRAGMA(HLS STREAM variable=reorder depth=channels_per_group+10)
-//
-//    #pragma HLS DATAFLOW
-//    accum_reorder<
-//        BATCH_SIZE,
-//        ROWS,
-//        COLS,
-//        CHANNELS,
-//        FILTERS,
-//        GROUPS,
-//        accum_t
-//    >(in, reorder);
-//
-//    accum_accumulate<
-//        BATCH_SIZE,
-//        ROWS,
-//        COLS,
-//        CHANNELS,
-//        FILTERS,
-//        GROUPS,
-//        accum_t
-//    >(reorder, out);
-//
-//}
+template<
+    unsigned int BATCH_SIZE,
+    unsigned int ROWS,
+    unsigned int COLS,
+    unsigned int CHANNELS,
+    unsigned int FILTERS,
+    unsigned int GROUPS,
+    typename accum_t
+>
+void accum(
+    stream_t(accum_t) &in,
+    stream_t(accum_t) &out
+)
+{
+
+    #pragma HLS INLINE OFF
+
+    //std::cout<<"Accum version B"<<std::endl;
+    // get all constant parameters
+    const unsigned int channels   = CHANNELS;
+    const unsigned int filters    = FILTERS;
+    const unsigned int groups     = GROUPS;
+    const unsigned int filters_per_group  = filters;
+    const unsigned int channels_per_group = DIVIDE(channels, groups);
+
+    #pragma HLS STREAM variable=in
+    #pragma HLS STREAM variable=out
+
+    // re-ordered stream
+    stream_t(accum_t) reorder[filters_per_group];
+    #pragma HLS STREAM variable=reorder
+    #pragma HLS array_partition variable=reorder complete dim=0
+    DO_PRAGMA(HLS STREAM variable=reorder depth=channels_per_group+10)
+
+    #pragma HLS DATAFLOW
+    accum_reorder<
+        BATCH_SIZE,
+        ROWS,
+        COLS,
+        CHANNELS,
+        FILTERS,
+        GROUPS,
+        accum_t
+    >(in, reorder);
+
+    accum_accumulate<
+        BATCH_SIZE,
+        ROWS,
+        COLS,
+        CHANNELS,
+        FILTERS,
+        GROUPS,
+        accum_t
+    >(reorder, out);
+
+}
 
 /**
  *  accum C

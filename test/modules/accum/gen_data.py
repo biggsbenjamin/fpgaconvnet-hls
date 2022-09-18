@@ -1,5 +1,6 @@
 import os
 import sys
+import numpy as np
 
 sys.path.append('..')
 
@@ -27,6 +28,7 @@ class AccumTB(Data):
 
         # data in
         data_in = self.gen_data([
+            self.param['batch_size'],
             self.param['rows'],
             self.param['cols'],
             self.param['channels'],
@@ -38,7 +40,10 @@ class AccumTB(Data):
         self.param['data_int_width'] = accum.data_width//2
 
         # data out
-        data_out = accum.functional_model(data_in)
+        d_out = []
+        for d in data_in:
+            d_out.append( accum.functional_model(d) )
+        data_out = np.asarray(d_out)
 
         # return data
         data = {
