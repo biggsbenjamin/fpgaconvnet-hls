@@ -21,7 +21,7 @@ from generate.layers.squeeze        import gen_squeeze_layer
 from generate.layers.split          import gen_split_layer
 from generate.layers.buffer         import gen_buffer_layer
 from generate.layers.softmax_cmp    import gen_softmax_cmp_layer
-#from generate.layers.exit_merge    import gen_exit_merge # TODO
+from generate.layers.exit_merge     import gen_exit_merge_layer
 
 import fpgaconvnet_optimiser.tools.graphs as graphs
 import fpgaconvnet_optimiser.proto.fpgaconvnet_pb2 as fpgaconvnet_pb2
@@ -286,8 +286,9 @@ def gen_network(name,partition,output_path):
         elif layer.type == fpgaconvnet_pb2.layer.layer_type.BUFFER:
             gen_buffer_layer(*args)
         elif layer.type == fpgaconvnet_pb2.layer.layer_type.IF:
-            print("WARNING: IGNORING ExitMerge layer.")
-            continue
+            #print("WARNING: IGNORING ExitMerge layer in layer gen.")
+            #continue
+            gen_exit_merge_layer(*args)
         else:
             raise NameError("The layer you want ain't on the list, try again.")
 
@@ -315,6 +316,9 @@ def gen_network(name,partition,output_path):
     # include generation
     include = ""
     for layer in partition.layers:
+        #if layer.type == fpgaconvnet_pb2.layer.layer_type.IF:
+        #    print("WARNING: IGNORING ExitMerge layer in includes.")
+        #    continue
         layer_name = gen_layer_name(layer)
         include +=f"#include \"{layer_name}.hpp\"\n"
 

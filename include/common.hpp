@@ -105,7 +105,7 @@ struct b_axis_t {
     b_data_t samp;
     ap_int<1> last;
 };
-typedef hls::stream<axis_t>   b_axis_hls_t;
+typedef hls::stream<b_axis_t>   b_axis_hls_t;
 
 
 //#define stream_t(x) hlslib::Stream<x>

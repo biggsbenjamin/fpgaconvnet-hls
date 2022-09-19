@@ -25,10 +25,12 @@ void exit_merge(
     const unsigned int exits      = EXITS;
     const unsigned int fm_size    = ROWS*COLS*CHANNELS;
 
-#pragma HLS STREAM variable=in depth=fm_size
-#pragma HLS ARRAY_PARTITION variable=in complete dim=0
-#pragma HLS STREAM variable=out
+    const unsigned int depth_in = fm_size+8;
+    #pragma HLS STREAM variable=in depth=depth_in
+    #pragma HLS ARRAY_PARTITION variable=in complete dim=0
+    #pragma HLS STREAM variable=out
 
+    em_t cache;
     batch_loop: 
     for(unsigned long b_index=0;b_index<batch_size;b_index++) {
         exit_loop: 
@@ -38,7 +40,8 @@ void exit_merge(
                 samp_loop: 
                 for(unsigned long pxo_index=0;pxo_index<fm_size;pxo_index++) {
                 #pragma HLS PIPELINE II=1 rewind
-                    out.write(in[ex_idx].read()); 
+                    cache = in[ex_idx].read();
+                    out.write(cache); 
                 } 
             }   
         }
