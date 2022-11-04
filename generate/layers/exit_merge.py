@@ -69,13 +69,11 @@ void {name}(
 
     stream_t({name}_data_t) exits_intr[{NAME}_EXITS];
     #pragma HLS STREAM variable=exits_intr
-
     const unsigned int exit_num = {NAME}_EXITS;
     // forcing hls to gen fifos for internal streams
     for (int ex=0; ex<exit_num; ex++) {{
         #pragma HLS unroll
-
-        buffer_buff<
+        em_buff<
             {NAME}_BUFFER_BATCH_SIZE,
             {NAME}_BUFFER_ROWS,
             {NAME}_BUFFER_COLS,

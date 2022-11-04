@@ -17,6 +17,7 @@ buffer_layer_template_header = """//auto generated
 #define {NAME}_ID   {id}
 
 typedef b_data_t {name}_data_t;
+//typedef b_data_t {name}_ctrl_t;
 typedef b_bool_t {name}_ctrl_t;
 typedef {name}_data_t {name}_input_t;
 typedef {name}_data_t {name}_output_t;
@@ -139,12 +140,20 @@ def gen_buffer_layer(name,param,src_path,header_path, topless=True):
     )
 
     # BUFFER MODULE INIT
+    if param['drop_mode'] == False:
+        dm=False
+        print("drop mode is false")
+    else:
+        print("drop mode is true")
+        dm=True
+
     buff = generate.modules.buff.gen_buff_module(
         name+"_buffer",
         "in[coarseIndex]",
         "fork_out[coarseIndex]",
         "out[coarseIndex]",
         f"{name}_data_t",
+        drop_mode = dm,
         indent=8
     )
 
