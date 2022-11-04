@@ -1,18 +1,16 @@
 import sys
-#import tempfile
 import parser
 import argparse
 import json
 import numpy as np
-#import random
 import os
-#import onnx
-#from PIL import Image
 from google.protobuf import json_format
 import fpgaconvnet_optimiser.proto.fpgaconvnet_pb2
-#import fpgaconvnet_optimiser.tools.onnx_helper as onnx_helper
 from onnx_data import gen_layer_name, get_layer_from_partition
 from host_code_template import *
+from fpgaconvnet_optimiser.tools.layer_enum import LAYER_TYPE
+from fpgaconvnet_optimiser.tools.layer_enum \
+        import from_proto_layer_type
 
 sys.path.append(os.environ.get("FPGACONVNET_OPTIMISER"))
 sys.path.append(os.environ.get("FPGACONVNET_HLS"))
@@ -47,6 +45,7 @@ def gen_host_code(args, prt):
     # TODO get these sizes from partition info
     input_size=784
     output_size=10
+    data_type='uint32_t'
     batch_size = prt.batch_size
 
     hc = hc_template.format(includes        =lyr_inc,
@@ -55,7 +54,8 @@ def gen_host_code(args, prt):
                             output_size     =output_size,
                             batch_size      =batch_size,
                             layer_inits     =lyr_inits,
-                            layer_starts    =lyr_strts)
+                            layer_starts    =lyr_strts,
+                            data_type       =data_type)
 
     # TODO save the host code to partition
     pth = args.json_path # might as well put it here
@@ -79,12 +79,24 @@ def get_layers(args, prt):
 
 # Returns the output node(s as a list) followed by coarse factor
 def get_conn(args, prt):
+    ctrl_f = args.control_flag
     # search through the partition
     lyr = args.layer_name
     lyr_obj = get_layer_from_partition(prt, lyr)
 
-    lyr_out = lyr_obj.node_out # might be a list...
-    crs_out = lyr_obj.parameters.coarse_out # should be consistent btwn lyrs
+    # check if the layer has conditional output (exit decision)
+    lyr_type = from_proto_layer_type(lyr_obj.type)
+    if ctrl_f and lyr_type == LAYER_TYPE.Greater:
+        lyr_out = lyr_obj.parameters.ctrledges
+        crs_out = lyr_obj.parameters.ctrl_out_size
+    else:
+
+        # might be a list...
+        lyr_out = lyr_obj.node_out
+        # should be consistent btwn lyrs
+        # (TODO add assertion, or tolerate if not consistent)
+        crs_out = lyr_obj.parameters.coarse_out
+
     result=""
     for l in lyr_out:
         result+=str(l)+" "
@@ -131,6 +143,8 @@ if __name__ == "__main__":
     get_conn_p = subparsers.add_parser("get_conn",
             help="Get the connections for a layer")
     get_conn_p.add_argument("-n","--layer_name", type=str, required=True)
+    get_conn_p.add_argument("-c","--control_flag",
+            action='store_true', help='Looking for ctrl edges.')
     #get_input
     get_input_p = subparsers.add_parser("get_input",
             help="Get the input layer name")

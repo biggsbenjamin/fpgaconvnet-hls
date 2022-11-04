@@ -58,7 +58,7 @@ static char *sd_out;
 #define SIZE_IN INPUT_SIZE*BATCH_SIZE
 #define SIZE_OUT OUTPUT_SIZE*BATCH_SIZE
 
-uint16_t in_stream[SIZE_IN]; //use ap_fixed type
+{data_type} in_stream[SIZE_IN]; //use ap_fixed type
 
 //DMA addresses (from yt example)
 #define MEM_BASE_ADDR 0x01000000
@@ -101,7 +101,7 @@ int sd_read( void* dest_addr) {{
     uint length = 0;
     uint bytes_read = 0;
     sd_in = (char *)input_file;
-    u32 byte_len = SIZE_IN * sizeof(uint16_t);
+    u32 byte_len = SIZE_IN * sizeof({data_type});
     //open file to read
     rc = f_open(&fil, sd_in, FA_READ);
     if (rc) {{
@@ -145,7 +145,7 @@ int sd_write(u32* start_addr) {{
     FRESULT rc;
     uint length;
     sd_out = (char *)output_file;
-    u32 byte_len = SIZE_OUT * sizeof(uint16_t);
+    u32 byte_len = SIZE_OUT * sizeof({data_type});
     rc = f_open(&fil, sd_out, FA_CREATE_ALWAYS | FA_WRITE);
     if (rc) {{
         xil_printf(" ERROR : %s f_open returned %d\\r\\n", sd_out, rc);
@@ -196,7 +196,7 @@ int main() {{
     // read from sd and write to input array
     sd_read(in_stream);
     //non sd data
-    /*uint16_t data;
+    /*{data_type} data;
 	for (int idx=0;idx<SIZE_IN;idx++) {{
 		data = idx % 16;
 		in_stream[idx] = data;
@@ -208,8 +208,8 @@ int main() {{
     //start fcn blocks
 {layer_starts}
     //flush buffer caches?
-    Xil_DCacheFlushRange((u32)in_stream, SIZE_IN*sizeof(uint16_t));
-    Xil_DCacheFlushRange((u32)m_dma_buff_rx, SIZE_OUT*sizeof(uint16_t));
+    Xil_DCacheFlushRange((u32)in_stream, SIZE_IN*sizeof({data_type}));
+    Xil_DCacheFlushRange((u32)m_dma_buff_rx, SIZE_OUT*sizeof({data_type}));
 
     //start timer
     //XScuTimer_Start(&timer);
@@ -218,10 +218,10 @@ int main() {{
 
     //setting up simple dma transfers
     //xil_printf("Receive command for DMA\\n\\r");
-    XAxiDma_SimpleTransfer(&axiDMA, (u32) m_dma_buff_rx, SIZE_OUT * sizeof(uint16_t), XAXIDMA_DEVICE_TO_DMA);
+    XAxiDma_SimpleTransfer(&axiDMA, (u32) m_dma_buff_rx, SIZE_OUT * sizeof({data_type}), XAXIDMA_DEVICE_TO_DMA);
     //xil_printf("Send command for DMA\\n\\r");
 
-    XAxiDma_SimpleTransfer(&axiDMA, (u32) in_stream, SIZE_IN * sizeof(uint16_t), XAXIDMA_DMA_TO_DEVICE);
+    XAxiDma_SimpleTransfer(&axiDMA, (u32) in_stream, SIZE_IN * sizeof({data_type}), XAXIDMA_DMA_TO_DEVICE);
 
     //start timer
     XTime_GetTime(&tStart);
@@ -238,7 +238,7 @@ int main() {{
     xil_printf("DMA transactions finished. Timer: %.2f us\\n\\r",elapsedTime);
 
     //invalidate cache to avoid reading rubbish (shouldnt be needed since disabled)
-    //Xil_DCacheInvalidateRange((u32) m_dma_buff_rx, SIZE_OUT * sizeof(uint16_t));
+    //Xil_DCacheInvalidateRange((u32) m_dma_buff_rx, SIZE_OUT * sizeof({data_type}));
 
     //write finished data to .bin file
     sd_write(m_dma_buff_rx);

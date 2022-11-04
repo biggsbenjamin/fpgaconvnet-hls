@@ -109,18 +109,18 @@ proc generate_split_hardware { BOARD PORT_WIDTH FREQ } {
     ] $hp_out_ic
 
     # setting dma input/output fifo params
-    puts "WARNING: defaulting to 16 bits of data (2 bytes)"
+    puts "WARNING: defaulting to 32 bits of data (4 bytes)"
     set_property -dict [list CONFIG.TDATA_NUM_BYTES.VALUE_SRC USER] $in_fifo
-    set_property -dict [list CONFIG.TDATA_NUM_BYTES {2} CONFIG.FIFO_DEPTH {256}] $in_fifo
+    set_property -dict [list CONFIG.TDATA_NUM_BYTES {4} CONFIG.FIFO_DEPTH {256}] $in_fifo
     set_property -dict [list CONFIG.TDATA_NUM_BYTES.VALUE_SRC USER] $out_fifo
-    set_property -dict [list CONFIG.TDATA_NUM_BYTES {2} CONFIG.FIFO_DEPTH {256}] $out_fifo
+    set_property -dict [list CONFIG.TDATA_NUM_BYTES {4} CONFIG.FIFO_DEPTH {256}] $out_fifo
 
     # setting DMA properties #NOTE axis_s2mm is automagically sized
     set_property -dict [list \
         CONFIG.c_include_sg {0} \
         CONFIG.c_sg_length_width {26} \
         CONFIG.c_sg_include_stscntrl_strm {0} \
-        CONFIG.c_m_axis_mm2s_tdata_width {16} \
+        CONFIG.c_m_axis_mm2s_tdata_width {32} \
         CONFIG.c_mm2s_burst_size {256} \
         CONFIG.c_s2mm_burst_size {256} \
         CONFIG.c_addr_width $PORT_WIDTH \
@@ -201,6 +201,7 @@ proc generate_split_hardware { BOARD PORT_WIDTH FREQ } {
     set layer_list [run_python $::env(FPGACONVNET_HLS)/tools/split_hw_helper.py \
         [list -p ../$NET.json -pi 0 get_layers] ]
 
+    
     set ip_num [llength $layer_list]
     incr ip_num
     puts "Number of IPs: $ip_num"
@@ -214,14 +215,14 @@ proc generate_split_hardware { BOARD PORT_WIDTH FREQ } {
     
     set ip_cell_list { }
     # create network layer only concat instance for interrupts (minus top level)
-    set intr_cc [create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat:2.1 intr_cc]
-    lappend ip_cell_list $intr_cc
-    set_property -dict [list CONFIG.NUM_PORTS [ expr $ip_num - 1 ] ] $intr_cc
+    #set intr_cc [create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat:2.1 intr_cc]
+    #lappend ip_cell_list $intr_cc
+    #set_property -dict [list CONFIG.NUM_PORTS [ expr $ip_num - 1 ] ] $intr_cc
     # create reduction AND gate
-    set intr_red [create_bd_cell -type ip -vlnv xilinx.com:ip:util_reduced_logic:2.0 intr_red]
-    lappend ip_cell_list $intr_red
-    set_property -dict [list CONFIG.C_SIZE [ expr $ip_num - 1 ] ] $intr_red
-    connect_bd_net [get_bd_pins intr_cc/dout] [get_bd_pins intr_red/Op1]
+    #set intr_red [create_bd_cell -type ip -vlnv xilinx.com:ip:util_reduced_logic:2.0 intr_red]
+    #lappend ip_cell_list $intr_red
+    #set_property -dict [list CONFIG.C_SIZE [ expr $ip_num - 1 ] ] $intr_red
+    #connect_bd_net [get_bd_pins intr_cc/dout] [get_bd_pins intr_red/Op1]
     # TODO sdk breaks when reduce output concatenated with other interrupts...
     # leaving unconnected
     #connect_bd_net [get_bd_pins intr_red/Res] [get_bd_pins irq_c/In3]
@@ -278,7 +279,7 @@ proc generate_split_hardware { BOARD PORT_WIDTH FREQ } {
         connect_bd_net -net pl_clk [get_bd_pins ${lyr}/ap_clk] ; # connect clock
         connect_bd_net -net peripheral_reset [get_bd_pins ${lyr}/ap_rst_n] ; # connect reset
         # connect component interrupts
-        connect_bd_net [get_bd_pins ${lyr}/interrupt] [get_bd_pins intr_cc/In${ivar}]
+        #connect_bd_net [get_bd_pins ${lyr}/interrupt] [get_bd_pins intr_cc/In${ivar}]
         # connect axi lite ports to ic
         set ctrl_m [format "%02d" [expr $ivar + 2]] ; # generate leading zero
         connect_bd_intf_net [get_bd_intf_pins ctrl_ic/M${ctrl_m}_AXI] \
@@ -297,37 +298,167 @@ proc generate_split_hardware { BOARD PORT_WIDTH FREQ } {
         [list -p ../$NET.json -pi 0 get_output] ]
     #puts "partition input: $p_in , partition output: $p_out"
     set in_conn [ connect_bd_intf_net \
-        [get_bd_intf_pins ${NET}/in_0_V_V   ] \
-        [get_bd_intf_pins ${p_in}/in_0_V_V  ] ]
+        [get_bd_intf_pins ${NET}/in_0_V_data_V   ] \
+        [get_bd_intf_pins ${p_in}/in_0_V_data_V  ] ]
     set out_conn [ connect_bd_intf_net \
-        [get_bd_intf_pins ${NET}/out_0_V_V  ] \
-        [get_bd_intf_pins ${p_out}/out_0_V_V] ]
+        [get_bd_intf_pins ${NET}/out_0_V_data_V  ] \
+        [get_bd_intf_pins ${p_out}/out_0_V_data_V] ]
+    ##### BATCH INFORMATION #####
+    set in_conn [ connect_bd_intf_net \
+        [get_bd_intf_pins ${NET}/in_0_V_batchid_V   ] \
+        [get_bd_intf_pins ${p_in}/in_0_V_batchid_V  ] ]
+    set out_conn [ connect_bd_intf_net \
+        [get_bd_intf_pins ${NET}/out_0_V_batchid_V  ] \
+        [get_bd_intf_pins ${p_out}/out_0_V_batchid_V] ]
 
     puts "connecting layers..."
     #debug save
     current_bd_instance $oldCurInst
     save_bd_design
-    # connect layers to each other
+
+    ### NEEDED TO STORE EXIT LAYER INPUT LAYERS ###
+    set exit_layer_preds { }
+    set ctrl_layers { }
+
+    # connect layers to each other TODO make this a proc (function)
     foreach lyr $layer_list {
         # python: get connected layer, get coarse(out)
         set results [run_python $::env(FPGACONVNET_HLS)/tools/split_hw_helper.py \
             [list -p ../$NET.json -pi 0 get_conn -n $lyr] ]
         set coarse [lindex $results end]
         set lyrs_out [lreplace $results end end]
-        if {[expr [llength lyrs_out] > 1]} {error "LIST NOT SUPPORTED (yet)"}
-        foreach lyr_o $lyrs_out {
-            # IF layer is the same as current layer - IGNORE (final output)
-            if {![string equal $lyr $lyr_o]} {
-                #puts "Connecting $lyr to $lyr_o @ $coarse"
-                # iterate over coarse and connect
-                for {set crs_idx 0} {$crs_idx < $coarse} {incr crs_idx} {
+        set out_len [llength $lyrs_out]
+
+        if {[expr $out_len == 0]} {
+            puts "FOUND layer without output DATA connections: $lyr"
+            lappend ctrl_layers $lyr
+            continue
+        }
+
+        #foreach lyr_o $lyrs_out
+        for {set op_idx 0} {$op_idx < $out_len} {incr op_idx} {
+            set lyr_o [lindex $lyrs_out $op_idx]
+            puts "crs: $coarse lyr out: $lyr_o"
+
+            # check if there are multiple layers out
+            ### NOTE this means it is a split layer ###
+            if {[expr $out_len > 1]} {
+                #error "LIST NOT SUPPORTED (yet)"
+                #puts "Results: $results, Layers out: $lyrs_out (multiple layers out)"
+                # form of : out_opidx_crsidx_V_batchid_V
+                #           out_opidx_crsidx_V_data_V
+                if {[expr $coarse == 1]} {
+                    # stupid reordering of output name string
                     #connect out to in
                     connect_bd_intf_net \
-                        [get_bd_intf_pins ${lyr}/out_${crs_idx}_V_V ] \
-                        [get_bd_intf_pins ${lyr_o}/in_${crs_idx}_V_V]
+                        [get_bd_intf_pins ${lyr}/out_V_data_V_${op_idx}_0 ] \
+                        [get_bd_intf_pins ${lyr_o}/in_0_V_data_V]
+                    ##### BATCH INFORMATION #####
+                    connect_bd_intf_net \
+                        [get_bd_intf_pins ${lyr}/out_V_batchid_V_${op_idx}_0 ] \
+                        [get_bd_intf_pins ${lyr_o}/in_0_V_batchid_V]
+                    #debug save
+                    current_bd_instance $oldCurInst
+                    save_bd_design
+                } else {
+                    for {set crs_idx 0} {$crs_idx < $coarse} {incr crs_idx} {
+                        #connect out to in
+                        connect_bd_intf_net \
+                            [get_bd_intf_pins ${lyr}/out_${op_idx}_${crs_idx}_V_data_V ] \
+                            [get_bd_intf_pins ${lyr_o}/in_${crs_idx}_V_data_V]
+                        ##### BATCH INFORMATION #####
+                        connect_bd_intf_net \
+                            [get_bd_intf_pins ${lyr}/out_${op_idx}_${crs_idx}_V_batchid_V ] \
+                            [get_bd_intf_pins ${lyr_o}/in_${crs_idx}_V_batchid_V]
+                        #debug save
+                        current_bd_instance $oldCurInst
+                        save_bd_design
+                    }
                 }
+            } else {
+                # Only one output layer
+                # IF layer is the same as current layer - IGNORE (final output)
+                if {![string equal $lyr $lyr_o]} {
+                    #puts "Results: $results, Layers out: $lyrs_out "
+                    #puts "Layer-$lyr"
+
+                    if {[string equal $lyr_o $p_out]} {
+                        # output layer is the exit layer - mode complicated to connect
+                        puts "Ignoring exit connections as output (for now)"
+                        lappend exit_layer_preds $lyr
+                        #puts "Exit layer predecessors:$exit_layer_preds"
+                    } else {
+                        #puts "Connecting $lyr to $lyr_o @ $coarse"
+                        # iterate over coarse and connect
+                        for {set crs_idx 0} {$crs_idx < $coarse} {incr crs_idx} {
+                            #connect out to in
+                            connect_bd_intf_net \
+                                [get_bd_intf_pins ${lyr}/out_${crs_idx}_V_data_V ] \
+                                [get_bd_intf_pins ${lyr_o}/in_${crs_idx}_V_data_V]
+                            ##### BATCH INFORMATION #####
+                            connect_bd_intf_net \
+                                [get_bd_intf_pins ${lyr}/out_${crs_idx}_V_batchid_V ] \
+                                [get_bd_intf_pins ${lyr_o}/in_${crs_idx}_V_batchid_V]
+                            #debug save
+                            current_bd_instance $oldCurInst
+                            save_bd_design
+                        }
+                    }
+                } 
             }
         }
+    }
+
+    ########## CONNECT Control layers ###########
+    # run python get_conn with control flag
+    # number of control layers
+    puts "List of control layers: $ctrl_layers"
+    foreach ctrl_lyr $ctrl_layers {
+        puts "Control layer: $ctrl_lyr"
+        set results [run_python $::env(FPGACONVNET_HLS)/tools/split_hw_helper.py \
+            [list -p ../$NET.json -pi 0 get_conn -n $ctrl_lyr -c] ]
+        set ctrl_out_size [lindex $results end]
+        set lyrs_out [lreplace $results end end]
+
+        # TODO allow the exit merge to have coarse folding, per layer???
+        for {set ctrl_idx 0} {$ctrl_idx < $ctrl_out_size} {incr ctrl_idx} {
+            set lyr_o [lindex $lyrs_out $ctrl_idx]
+            # connecting input layer to exit
+            #connect out to in
+            connect_bd_intf_net \
+                [get_bd_intf_pins ${ctrl_lyr}/out_${ctrl_idx}_V_data ] \
+                [get_bd_intf_pins ${lyr_o}/ctrl_in_V_data]
+            # TODO allow the exit merge to have coarse folding, per layer???
+            ##### BATCH INFORMATION #####
+            connect_bd_intf_net \
+                [get_bd_intf_pins ${ctrl_lyr}/out_${ctrl_idx}_V_batchid_V ] \
+                [get_bd_intf_pins ${lyr_o}/ctrl_in_V_batchid_V]
+            #debug save
+            current_bd_instance $oldCurInst
+            save_bd_design
+        }
+    }
+    
+    ########## CONNECT exit predecessors ###########
+    # length is number of inputs tp exit merge
+    set in_len [llength $exit_layer_preds]
+    # TODO allow the exit merge to have coarse folding, per layer???
+    set exit_coarse 1
+    for {set ip_idx 0} {$ip_idx < $in_len} {incr ip_idx} {
+        set lyr_i [lindex $exit_layer_preds $ip_idx]
+        # connecting input layer to exit
+        #connect out to in
+        connect_bd_intf_net \
+            [get_bd_intf_pins ${p_out}/exits_${ip_idx}_V_data_V ] \
+            [get_bd_intf_pins ${lyr_i}/out_0_V_data_V]
+        # TODO allow the exit merge to have coarse folding, per layer???
+        ##### BATCH INFORMATION #####
+        connect_bd_intf_net \
+            [get_bd_intf_pins ${p_out}/exits_${ip_idx}_V_batchid_V ] \
+            [get_bd_intf_pins ${lyr_i}/out_0_V_batchid_V]
+        #debug save
+        current_bd_instance $oldCurInst
+        save_bd_design
     }
 
     #create hierarchy

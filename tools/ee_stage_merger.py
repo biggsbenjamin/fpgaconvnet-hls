@@ -34,19 +34,38 @@ def exit_fusion(args,ee1,eef):
     #for easier access - should pass by ref
     out0 = merge_out.partition[0]
 
+    out0.output_node = "brn_exit"
+
     #find the exit buffer, keep a note
     ebuff=None
     #find the if layer, keep a note
     emerge=None
     for lyr in out0.layers:
+        lyr_type = from_proto_layer_type(lyr.type)
+
+
         if lyr.streams_out[0].name == "out":
-            lyr_type = from_proto_layer_type(lyr.type)
             if lyr_type == LAYER_TYPE.Buffer:
-                print("found exit buffer")
+                print("found buffer to late stage")
                 ebuff = lyr
             if lyr_type == LAYER_TYPE.If:
                 print("found exit merge")
                 emerge = lyr
+                emerge.name = "brn_exit"
+                emerge.node_out.pop()
+                emerge.node_out.append("brn_exit")
+
+        if lyr_type == LAYER_TYPE.Greater:
+            print("Found exit decision layer")
+            lyr.parameters.ctrl_out_size = 2
+
+        if len(lyr.streams_out) == 1:
+            if "exit" in lyr.node_out:
+                print("Found layer before exit merge")
+                lyr.node_out.pop()
+                lyr.node_out.append("brn_exit")
+
+
 
     # Little helper function to edit io for changing layers
     def _connect_layers(input_layer,output_layer, out_stream_index=0):

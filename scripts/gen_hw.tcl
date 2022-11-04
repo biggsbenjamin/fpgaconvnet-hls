@@ -56,12 +56,16 @@ if { $argc < 3 } {
 
     # Generate the base block design for system implementation
     if { $SN_ON } {
+        # NOTE this is split layer HW generation
         source $::env(FPGACONVNET_HLS)/scripts/split_bd_gen.tcl
         generate_split_hardware $BOARD $PORT_WIDTH $FREQ
+
+        # TODO add the synth+impl back in
         impl_split_hardware $PATH $dir_name
 
         exit
     } else {
+        # NOTE this is standard HW generation
         # Add CNN IP core from HLS to the current IP Catalog
         set ip_name "${NET}_hls_prj/solution"
         set_property  ip_repo_paths  $PATH/$ip_name/impl/ip [current_project]

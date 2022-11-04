@@ -51,37 +51,98 @@ def gen_layer_name(layer): # layer in protobuf form
     else:
         return layer.name
 
-def bin_to_fixed_point(filename, data_width=16, int_width=8):
+#FIXME not actually fixed point
+def bin_to_fixed_point(filename, data_width=16, int_width=8, ee_flag=False):
+
+    def _get_np_type(data_width):
+        if   0  < data_width <= 8:
+            data_type = np.uint8
+        elif 8  < data_width <= 16:
+            data_type = np.uint16
+        elif 16 < data_width <= 32:
+            data_type = np.uint32
+        elif 32 < data_width <= 64:
+            data_type = np.uint64
+        else:
+            raise typeerror
+        return data_type
+
     #get numpy data type from width
-    if   0  < data_width <= 8:
-        data_type = np.uint8
-    elif 8  < data_width <= 16:
-        data_type = np.uint16
-    elif 16 < data_width <= 32:
-        data_type = np.uint32
-    elif 32 < data_width <= 64:
-        data_type = np.uint64
-    else:
-        raise TypeError
+    data_type = _get_np_type(data_width)
+    if ee_flag:
+        print("EE flag triggered")
+        data_type = _get_np_type(data_width*2)
 
     #import the file
     bin_in = np.fromfile(filename, dtype=data_type)
+
+    if ee_flag:
+        samp_id_bin = np.right_shift(bin_in,data_width)
+        samp_id_bin.astype( _get_np_type(data_width) )
+
+        samp_dat_bin = np.bitwise_and(bin_in, 0xffff)
+        samp_dat_bin.astype( _get_np_type(data_width) )
+
+        #TODO pull number of classes from user info
+        class_num = 10
+        samp_id_bin = samp_id_bin.reshape((-1,class_num))
+        #checking samples all have same batch id thru output
+        for samp in samp_id_bin:
+            if not np.all(samp == samp[0]):
+                raise ValueError(f"Sample ID mismatch in check bin. ID:{samp}")
+
+        samp_dat_bin = samp_dat_bin.reshape((-1,class_num))
+
+        # {ID: {"early_exit":T/F, "result": [0 .. class_num]}, ... }
+        result_dict = {}
+        le_tracker = [] #NOTE put all the out of order ones in this bin? works for small batches
+        prev_id = -1
+        for id_num_arr, samp_res in zip(samp_id_bin,samp_dat_bin):
+            id_num = id_num_arr[0] #NOTE verified that they are the same
+
+            # FIXME method for telling if EE or LE
+            #print("CURRENT ID NUM:",id_num, "PREV ID:", prev_id)
+            #ee_res_flag=True
+            #if id_num in le_tracker:
+            #    ee_res_flag=False
+            #else:
+            #    if prev_id+1 < id_num:
+            #        # out of order
+            #        ooo_ids = [i for i in range(prev_id+1,id_num)]
+            #        le_tracker = le_tracker + ooo_ids
+            #        print("RANGE:", ooo_ids)
+            #    prev_id = id_num
+            #print("New le tracker:", le_tracker)
+            ## {"early_exit":T/F, "result": [0 .. class_num]}
+            #samp_dict = {"early_exit":ee_res_flag, "output": samp_res}
+            #result_dict[id_num] = samp_dict
+
+            result_dict[id_num] = samp_res
+
+        return result_dict
+
+        #return samp_dat_bin
 
     #TODO convert to fixed point with integer component of width int_width
     #TODO maybe convert to floating point?
     #for b in bin_in:
     #    print(b)
 
+    # FIXME baseline stripped back version (no sample ID, deprecating)
     return bin_in
 
 def validate_output(args):
+    print(args.gold_path)
     #get fixed point tolerance
     errtol = fixed_point(args.error_tolerance, args.data_width) #TODO add int_width
     print(f"Error tolerance as fxpbin: {errtol}, as uint: {errtol.bits_to_signed()}")
     #load golden data, convert to float
-    g_dat = bin_to_fixed_point(args.gold_path, args.data_width)
+    g_dat_list = []
+    for gp in args.gold_path:
+        g_dat = bin_to_fixed_point(gp, args.data_width, ee_flag=args.early_exit)
+        g_dat_list.append(g_dat)
     #load actual data, convert to float
-    a_dat = bin_to_fixed_point(args.actual_path, args.data_width)
+    a_dat = bin_to_fixed_point(args.actual_path, args.data_width, ee_flag=args.early_exit)
     #compare values, check length, compute average error
     if len(g_dat) != len(a_dat):
         raise ValueError(f"Data length differs! Expected: {len(g_dat)} Actual: {len(a_dat)}")
@@ -91,17 +152,78 @@ def validate_output(args):
             return value-(2**datawidth)
         return value
 
+    def make_signed_16(value):
+        if value > 2**(16-1)-1:
+            return value-(2**16)
+        return value
+
+
+    #TODO make this a user defined input or something
+    class_num = 10
+
     max_err=0.0
     err_tot=0
-    for idx,(g,a) in enumerate(zip(g_dat, a_dat)):
-        sg=make_signed(g,args.data_width)
-        sa=make_signed(a,args.data_width)
-        cmpr = (sg-sa) if (sg > sa) else (sa-sg)
-        max_err = max(max_err,cmpr)
-        if cmpr > errtol.bits_to_signed():
+
+    # TODO warnings based on binary difference, errors based on classif difference
+    for samp_id in g_dat_list[0].keys():
+        # compare the values for now
+
+        for idx,(g0,g1,a) in enumerate(zip( g_dat_list[0][samp_id],
+                                            g_dat_list[1][samp_id],
+                                            a_dat[samp_id])):
+
+            sg0=make_signed(g0,args.data_width)
+            sg1=make_signed(g1,args.data_width)
+
+            sa=make_signed(a,args.data_width)
+
+            cmpr0 = (sg0-sa) if (sg0 > sa) else (sa-sg0)
+            cmpr1 = (sg1-sa) if (sg1 > sa) else (sa-sg1)
+
+            #max_err = max(max_err,cmpr)
+
+        if cmpr0 > errtol.bits_to_signed() and cmpr1 > errtol.bits_to_signed():
             print(f"ERROR: Difference greater than tolerance.\n \
-                    Values g:{sg} a:{sa} @ index:{idx}")
+                            Values g0:{sg0} g1:{sg1} a:{sa} @ sample:{samp_id}, index:{idx}")
             err_tot+=1
+        elif cmpr0 > errtol.bits_to_signed():
+            #make the values signed for easier reading
+            s16_f = np.vectorize(make_signed_16)
+            eegdat = s16_f(g_dat_list[0][samp_id])
+            if np.exp(max(eegdat)) >= (sum(np.exp(eegdat))*0.996):
+                print("should be early exit")
+            legdat = s16_f(g_dat_list[1][samp_id])
+            adat = s16_f(a_dat[samp_id])
+            print(f"EE error so assuming LE Sample ID:{samp_id}\n \
+                    EEgdat:\t{eegdat}\n \
+                    adat:\t{adat},\n \
+                    LEgdat:\t{legdat}")
+            max_err = max(max_err,cmpr1)
+        elif cmpr1 > errtol.bits_to_signed():
+            max_err = max(max_err,cmpr0)
+
+        #NOTE printing stuff for debug etc.
+        if args.verbose:
+            print(f"Signed gold0:{sg0}, gold1:{sg1}, signed actual:{sa}")
+            print(f"\tcompare var: {cmpr}, error total:{err_tot}")
+
+
+    # NOTE old version compares everything - any value difference
+    #for idx,(g,a) in enumerate(zip(g_dat, a_dat)):
+    #    #print("bin repr g: ",np.binary_repr(g,width=32), "bin repr a: ",np.binary_repr(a,width=32))
+
+    #    sg=make_signed(g,args.data_width)
+    #    sa=make_signed(a,args.data_width)
+    #    cmpr = (sg-sa) if (sg > sa) else (sa-sg)
+    #    max_err = max(max_err,cmpr)
+    #    if cmpr > errtol.bits_to_signed():
+    #        #print(f"ERROR: Difference greater than tolerance.\n \
+    #        #        Values g:{sg} a:{sa} @ index:{idx}")
+    #        err_tot+=1
+    #    #NOTE printing stuff for debug etc.
+    #    if args.verbose:
+    #        print(f"Signed gold:{sg}, signed actual:{sa}")
+    #        print(f"\tcompare var: {cmpr}, error total:{err_tot}")
 
     err_p = (max_err)/errtol.bits_to_signed()
     raw_err_mx = err_p*args.error_tolerance
@@ -111,6 +233,7 @@ def validate_output(args):
         print("Error count total:",err_tot)
 
     print("(Maximum error was ~{:.2f}% of tolerance, ~{:.5f})".format(100*err_p, raw_err_mx))
+    print("ee flag:", args.early_exit)
 
 class ONNXData:
     def __init__(self, partition, model_path=None):
