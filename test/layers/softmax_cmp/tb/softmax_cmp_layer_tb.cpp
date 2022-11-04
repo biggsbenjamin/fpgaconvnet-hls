@@ -56,6 +56,7 @@ int main()
     for(int i=0;i<SOFTMAX_CMP_LAYER_CTRL;i++)
     {
         printf("TESTING OUTPUT %d: ",i);
+        //err += checkStreamEqual<b_data_t>(out[i],out_correct[i],true);
         err += checkStreamEqual<b_bool_t>(out[i],out_correct[i],true);
         printf("%s\n",(err==0) ? "passed" : "failed");
     }

@@ -1,0 +1,17 @@
+{
+    "type": "BUFFER",
+    "buffer_depth" : 0,
+    "batch_size": 64,
+    "rows": 16,
+    "cols": 16,
+    "channels": 5,
+    "coarse": 1,
+    "coarse_in": 1,
+    "coarse_out": 1,
+    "ctrledge": 24,
+    "drop_mode": true,
+    "rows_out": 16,
+    "cols_out": 16,
+    "channels_out": 5,
+    "description": "buffer 1, chonky boi"
+}

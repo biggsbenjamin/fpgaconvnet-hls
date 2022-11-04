@@ -43,7 +43,8 @@ int main()
     >(ctrl_input_path,test_ctrl_in);
 
     // load output - unknown output size
-    load_data<
+    load_data_buffout<
+        fm_size*2,
         BUFFER_LAYER_COARSE,
         buffer_layer_data_t
     >(output_path,test_out);
@@ -64,6 +65,11 @@ int main()
         }
 
     }
+    // FIXME some other way:
+    // adding in this flush sample
+    batch_t flushid = 420;
+    batchnum_vec.push_back(flushid);
+    batchnum_vec.push_back(flushid);
 
     //int out_size;
     //if (!BUFFER_LAYER_DROP_MODE) {
@@ -73,7 +79,8 @@ int main()
     //}
     printf("batchIDs:");
     for (int i=0; i<batchnum_vec.size();i++){
-        printf("%d,",batchnum_vec[i]);
+        uint16_t tmp =batchnum_vec[i]; 
+        printf("%d,",tmp);
     }
     int out_size = batchnum_vec.size()*fm_size;
     printf("\nout_size:%d \n",out_size);

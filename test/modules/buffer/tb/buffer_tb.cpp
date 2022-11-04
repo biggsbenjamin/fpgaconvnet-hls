@@ -40,8 +40,9 @@ int main()
     >(ctrl_input_path,test_ctrl_in);
 
     // load data_out
-    load_data<
-    buffer_t
+    load_data_buffout<
+        fm_size*2,
+        buffer_t
     >(output_path,test_out);
 
     printf("fm_size:%d \n",fm_size);
@@ -49,7 +50,7 @@ int main()
     printf("test_out len:%d \n",test_out.size());
     
     //int ctrl_sum=0;
-    for (unsigned int i=0; i<BUFFER_BATCH_SIZE;i++) {
+    for (batch_t i=0; i<BUFFER_BATCH_SIZE;i++) {
         if (test_ctrl_in[i].data) {
             if (!BUFFER_DROP_MODE) {
                 batchnum_vec.push_back(i);
@@ -60,12 +61,19 @@ int main()
             } 
         }
     }
+    // FIXME some other way:
+    // adding in this flush sample
+    batch_t flushid = 420;
+    batchnum_vec.push_back(flushid);
+    batchnum_vec.push_back(flushid);
+
 
     printf("batchIDs:");
     for (int i=0; i<batchnum_vec.size();i++){
-        printf("%d,",batchnum_vec[i]);
+        uint16_t tmp =batchnum_vec[i]; 
+        printf("%d,",tmp);
     }
-    int out_size = batchnum_vec.size()*fm_size;
+    int out_size = test_out.size(); //batchnum_vec.size()*fm_size;
     printf("\nout_size:%d \n",out_size);
 
     // convert input stream
@@ -89,7 +97,7 @@ int main()
     buffer_top(in, ctrl_in, out);
 
     printf("\r\n\t BUFFER #1\r\n");
-    checkStreamEqual<buffer_t>(out,out_valid);
+    err += checkStreamEqual<buffer_t>(out,out_valid);
 
     return err;
 }

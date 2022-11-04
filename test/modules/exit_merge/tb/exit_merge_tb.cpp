@@ -9,11 +9,6 @@ int main()
     std::string input1_path  = std::string(DATA_DIR)+"/input1.dat";
     std::string output_path = std::string(DATA_DIR)+"/output.dat";
 
-    // in/out streams
-    stream_t(em_t) in[EXIT_MERGE_EXITS];
-    stream_t(em_t) out;
-    stream_t(em_t) out_valid;
-
     const unsigned int fm_size = EXIT_MERGE_ROWS*EXIT_MERGE_COLS*EXIT_MERGE_CHANNELS;
     const unsigned int size_out = EXIT_MERGE_BATCH_SIZE*EXIT_MERGE_ROWS*EXIT_MERGE_COLS*EXIT_MERGE_CHANNELS;
 
@@ -21,6 +16,16 @@ int main()
     static em_t test_in0[fm_size*EXIT_MERGE_EX0_IN];
     static em_t test_in1[fm_size*EXIT_MERGE_EX1_IN];
     static em_t test_out[size_out];
+
+    // in/out streams
+    stream_t(em_t) in[EXIT_MERGE_EXITS];
+    stream_t(em_t) out;
+    stream_t(em_t) out_valid;
+
+    std::cout<< "ex0 in:"<<EXIT_MERGE_EX0_IN
+        <<" ex1 in:"<<EXIT_MERGE_EX1_IN
+        <<" bs:"<<EXIT_MERGE_BATCH_SIZE
+        <<std::endl;
 
     // load data_in0
     load_data_em<
@@ -45,13 +50,15 @@ int main()
     >(output_path,test_out);
 
     // convert input stream0
-    to_stream<
+    to_stream<//_ex<
         fm_size*EXIT_MERGE_EX0_IN,
+        //(fm_size-1),
         em_t
     >(test_in0,in[0]);
     // convert input stream1
-    to_stream<
+    to_stream<//_ex<
         fm_size*EXIT_MERGE_EX1_IN,
+        //(fm_size-1),
         em_t
     >(test_in1,in[1]);
 
@@ -66,7 +73,7 @@ int main()
 
     printf("\r\n\t EXIT_MERGE #1\r\n");
     // FIXME only checks that batch grouping of data is preserved, not that data is correct
-    err += checkStreamEqual_EM<em_t> (fm_size,out,out_valid,false);
+    err += checkStreamEqual_EM<em_t> (fm_size,out,out_valid,true);
     //err += checkStreamEqual <float> (out,out_valid,true);
     
     return err;

@@ -6,6 +6,7 @@
 #include "compare_param.hpp"
 
 typedef b_float_t cmp_t;
+//typedef b_data_t ctrl_t;
 typedef b_bool_t ctrl_t;
 
 /////////////////////////////////

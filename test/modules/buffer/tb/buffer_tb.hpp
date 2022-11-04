@@ -6,6 +6,7 @@
 #include "buffer_param.hpp"
 
 typedef b_data_t buffer_t;
+//typedef b_data_t ctrl_t;
 typedef b_bool_t ctrl_t;
 
 /////////////////////////////////
