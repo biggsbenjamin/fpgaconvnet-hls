@@ -131,6 +131,50 @@ void to_stream(
 }
 
 /* (BUFFER LAYER OUT LOAD) */
+template<int FM_SIZE, int COARSE, typename T>
+void load_data_buffout(
+    std::string filepath,
+    std::vector<T> data[COARSE] 
+) {
+    // read in file
+    std::ifstream input_file(filepath);
+    float val;
+
+    // check file opened
+    if (!input_file.is_open()) {
+        perror("Failed: ");
+    }
+    
+    // save to array
+    T caster;
+    int i=0;
+    while(input_file >> val) {
+        caster.data = val;
+        data[i].push_back(caster);
+        i++;
+        if (i>=COARSE){ i=0; }; //reset i every COARSE number of items
+        /*if (i==0){
+            data_t tmp[COARSE];
+        }
+        tmp[i] = data_t(val);
+        if (i>=COARSE){
+            data.push_back(tmp);
+        }
+        i++;*/
+    }
+    // close file
+    input_file.close();
+
+    //FIXME some other way:
+    //adding flush data
+    for (int fidx=0; fidx<FM_SIZE; fidx++) {
+        for (int crs_idx=0;crs_idx<COARSE;crs_idx++) {
+            caster.data = 6.9;
+            data[crs_idx].push_back( caster );
+        }
+    }
+}
+/* old version (BUFFER LAYER OUT LOAD) */
 template<int COARSE, typename T>
 void load_data(
     std::string filepath,
@@ -335,6 +379,24 @@ void to_stream(
     for(int i=0;i<SIZE;i++) {
  	out.write(in[i]);
     }
+}
+/* exit merge module test, anti flush*/
+template<int SIZE, int FLUSH_SIZE, typename T>
+void to_stream_ex(
+    T in[SIZE],
+    stream_t(T) &out
+)
+{
+    for(int i=0;i<SIZE;i++) {
+ 	    out.write(in[i]);
+    }
+
+    //T flusher;
+    //flusher.batchid = 420;
+    //flusher.data = 6.9;
+    //for(int i=0;i<FLUSH_SIZE;i++) {
+    //    out.write(flusher);
+    //}
 }
 
 /* (weights only because of new default types) */
@@ -732,6 +794,42 @@ void load_data(
 }
 
 /* (BUFFER MOD OUT LOAD) */
+template<int FM_SIZE, typename T>
+void load_data_buffout(
+    std::string filepath,
+    std::vector<T> &data 
+) {
+    // read in file
+    std::ifstream input_file(filepath);
+    float val;
+
+    // check file opened
+    if (!input_file.is_open()) {
+        perror("Failed: ");
+    }
+    
+    // save to array
+    int i=0;
+    T tmp;
+    while(input_file >> val) {
+        tmp.data = val;
+        data.push_back( tmp );
+        i++;
+    }
+    // close file
+    input_file.close();
+
+    //FIXME some other way:
+    //adding flush data
+    for (int fidx=0; fidx<FM_SIZE; fidx++) {
+        tmp.batchid = 420;
+        tmp.data = 6.9;
+        data.push_back( tmp );
+    }
+    
+}
+
+/* FIXME OLD VERSION (BUFFER MOD OUT LOAD) */
 template<typename T>
 void load_data(
     std::string filepath,
@@ -769,7 +867,7 @@ void to_stream(
 ) {
     int bidx=0;
     T out_val;
-    for(int i=0;i<b_in.size()*shape_size;i++) {
+    for(int i=0;i<(b_in.size()*shape_size);i++) {
         if (i % shape_size == 0 && i != 0) {
             bidx++;
         }
@@ -790,7 +888,7 @@ void to_stream(
 ) {
     int bidx=0;
     T out_val;
-    for(int i=0;i<b_in.size()*shape_size;i++) {
+    for(int i=0;i<(b_in.size()*shape_size);i++) {
         if (i % shape_size == 0 && i != 0) {
             bidx++;
         }
@@ -849,8 +947,10 @@ int checkStreamEqual(
 			err++;
 		}
         if (tmp.batchid != tmp_valid.batchid) {
+            uint16_t printer = tmp.batchid;
+            uint16_t printer2 = tmp_valid.batchid;
 			printf("ERROR: wrong ID. Actual:%d, Expected:%d\n",
-                    tmp.batchid, tmp_valid.batchid );
+                    printer, printer2 );
 			err++;
         }
 	}
@@ -895,7 +995,8 @@ int checkStreamEqual_EM(
             //std::cout<<"Expected:"<<tmp.range()&BIT_MASK
             //    <<" Actual:"<<tmp_valid.range()&BIT_MASK<<std::endl;    
             std::cout<<"Expected:"<<tmpf
-                <<" Actual:"<<tmpf_valid<<std::endl;    
+                <<" Actual:"<<tmpf_valid
+                <<"fm ctr:"<<fm_cntr<<std::endl;    
         }
 		//if(
 		//		(tmp.data.to_float() > tmp_valid.data.to_float()+ERROR_TOLERANCE) ||

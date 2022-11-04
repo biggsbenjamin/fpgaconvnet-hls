@@ -50,7 +50,7 @@ void compare(
     ctrl_t out_var;
     
     batch_loop: for(unsigned long b_index=0;b_index<batch_size;b_index++) {
-        #pragma HLS PIPELINE II=1 rewind 
+        #pragma HLS PIPELINE II=1
         thr_mult = thr_in.read(); //this one will arrive later
         thr_res.data = thr_mult.data * threshold;
         cmp_max = max_in.read();
