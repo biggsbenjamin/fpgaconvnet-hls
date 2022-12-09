@@ -24,6 +24,7 @@ template<
     const unsigned int channels   = CHANNELS;
 
     const unsigned int buff_size  = rows*cols*channels;
+    const unsigned int invalid_id = 65535;
 
     intr_t cache;
     full_loop: 
@@ -32,7 +33,7 @@ template<
             #pragma HLS PIPELINE II=1
             cache = in.read();
 
-            if (cache.batchid != 420) {
+            if (cache.batchid != invalid_id ) {
               out.write( cache );
             } 
         }
