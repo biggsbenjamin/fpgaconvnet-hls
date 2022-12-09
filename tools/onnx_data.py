@@ -165,6 +165,8 @@ def validate_output(args):
     err_tot=0
 
     # TODO warnings based on binary difference, errors based on classif difference
+    EE_cnt=0
+    LE_cnt=0
     for samp_id in g_dat_list[0].keys():
         # compare the values for now
 
@@ -182,31 +184,44 @@ def validate_output(args):
 
             #max_err = max(max_err,cmpr)
 
+        #make the values signed for easier reading
+        s16_f = np.vectorize(make_signed_16)
+        eegdat = s16_f(g_dat_list[0][samp_id])
+        legdat = s16_f(g_dat_list[1][samp_id])
+        adat = s16_f(a_dat[samp_id])
+
         if cmpr0 > errtol.bits_to_signed() and cmpr1 > errtol.bits_to_signed():
             print(f"ERROR: Difference greater than tolerance.\n \
                             Values g0:{sg0} g1:{sg1} a:{sa} @ sample:{samp_id}, index:{idx}")
             err_tot+=1
         elif cmpr0 > errtol.bits_to_signed():
-            #make the values signed for easier reading
-            s16_f = np.vectorize(make_signed_16)
-            eegdat = s16_f(g_dat_list[0][samp_id])
-            if np.exp(max(eegdat)) >= (sum(np.exp(eegdat))*0.996):
-                print("should be early exit")
-            legdat = s16_f(g_dat_list[1][samp_id])
-            adat = s16_f(a_dat[samp_id])
-            print(f"EE error so assuming LE Sample ID:{samp_id}\n \
-                    EEgdat:\t{eegdat}\n \
-                    adat:\t{adat},\n \
-                    LEgdat:\t{legdat}")
+            #if np.exp(max(eegdat)) >= (sum(np.exp(eegdat))*0.996):
+            #    print("Should be early exit!")
+            #print(f"EE error so assuming LE Sample ID:{samp_id}\n \
+            #        EEgdat:\t{eegdat}\n \
+            #        adat:\t{adat},\n \
+            #        LEgdat:\t{legdat}")
+            LE_cnt+=1
             max_err = max(max_err,cmpr1)
         elif cmpr1 > errtol.bits_to_signed():
             max_err = max(max_err,cmpr0)
+            EE_cnt+=1
+        else:
+            print("ERROR TOO LOW BETWEEN EXITS")
+            ee_diff = np.linalg.norm((eegdat - adat))
+            le_diff = np.linalg.norm((legdat - adat))
+            if ee_diff < le_diff:
+                EE_cnt += 1
+            else:
+                LE_cnt += 1
+
 
         #NOTE printing stuff for debug etc.
         if args.verbose:
             print(f"Signed gold0:{sg0}, gold1:{sg1}, signed actual:{sa}")
             print(f"\tcompare var: {cmpr}, error total:{err_tot}")
 
+    print("Num EE:{} LE:{}".format(EE_cnt, LE_cnt))
 
     # NOTE old version compares everything - any value difference
     #for idx,(g,a) in enumerate(zip(g_dat, a_dat)):
